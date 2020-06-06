@@ -31,7 +31,7 @@ navigation:
   - {file: "README.md", icon: address-card}
 
 external:                    # see http://fontawesome.com/icons
-  - {title: Mail, icon: envelope, url: "mailto:alexdowad@gmail.com"}
+  - {title: Mail, icon: envelope, url: "mailto:alexinbeijing@gmail.com"}
   - {title: Github, icon: github, url: "https://github.com/alexdowad"}
   - {title: Subscribe, icon: rss, url: "/feed.xml"}
 
