@@ -1,8 +1,8 @@
 # Site settings
 
-title: Alex's Tech Blog
+title: Alex Dowad Computes
 email: alexinbeijing@gmail.com
-description: Explorations in the world of computing
+description: Explorations in the world of code
 baseurl: "" # subpath
 url: "" # base hostname & protocol
 github_username:  alexdowad
