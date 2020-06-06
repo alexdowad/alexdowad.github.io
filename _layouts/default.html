@@ -25,10 +25,9 @@
 
 <header class="icons">
   {% unless site.show_title != true and site.navigation and site.external %}
-    <a href="{{ "/" | relative_url }}" class="title">{{ site.title | escape }}</a>
+    <a href="{{ "/" | relative_url }}" class="title">{{ site.title | escape }}<br><span class="subtitle">{{ site.description }}</span></a>
   {% endunless %}
   {% if site.navigation or site.external %}
-    {% include menu.html menu=site.navigation icons=false %}
     {% include menu.html menu=site.external icons=true %}
   {% else %}
     {% assign pages = site.pages | where_exp: "item", "item.title and item.sitemap != false" | sort: "order" %}
