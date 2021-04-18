@@ -9,9 +9,7 @@ layout: default
 <div class="contact-me">
   This post left you burning to speak your mind? Reach out and <a href="mailto:alexinbeijing@gmail.com">e-mail the author</a>! Selected replies will be published here.
 </div>
-{% if site.show_related %}
-  <footer class="related">
-    <div class="previous">{% if page.previous.url %}<span>Previous Post</span><a href="{{ page.previous.url | relative_url }}">{{ page.previous.title }}</a>{% endif %}</div>
-    <div class="next">{% if page.next.url %}<span>Next Post</span><a href="{{ page.next.url | relative_url }}">{{ page.next.title }}</a>{% endif %}</div>
-  </footer>
-{% endif %}
+<footer class="related">
+  <div class="previous">{% if page.previous.url %}<span>Previous Post</span><a href="{{ page.previous.url | relative_url }}">{{ page.previous.title }}</a>{% endif %}</div>
+  <div class="next">{% if page.next.url %}<span>Next Post</span><a href="{{ page.next.url | relative_url }}">{{ page.next.title }}</a>{% endif %}</div>
+</footer>
