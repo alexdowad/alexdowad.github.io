@@ -35,9 +35,5 @@ external:                    # see http://fontawesome.com/icons
   - {title: Github, icon: github, url: "https://github.com/alexdowad"}
   - {title: Subscribe, icon: rss, url: "/feed.xml"}
 
-comments:
-#  disqus_shortname: ""      # see https://disqus.com/
-#  isso_domain: ""           # see https://posativ.org/isso/
-
 plugins:
  - jekyll-feed
