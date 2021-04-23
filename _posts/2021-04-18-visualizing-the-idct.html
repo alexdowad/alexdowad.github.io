@@ -1,0 +1,1271 @@
+---
+layout: post
+title:  "Visualizing the Inverse Discrete Cosine Transform"
+date:   2021-04-18
+categories:
+  - jpeg
+  - graphics
+stylesheets:
+  - idct.css
+  - katex.css
+---
+
+<p>A key step in JPEG image compression is converting 8-by-8-pixel blocks of color values into the frequency domain, so instead of storing color values, we store amplitudes of sinusoidal waveforms. This is a fun little bit of applied math, and you might enjoy seeing how it works.<p>
+
+<p>It all really started in the early 1820's, when Joseph Fourier figured out that any periodic waveform can be broken down into a sum of sinusoids. Kalid Azad has <a href="https://betterexplained.com/articles/an-interactive-guide-to-the-fourier-transform/">explained this much better than I could over at BetterExplained</a>, and if you are not familiar with the Fourier transform, I recommend you go learn about it from Kalid first. I'll be waiting right here.</p>
+
+<hr>
+
+<p>Welcome back! Let's apply what you learned to a block of pixel values. How about this block of pixels right here?</p>
+
+<!-- If you want to reuse the program code in this page for any purpose, hit the author up.
+     He is generally cool about stuff and will probably be willing to grant permission. -->
+<div class="pic-container">
+  <div class="pic-spacer"></div>
+  <div class="pic" id="pic1"></div>
+</div>
+<script>
+  'use strict';
+
+  const coffeeCup = [
+    96,  213, 255,  96, 255, 213,  96, 255,
+    255, 119, 255, 255, 109, 255,  79, 255,
+    255,  79, 255,  85, 255, 119, 255, 255,
+    255,   0,   5,  10,  12,  15,  20,  20,
+    255,  18,  35,  46, 140,  10, 255,  30,
+    255,  18,  35,  46, 140,  10, 255,  45,
+    255,  18,  35,  46, 140,  12,  35, 255,
+    255, 255,  18,  26,  32,  12, 255, 255
+  ];
+
+  function initPixelGrid(pic) {
+    const pixels = [];
+    for (var i = 0; i < 64; i++) {
+      const pixel = document.createElement('span');
+      pixels.push(pixel);
+      pixel.classList.add('pixel');
+      pic.appendChild(pixel);
+    }
+    return pixels;
+  }
+
+  function setPixelValues(pixels, values) {
+    for (var i = 0; i < 64; i++) {
+      const luminance = values[i];
+      pixels[i].style.backgroundColor = `rgb(${luminance},${luminance},${luminance})`;
+    }
+  }
+
+  const pic1 = document.getElementById('pic1');
+  const px1  = initPixelGrid(pic1);
+  setPixelValues(px1, coffeeCup);
+</script>
+
+<p>Take a horizontal slice, 8 pixels wide, from that block. Take the position of each pixel as an <i>x</i> value and its brightness as a <i>y</i> value. Then the 8 pixels correspond to 8 <i>(x, y)</i> points on a plane, and we could find a combination of sinusoidal waves that would go through those 8 points.</p>
+
+<p>We could, and we will. Let's do it now. Click on any row of the pixel grid below:</p>
+
+<div class="pic-container">
+  <div class="pic-spacer"></div>
+  <div class="pic" id="pic2"></div>
+</div>
+<div class="wave-container">
+  <div class="wave-spacer"></div>
+  <div class="wave-graph">
+    <canvas id="waveform1" class="wave"></canvas>
+  </div>
+  <div class="wave-legend" id="legend1"></div>
+</div>
+<script>
+  'use strict';
+
+  const pic2 = document.getElementById('pic2');
+  const px2  = initPixelGrid(pic2);
+  setPixelValues(px2, coffeeCup);
+
+  const wave1 = document.getElementById('waveform1');
+  const ctx1  = wave1.getContext('2d');
+
+  const vertTickColor = 'rgb(230,230,150)';
+
+  function graphDrawVerticalTicks(canvas, ctx) {
+    const xMin = 10, xMax = canvas.width - 10, yMin = 10, yMax = canvas.height - 10;
+    ctx.strokeStyle = vertTickColor;
+    ctx.lineWidth = 1;
+    const xRange = xMax - xMin;
+
+    for (var i = 0; i < 8; i++) {
+      ctx.beginPath();
+      ctx.moveTo(xMin + (xRange * (i + 0.5) / 8), yMin);
+      ctx.lineTo(xMin + (xRange * (i + 0.5) / 8), yMax);
+      ctx.stroke();
+    }
+  }
+
+  const zeroLineColor = 'rgb(40,50,180)';
+
+  function graphDrawZeroLine(canvas, ctx) {
+    const xMin = 10, xMax = canvas.width - 10, yMin = 10, yMax = canvas.height - 10;
+    ctx.strokeStyle = zeroLineColor;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(xMin, (yMin + yMax) / 2);
+    ctx.lineTo(xMax, (yMin + yMax) / 2);
+    ctx.stroke();
+  }
+
+  function autosizeGraph(canvas, callback) {
+    const parent = canvas.parentElement;
+
+    function resizeCanvas() {
+      canvas.width = parent.clientWidth;
+      canvas.height = parent.clientHeight;
+      if (callback)
+        callback();
+    }
+
+    if (window.ResizeObserver) {
+      const resizeObserver = new ResizeObserver(resizeCanvas);
+      resizeObserver.observe(parent);
+    } else {
+      window.addEventListener('resize', resizeCanvas);
+    }
+  }
+
+  /* `values` is an array of 8 evenly-spaced discrete time samples */
+  function discreteCosTransform1D(values) {
+    const coeffs = [];
+    for (var u = 0; u < 8; u++) {
+      const correctionFactor = (u === 0) ? (1 / Math.sqrt(8)) : (1 / 2);
+      var sum = 0;
+      for (var x = 0; x < 8; x++)
+        sum += values[x] * Math.cos(Math.PI * u * ((2 * x) + 1) / 16);
+      coeffs.push(correctionFactor * sum);
+    }
+    return coeffs;
+  }
+
+  function graphCosine(canvas, ctx, frequency, amplitude, color, lineWidth) {
+    if (Math.abs(amplitude) <= 0.02)
+      return;
+
+    const xMin = 10, xMax = canvas.width - 10, yMin = 10, yMax = canvas.height - 10;
+    const yRange = yMax - yMin,
+          yMid = (yMax + yMin) / 2,
+          xRange = xMax - xMin;
+
+    ctx.strokeStyle = color;
+    ctx.lineWidth = lineWidth || 1.5;
+
+    ctx.beginPath();
+    /* A cosine wave with no phase shift always starts at maximum amplitude
+     * Subtract `amplitude` because lower y-values are 'up' on an HTML canvas */
+    ctx.moveTo(xMin, yMid - (amplitude * (yRange / 2)));
+    for (var x = xMin+2; x < xMax; x += 2) {
+      ctx.lineTo(x, yMid - (amplitude * (yRange / 2) * Math.cos(Math.PI * 2 * ((x - xMin) / xRange) * frequency)));
+    }
+    ctx.stroke();
+  }
+
+  function graphCosines(canvas, ctx, frequencies, amplitudes, colors) {
+    for (var i = 0; i < frequencies.length; i++)
+      graphCosine(canvas, ctx, frequencies[i], amplitudes[i], colors[i]);
+  }
+
+  function graphSumOfCosines(canvas, ctx, frequencies, amplitudes) {
+    const xMin = 10, xMax = canvas.width - 10, yMin = 10, yMax = canvas.height - 10;
+    const yRange = yMax - yMin,
+          yMid = (yMax + yMin) / 2,
+          xRange = xMax - xMin;
+
+    ctx.strokeStyle = 'black';
+    ctx.lineWidth = 3;
+
+    ctx.beginPath();
+    /* A cosine wave with no phase shift always starts at maximum amplitude
+     * Subtract amplitude because lower y-values are 'up' on an HTML canvas */
+    ctx.moveTo(xMin, yMid - (amplitudes.reduce((sum,a) => sum+a, 0) * (yRange / 2)));
+    for (var x = xMin+2; x < xMax; x += 2) {
+      var sum = 0;
+      for (var i = 0; i < frequencies.length; i++) {
+        sum += amplitudes[i] * (yRange / 2) * Math.cos(Math.PI * 2 * ((x - xMin) / xRange) * frequencies[i]);
+      }
+      ctx.lineTo(x, yMid - sum);
+    }
+    ctx.stroke();
+  }
+
+  function graphTargetDots(canvas, ctx, values, coordinates) {
+    const xMin = 10, xMax = canvas.width - 10, yMin = 10, yMax = canvas.height - 10;
+    const xRange = xMax - xMin,
+          yRange = yMax - yMin,
+          yMid = (yMax + yMin) / 2,
+          dotSize = 4.5;
+
+    ctx.fillStyle = 'black';
+
+    for (var i = 0; i < 8; i++) {
+      ctx.beginPath();
+      const x = xMin + (xRange * (i + 0.5) / 8);
+      const y = yMid - (values[i] * yRange / 2);
+      ctx.arc(x, y, dotSize, 0, Math.PI * 2);
+      coordinates[i] = [x, y];
+      ctx.fill();
+    }
+  }
+
+  /* 8 colors, each 45 degrees apart around the color wheel */
+  const graphColors = [
+    'rgb(200,10,10)',
+    'rgb(200,150,10)',
+    'rgb(105,200,10)',
+    'rgb(10,200,58)',
+    'rgb(10,200,200)',
+    'rgb(10,58,200)',
+    'rgb(105,10,200)',
+    'rgb(200,10,150)'
+  ];
+
+  function initLegend(parent) {
+    const entries = [];
+    for (var i = 0; i < 8; i++) {
+      const entry = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+      entry.classList.add('legend-entry');
+      entry.style.visibility = 'hidden'; /* Will appear when a waveform is shown */
+      entry.setAttribute('viewBox', '0 0 500 300');
+      entry.innerHTML = '<circle cx=22 cy=158 r=117 fill="white" class="selection" />' +
+        '<circle cx=22 cy=158 r=100 fill="' + graphColors[i] + '" />' +
+        '<text x=147 y=150 font-size=110>F = ' + (0.5 * i) + 'Hz</text><text x=147 y=265 font-size=110 class="amplitude"></text>';
+      parent.appendChild(entry);
+      entries.push(entry);
+    }
+    return entries;
+  }
+
+  const legend1 = initLegend(document.getElementById('legend1'));
+
+  function updateLegend(entries, amplitudes) {
+    for (var i = 0; i < 8; i++) {
+      if (Math.abs(amplitudes[i]) <= 0.02) {
+        entries[i].style.visibility = 'hidden';
+      } else {
+        entries[i].style.visibility = '';
+        const span = entries[i].querySelector('.amplitude');
+        span.textContent = 'A = ' + amplitudes[i].toFixed(2);
+      }
+    }
+  }
+
+  function highlightLegend(entry, color) {
+    if (entry)
+      entry.querySelector('.selection').setAttribute('fill', color);
+  }
+
+  function selectRow(pic, rowNumber) {
+    var highlight = pic.getElementsByClassName('highlight')[0];
+    if (!highlight) {
+      highlight = document.createElement('span');
+      highlight.classList.add('highlight');
+      pic.appendChild(highlight);
+    }
+
+    highlight.style.left = 0;
+    highlight.style.width = '100%';
+    highlight.style.top = (rowNumber * 12.5) + '%';
+    highlight.style.height = '12.5%';
+  }
+
+  function drawCosineGraph(canvas, ctx, values, coeffs, dotLocations) {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    graphDrawVerticalTicks(canvas, ctx);
+    graphDrawZeroLine(canvas, ctx);
+    graphCosines(canvas, ctx, [0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5], coeffs, graphColors);
+    graphSumOfCosines(canvas, ctx, [0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5], coeffs, graphColors);
+    graphTargetDots(canvas, ctx, values, dotLocations);
+  }
+
+  function updateCosineGraphAndLegend(canvas, ctx, legend, samples, hilite, dotLocations) {
+    /* Center range of possible sample values on the zero line */
+    var shifted = samples.map((s) => s - 128);
+    /* After DCT, apply an arbitrary scaling factor to make the graph fit well
+     * in the available space */
+    const coeffs = discreteCosTransform1D(shifted).map((c) => c / 420);
+    /* The IDCT applies a correction factor of 1/sqrt(2) for u=0; do the same */
+    coeffs[0] *= 1 / Math.sqrt(2);
+    /* Scaling factor for distance of target dots from zero line
+     * This must be 1/2 the scaling factor for the wave amplitudes for the waveform
+     * and dots to line up */
+    shifted = shifted.map((s) => s / 210);
+
+    updateLegend(legend, coeffs);
+    drawCosineGraph(canvas, ctx, shifted, coeffs, dotLocations);
+
+    if (hilite || hilite === 0)
+      graphCosine(canvas, ctx, hilite * 0.5, coeffs[hilite], graphColors[hilite], 3.5);
+  }
+
+  function onPixelClick(pixels, callback) {
+    for (var i = 0; i < 64; i++) {
+      (function(i) {
+        pixels[i].addEventListener('click', function() { callback(i, pixels[i]) });
+      })(i);
+    }
+  }
+
+  function onLegendClick(entries, callback) {
+    for (var i = 0; i < 8; i++) {
+      (function(i) {
+        entries[i].addEventListener('click', function() { callback(i, entries[i]); });
+      })(i);
+    }
+  }
+
+  function onTargetDotDrag(canvas, dotLocations, callback) {
+    var draggedDot, dragX, dragY;
+
+    canvas.addEventListener('mousedown', function(event) {
+      dragX = event.offsetX;
+      dragY = event.offsetY;
+      for (var i = 0; i < 8; i++) {
+        const [x, y] = dotLocations[i];
+        if (x && y && ((x - dragX) ** 2 + (y - dragY) ** 2) < 20) {
+          draggedDot = i;
+          return;
+        }
+      }
+      draggedDot = dragX = dragY = undefined;
+    });
+    canvas.addEventListener('mouseup', function() {
+      draggedDot = dragX = dragY = undefined;
+    });
+    canvas.addEventListener('mouseleave', function() {
+      draggedDot = dragX = dragY = undefined;
+    });
+    canvas.addEventListener('mousemove', function(event) {
+      if (draggedDot || draggedDot === 0)
+        callback(draggedDot, dragX, dragY, event.offsetX, event.offsetY);
+    });
+  }
+
+  (function() {
+    const image = Array.from(coffeeCup); /* Copy, since we may modify the image */
+    var index, samples, hilitedFreq, repaintScheduled = false;
+    const dotLocations = new Array(8).fill([]);
+
+    autosizeGraph(wave1, function() {
+      if (samples) {
+        updateCosineGraphAndLegend(wave1, ctx1, legend1, samples, hilitedFreq, dotLocations);
+      } else {
+        graphDrawVerticalTicks(wave1, ctx1);
+        graphDrawZeroLine(wave1, ctx1);
+      }
+    });
+
+    onPixelClick(px2, function(i, px) {
+      selectRow(pic2, Math.floor(i / 8));
+
+      highlightLegend(legend1[hilitedFreq], 'white');
+      hilitedFreq = undefined;
+
+      index = Math.floor(i / 8) * 8;
+      samples = image.slice(index, index + 8);
+      updateCosineGraphAndLegend(wave1, ctx1, legend1, samples, undefined, dotLocations);
+    });
+
+    onLegendClick(legend1, function(i) {
+      highlightLegend(legend1[hilitedFreq], 'white');
+      hilitedFreq = (hilitedFreq === i) ? undefined : i;
+      highlightLegend(legend1[hilitedFreq], graphColors[hilitedFreq]);
+
+      if (samples)
+        updateCosineGraphAndLegend(wave1, ctx1, legend1, samples, hilitedFreq, dotLocations);
+    });
+
+    var count = 0;
+    onTargetDotDrag(wave1, dotLocations, function(dot, startX, startY, endX, endY) {
+      const yMin = 10, yMax = wave1.height - 10, yRange = yMax - yMin, yMid = yMin + (yRange / 2);
+      /* The 1.666 multiplier is because the range from 0-255 luminance only covers about
+       * 60% of the available vertical space in the graph (1 / 0.6 = 1.666...)
+       * (We don't use the entire space available, so that parts of the waveform which
+       * go higher or lower can still be seen) */
+      var luminance = Math.max(Math.min(255 * (0.5 + (1.666 * (yMid - endY) / yRange)), 255), 0);
+
+      if (luminance !== samples[dot]) {
+        image[index + dot] = luminance;
+        samples[dot] = luminance;
+        px2[index + dot].style.backgroundColor = `rgb(${luminance},${luminance},${luminance})`;
+        /* The other events which can trigger a repaint of the graph, such as clicking on a
+         * row of pixels or a legend entry, don't generally happen more than once per screen
+         * refresh. Drag events, though, can happen much faster than that, so let's make sure
+         * we only redraw the graph once per screen refresh (and avoid pegging the CPU). */
+        if (!repaintScheduled) {
+          repaintScheduled = true;
+          requestAnimationFrame(function() {
+            repaintScheduled = false;
+            updateCosineGraphAndLegend(wave1, ctx1, legend1, samples, hilitedFreq, dotLocations);
+          });
+        }
+      }
+    });
+  })();
+</script>
+
+<p>The heavy, black waveform is the sum of all the colored sinusoids. The height of the 8 black dots represent the brightness values of the 8 pixels in the selected row. Try comparing several different rows to see that in each case, the height of the dots matches the brightness of the pixels.</p>
+
+<p>You might notice that for darker pixel values, the dots appear below the 'zero line', while for brighter pixels, they appear above it. This is because we subtracted 128 from each brightness value before converting to a waveform, so the range of possible values (0-255) would be centered on the zero line. (This is also done when an image is stored in JPEG format.)</p>
+
+<p>You might have also noticed that one of the component waves doesn't look like a sinusoid; it's the red one. It is just a flat line. That is the <b>zero frequency</b> component; it represents the <b>average</b> of the 8 values. It shifts the black waveform up or down to just the right height for it to hit all 8 target points.</p>
+
+<p>The legend displays the frequency and amplitude (on a scale of zero to one) of each component wave. Try clicking on the color swatches in the legend to see the component waves more clearly.</p>
+
+<p>Of course, we could do exactly the same with columns of 8 pixels:</p>
+
+<div class="pic-container">
+  <div class="pic-spacer"></div>
+  <div class="pic" id="pic3"></div>
+</div>
+<div class="wave-container">
+  <div class="wave-spacer"></div>
+  <div class="wave-graph">
+    <canvas id="waveform2" class="wave"></canvas>
+  </div>
+  <div class="wave-legend" id="legend2"></div>
+</div>
+<script>
+  'use strict';
+
+  const pic3 = document.getElementById('pic3');
+  const px3  = initPixelGrid(pic3);
+  setPixelValues(px3, coffeeCup);
+
+  const wave2 = document.getElementById('waveform2');
+  const ctx2  = wave2.getContext('2d');
+
+  const legend2 = initLegend(document.getElementById('legend2'));
+
+  function selectCol(pic, colNumber) {
+    var highlight = pic.getElementsByClassName('highlight')[0];
+    if (!highlight) {
+      highlight = document.createElement('span');
+      highlight.classList.add('highlight');
+      pic.appendChild(highlight);
+    }
+
+    highlight.style.left = (colNumber * 12.5) + '%';;
+    highlight.style.width = '12.5%';
+    highlight.style.top = 0;
+    highlight.style.height = '100%';
+  }
+
+  function transpose8by8(ary) {
+    return [
+      ary[0], ary[8],  ary[16], ary[24], ary[32], ary[40], ary[48], ary[56],
+      ary[1], ary[9],  ary[17], ary[25], ary[33], ary[41], ary[49], ary[57],
+      ary[2], ary[10], ary[18], ary[26], ary[34], ary[42], ary[50], ary[58],
+      ary[3], ary[11], ary[19], ary[27], ary[35], ary[43], ary[51], ary[59],
+      ary[4], ary[12], ary[20], ary[28], ary[36], ary[44], ary[52], ary[60],
+      ary[5], ary[13], ary[21], ary[29], ary[37], ary[45], ary[53], ary[61],
+      ary[6], ary[14], ary[22], ary[30], ary[38], ary[46], ary[54], ary[62],
+      ary[7], ary[15], ary[23], ary[31], ary[39], ary[47], ary[55], ary[63]
+    ];
+  }
+
+  (function() {
+    const image = Array.from(coffeeCup); /* Copy, since we may modify the image */
+    var index, samples, hilitedFreq, repaintScheduled = false;
+    const dotLocations = new Array(8).fill([]);
+
+    autosizeGraph(wave2, function() {
+      if (samples) {
+        updateCosineGraphAndLegend(wave2, ctx2, legend2, samples, hilitedFreq, dotLocations);
+      } else {
+        graphDrawVerticalTicks(wave2, ctx2);
+        graphDrawZeroLine(wave2, ctx2);
+      }
+    });
+
+    onPixelClick(px3, function(i, px) {
+      selectCol(pic3, i % 8);
+
+      highlightLegend(legend2[hilitedFreq], 'white');
+      hilitedFreq = undefined;
+
+      index = (i % 8) * 8;
+      samples = transpose8by8(coffeeCup).slice(index, index + 8);
+      updateCosineGraphAndLegend(wave2, ctx2, legend2, samples, undefined, dotLocations);
+    });
+
+    onLegendClick(legend2, function(i) {
+      highlightLegend(legend2[hilitedFreq], 'white');
+      hilitedFreq = (hilitedFreq === i) ? undefined : i;
+      highlightLegend(legend2[hilitedFreq], graphColors[hilitedFreq]);
+
+      if (samples)
+        updateCosineGraphAndLegend(wave2, ctx2, legend2, samples, hilitedFreq, dotLocations);
+    });
+
+    var count = 0;
+    onTargetDotDrag(wave2, dotLocations, function(dot, startX, startY, endX, endY) {
+      const yMin = 10, yMax = wave1.height - 10, yRange = yMax - yMin, yMid = yMin + (yRange / 2);
+      var luminance = Math.max(Math.min(255 * (0.5 + (1.666 * (yMid - endY) / yRange)), 255), 0);
+
+      if (luminance !== samples[dot]) {
+        const pxIndex = (dot * 8) + (index / 8);
+        image[pxIndex] = luminance;
+        samples[dot] = luminance;
+        px3[pxIndex].style.backgroundColor = `rgb(${luminance},${luminance},${luminance})`;
+        if (!repaintScheduled) {
+          repaintScheduled = true;
+          requestAnimationFrame(function() {
+            repaintScheduled = false;
+            updateCosineGraphAndLegend(wave2, ctx2, legend2, samples, hilitedFreq, dotLocations);
+          });
+        }
+      }
+    });
+  })();
+</script>
+
+<p>Now, you have seen that each row or column of pixel values in this "coffee cup" icon can be converted to a sum of sinusoidal waves. But could that just be a fluke? Can we really do this with <i>any</i> sequence of eight brightness values?</p>
+
+<p>If the answer is obvious, just humour me here. Go back and try dragging any of the black points up or down. The pixel colors and waveform will update as you drag.</p>
+
+<p>Looks cool, doesn't it?</p>
+
+<hr>
+
+<p>Now... we need to talk.</p>
+
+<p>I have misled you here. The <a href="https://betterexplained.com/articles/an-interactive-guide-to-the-fourier-transform/">link to BetterExplained</a> above probably tricked you into thinking that these waveforms were derived using a Fourier transform. Not so. This page is about the <b>Discrete Cosine Transform</b>, not the Fourier transform. But it was good for you to understand the idea of the Fourier transform before learning about the DCT.</p>
+
+<p>If you take some time to play with both the <a href="https://betterexplained.com/examples/fourier/">Fourier transform demonstration on BetterExplained</a> and the DCT demonstration here, you might recognize some differences between these transforms. Even when given the same input, they produce a different series of component waves. (That's an interesting point; the <i>same</i> sequence of discrete time samples can be broken down into sinusoids in more than one way.)</p>
+
+<p>Do you want to go back and give it a try? Either way, whenever you are ready, click to reveal two major differences:</p>
+
+<p class="reveal">The component waves found by the Fourier transform are <i>integral multiples</i> of the overall period of repetition; i.e. 0, 1F, 2F, 3F, and so on. Those found by the DCT are multiples of <i>half</i> the period of repetition: 0, 0.5F, 1F, 1.5F, 2F, 2.5F, etc.</p>
+
+<p class="reveal">The component waves found by the Fourier transform often have varying phase shifts (they have to, otherwise it wouldn't be possible to match the input values). Those found by the DCT all have the same phase. Look at the graphs above and you will see this clearly.</p>
+
+<p>Other differences which you can't see from the demonstrations:</p>
+
+<ul>
+<li>While the computation of the Fourier transform uses complex numbers, the DCT only involves real numbers.</li>
+<li>The DCT is easier to compute. It's just a simple nested loop which evaluates a cosine function and a couple of adds and multiplies for each input sample.</li>
+</ul>
+
+<p>Now, another important point. Look back at the interactive DCT. As you drag the target points up and down, what is the maximum number of component waves which are required to match the 8 target points?</p>
+
+<p class="reveal">8.</p>
+
+<p>Right. That is a key point for JPEG image compression. Remember, in a JPEG image, blocks of 8 pixels by 8 pixels are represented as a combination of component waves. The amplitude of each component is called a DCT <b>coefficient</b>. Since each block of input pixels converts to a fixed number of component waves, we just need to store a fixed number of coefficients for each such block. We don't need to store their frequencies, since those are known and are always the same. Nor do we need to store phase shifts, because all are at a constant phase.</p>
+
+<p>Let's move into two dimensions now. We have demonstrated that if we just needed to represent 8 color values in a row, 8 coefficients would be enough. But how many coefficients do we need to represent 8-by-8, or 64, color values? Guess before clicking:</p>
+
+<p class="reveal">64.</p>
+
+<p>You might ask: <i><b>Isn't JPEG a lossy format which compresses images into fewer bits? How can converting 64 numbers into 64 other numbers save storage space?</b></i></p>
+
+<p>You are right; <i>by itself</i>, applying the DCT to a block of color samples doesn't result in any compression. It's like translating English text to French or Chinese; you are representing the same information in a different form. So it's not surprising that 64 color samples convert to 64 coefficients. However, the DCT is still a key step in achieving image compression. <a href="#why-useful">More on this later.</a></p>
+
+<p>I want to show you examples of 8-by-8 images broken down into 64 two-dimensional waveforms. As in the one-dimensional case, the frequencies and phase of the 64 components will always be the same; only their amplitudes will vary. Before looking at any sample images, though, first let me show you the 64 components of the two-dimensional DCT at a fixed amplitude.</p>
+
+<p>On the left is an 8 by 8 grid. In each cell is a <i>(u, v)</i> pair. (We talk about positions in a DCT coefficient matrix using <i>u, v</i> coordinates; coordinates in the corresponding block of pixels are named <i>x</i> and <i>y</i>.) On the right is a waveform graph. Click on each position in the coefficient matrix to see what the corresponding waveform looks like. You can click and drag on the graph to pivot.</p>
+
+<div class="matrix-container">
+  <div class="matrix-spacer"></div>
+  <div class="edge-colors">
+    <table id="matrix1" class="matrix"></table>
+  </div>
+</div>
+<div class="matrix-container">
+  <div class="matrix-spacer"></div>
+  <div class="fill-parent">
+    <canvas id="demo3"></canvas>
+  </div>
+</div>
+<script>
+  'use strict';
+
+  /* DISPLAY OF 3D GRAPH, SHOWING HOW EACH IDCT COEFFICIENT AFFECTS EACH POINT IN X,Y SPACE
+   * How finely should we divide our 3D graph along the X/Y axes? */
+  const xRes = 120;
+  const yRes = 120;
+  const xyScale = 1.3;
+  const zScale = 0.3;
+
+  /* Take vectors from point1->point2 and point1->point3, cross them to get normal vector */
+  function crossProduct(point1, point2, point3) {
+    const x1 = point1[0] - point2[0], x2 = point1[0] - point3[0],
+          y1 = point1[1] - point2[1], y2 = point1[1] - point3[1],
+          z1 = point1[2] - point2[2], z2 = point1[2] - point3[2];
+    return [
+      y1 * z2 - y2 * z1,
+      z1 * x2 - z2 * x1,
+      x1 * y2 - x2 * y1
+    ];
+  }
+
+  /* Multiply 3x3 matrices */
+  function matrixMultiply(m1, m2) {
+    return [
+      m1[0]*m2[0] + m1[1]*m2[3] + m1[2]*m2[6],
+      m1[0]*m2[1] + m1[1]*m2[4] + m1[2]*m2[7],
+      m1[0]*m2[2] + m1[1]*m2[5] + m1[2]*m2[8],
+
+      m1[3]*m2[0] + m1[4]*m2[3] + m1[5]*m2[6],
+      m1[3]*m2[1] + m1[4]*m2[4] + m1[5]*m2[7],
+      m1[3]*m2[2] + m1[4]*m2[5] + m1[5]*m2[8],
+
+      m1[6]*m2[0] + m1[7]*m2[3] + m1[8]*m2[6],
+      m1[6]*m2[1] + m1[7]*m2[4] + m1[8]*m2[7],
+      m1[6]*m2[2] + m1[7]*m2[5] + m1[8]*m2[8],
+    ];
+  }
+
+  function plotIDCTAmplitudeGraph(u, v) {
+    const points = [];
+
+    for (var x = 0; x < xRes; x++) {
+      for (var y = 0; y < yRes; y++) {
+        /* (x,y) in IDCT formula */
+        const px_x = ((x * 8) - 0.5) / xRes;
+        const px_y = ((y * 8) - 0.5) / yRes;
+        /* Value of IDCT coefficient (u,v) at each point in (x,y) plane */
+        const z = Math.cos((2*px_x + 1) * u * Math.PI / 16) * Math.cos((2*px_y + 1) * v * Math.PI / 16);
+        points.push([(xyScale * x / xRes) - (xyScale/2), (xyScale * y / yRes) - (xyScale/2), z * zScale]);
+      }
+    }
+
+    return points;
+  }
+
+  function buildSurfaceTriangles(points) {
+    const triangles = [], normals = [];
+
+    /* Iterate over grid of (x,y,z) values; stitch them together with triangles */
+    for (var x = 0; x < xRes-1; x++) {
+      for (var y = 0; y < yRes-1; y++) {
+        const botLeft = points[y + (x * yRes)];
+        const topLeft = points[y + 1 + (x * yRes)];
+        const botRight = points[y + ((x + 1) * yRes)];
+        const topRight = points[y + 1 + ((x + 1) * yRes)];
+        /* Triangle 1, covering half of this grid square */
+        triangles.push(topLeft[0]);  triangles.push(topLeft[1]);  triangles.push(topLeft[2]);
+        triangles.push(botLeft[0]);  triangles.push(botLeft[1]);  triangles.push(botLeft[2]);
+        triangles.push(topRight[0]); triangles.push(topRight[1]); triangles.push(topRight[2]);
+        /* Triangle 2, covering the remainder of this grid square */
+        triangles.push(botRight[0]); triangles.push(botRight[1]); triangles.push(botRight[2]);
+        triangles.push(botLeft[0]);  triangles.push(botLeft[1]);  triangles.push(botLeft[2]);
+        triangles.push(topRight[0]); triangles.push(topRight[1]); triangles.push(topRight[2]);
+        /* Compute surface normals; these will be used for lighting */
+        const normal1 = crossProduct(topLeft, botLeft, topRight);
+        const normal2 = crossProduct(botRight, topRight, botLeft);
+        /* We need one normal vector for _each_ vertice */
+        for (var i = 0; i < 3; i++) {
+          normals.push(normal1[0]); normals.push(normal1[1]); normals.push(normal1[2]);
+        }
+        for (var i = 0; i < 3; i++) {
+          normals.push(normal2[0]); normals.push(normal2[1]); normals.push(normal2[2]);
+        }
+      }
+    }
+
+    return [triangles, normals];
+  }
+
+  /* We will highlight edges so orientation of surface can be seen */
+  function buildEdgeLines(points) {
+    const edges = [], edgeColors = [];
+
+    const topR = 0.2, topG = 0.41, topB = 0.82; /* blue */
+    const botR = 0.82, botG = 0.18, botB = 0.17; /* red */
+    const leftR = 0.9, leftG = 0.85, leftB = 0.14; /* yellow */
+    const rightR = 0.18, rightG = 0.81, rightB = 0.19; /* green */
+
+    for (var x = 0; x < xRes-1; x++) {
+      var y = 0;
+      const botLeft = points[y + (x * yRes)];
+      const botRight = points[y + ((x + 1) * yRes)];
+      edges.push(botLeft[0]);  edges.push(botLeft[1]);  edges.push(botLeft[2]);
+      edges.push(botRight[0]); edges.push(botRight[1]); edges.push(botRight[2]);
+      edgeColors.push(botR); edgeColors.push(botG); edgeColors.push(botB);
+      edgeColors.push(botR); edgeColors.push(botG); edgeColors.push(botB);
+
+      y = yRes-2;
+      const topLeft = points[y + 1 + (x * yRes)];
+      const topRight = points[y + 1 + ((x + 1) * yRes)];
+      edges.push(topLeft[0]);  edges.push(topLeft[1]);  edges.push(topLeft[2]);
+      edges.push(topRight[0]); edges.push(topRight[1]); edges.push(topRight[2]);
+      edgeColors.push(topR); edgeColors.push(topG); edgeColors.push(topB);
+      edgeColors.push(topR); edgeColors.push(topG); edgeColors.push(topB);
+    }
+
+    for (var y = 0; y < yRes-1; y++) {
+      var x = 0;
+      const topLeft = points[y + 1 + (x * yRes)];
+      const botLeft = points[y + (x * yRes)];
+      edges.push(topLeft[0]); edges.push(topLeft[1]); edges.push(topLeft[2]);
+      edges.push(botLeft[0]); edges.push(botLeft[1]); edges.push(botLeft[2]);
+      edgeColors.push(leftR); edgeColors.push(leftG); edgeColors.push(leftB);
+      edgeColors.push(leftR); edgeColors.push(leftG); edgeColors.push(leftB);
+
+      x = xRes-2;
+      const topRight = points[y + 1 + ((x + 1) * yRes)];
+      const botRight = points[y + ((x + 1) * yRes)];
+      edges.push(topRight[0]); edges.push(topRight[1]); edges.push(topRight[2]);
+      edges.push(botRight[0]); edges.push(botRight[1]); edges.push(botRight[2]);
+      edgeColors.push(rightR); edgeColors.push(rightG); edgeColors.push(rightB);
+      edgeColors.push(rightR); edgeColors.push(rightG); edgeColors.push(rightB);
+    }
+
+    return [edges, edgeColors];
+  }
+
+  function xRotationMatrix(radians) {
+    return [
+      1, 0, 0,
+      0, Math.cos(radians), Math.sin(radians),
+      0, -Math.sin(radians), Math.cos(radians)
+    ];
+  }
+
+  function yRotationMatrix(radians) {
+    return [
+      Math.cos(radians), 0, Math.sin(radians),
+      0, 1, 0,
+      -Math.sin(radians), 0, Math.cos(radians)
+    ];
+  }
+
+  const canvas3 = document.getElementById('demo3');
+  const gl = canvas3.getContext('webgl2');
+  gl.enable(gl.DEPTH_TEST);
+
+  function createShader(gl, type, src) {
+    const shader = gl.createShader(type);
+    gl.shaderSource(shader, src);
+    gl.compileShader(shader);
+    if (gl.getShaderParameter(shader, gl.COMPILE_STATUS))
+      return shader;
+    console.log(gl.getShaderInfoLog(shader));
+    gl.deleteShader(shader);
+  }
+
+  /* Shader code which will be compiled by WebGL and run on GPU */
+  const vertexShader = createShader(gl, gl.VERTEX_SHADER, `#version 300 es
+    uniform mat3 rotationMatrix;
+    in vec3 position;
+    in vec3 normal;
+    out vec3 vNormal;
+    void main() {
+      gl_Position = vec4(rotationMatrix * position, 1);
+      vNormal = rotationMatrix * normal;
+    }`);
+  const fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, `#version 300 es
+    precision highp float;
+    in vec3 vNormal;
+    out vec4 color;
+    void main() {
+      vec3 normal = normalize(vNormal);
+      vec3 lightDirection = normalize(vec3(0.5, 0.5, 0.5));
+      color = vec4(1, 0.3, 0.6, 1);
+      color.rgb *= 0.35 + (0.65 * abs(dot(normal, lightDirection)));
+    }`);
+  const edgeVertexShader = createShader(gl, gl.VERTEX_SHADER, `#version 300 es
+    uniform mat3 rotationMatrix;
+    in vec3 position;
+    in vec3 edgeColor;
+    out vec3 _color;
+    void main() {
+      gl_Position = vec4(rotationMatrix * position, 1);
+      _color = edgeColor;
+    }`);
+  const edgeFragmentShader = createShader(gl, gl.FRAGMENT_SHADER, `#version 300 es
+    precision highp float;
+    in vec3 _color;
+    out vec4 color;
+    void main() {
+      color = vec4(_color, 1);
+    }`);
+
+  function createProgram(gl, vertexShader, fragmentShader, primitiveType, inputs, uniforms) {
+    const program = gl.createProgram();
+    gl.attachShader(program, vertexShader);
+    gl.attachShader(program, fragmentShader);
+    gl.linkProgram(program);
+
+    if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+      console.log(gl.getProgramInfoLog(program));
+      gl.deleteProgram(program);
+      return;
+    }
+
+    const vertexArray = gl.createVertexArray();
+
+    function draw(arrays, uniformValues) {
+      gl.useProgram(program);
+      gl.bindVertexArray(vertexArray);
+
+      for (var i = 0; i < inputs.length; i++) {
+        const buffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(arrays[i]), gl.STATIC_DRAW);
+        const attr = gl.getAttribLocation(program, inputs[i]);
+        gl.enableVertexAttribArray(attr);
+        gl.vertexAttribPointer(attr, 3, gl.FLOAT, false, 0, 0);
+      }
+
+      for (var uniform of uniforms)
+        gl.uniformMatrix3fv(gl.getUniformLocation(program, uniform), false, uniformValues[uniform]);
+
+      gl.drawArrays(primitiveType, 0, arrays[0].length / 3);
+    }
+
+    return draw;
+  }
+
+  const drawTriangles = createProgram(gl, vertexShader, fragmentShader, gl.TRIANGLES, ['position', 'normal'], ['rotationMatrix']);
+  const drawEdges = createProgram(gl, edgeVertexShader, edgeFragmentShader, gl.LINES, ['position', 'edgeColor'], ['rotationMatrix']);
+
+  /* Fairly arbitrary product which seems to give a good starting angle */
+  var rotationMatrix = matrixMultiply(xRotationMatrix(1), yRotationMatrix(0.5));
+  var scene = {};
+
+  function plotGraph(u, v) {
+    /* (u, v) has changed */
+    const points = plotIDCTAmplitudeGraph(u, v);
+    const [triangles, normals] = buildSurfaceTriangles(points);
+    const [edges, edgeColors]  = buildEdgeLines(points);
+
+    scene = { triangles: triangles, normals: normals, edges: edges, edgeColors: edgeColors };
+    redrawGraph();
+  }
+
+  function redrawGraph() {
+    /* Either (u,v) has changed, or graph has been rotated, or window has been resized */
+    requestAnimationFrame(function() {
+      gl.clearColor(0.05, 0.15, 0.25, 1);
+      gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+      drawTriangles([scene.triangles, scene.normals], { rotationMatrix: rotationMatrix });
+      drawEdges([scene.edges, scene.edgeColors], { rotationMatrix: rotationMatrix });
+    });
+  }
+
+  /* Allow drag to rotate 3D scene */
+  var dragX, dragY;
+  canvas3.addEventListener('mousedown', function(event) {
+    dragX = event.offsetX;
+    dragY = event.offsetY;
+  });
+  canvas3.addEventListener('mouseup', function(event) {
+    dragX = dragY = undefined;
+  });
+  canvas3.addEventListener('mousemove', function(event) {
+    var changedRotation = false;
+    if (dragX && event.offsetX !== dragX) {
+      rotationMatrix = matrixMultiply(rotationMatrix, yRotationMatrix((event.offsetX - dragX) / 40));
+      dragX = event.offsetX;
+      changedRotation = true;
+    }
+    if (dragY && event.offsetY !== dragY) {
+      rotationMatrix = matrixMultiply(rotationMatrix, xRotationMatrix((dragY - event.offsetY) / 40));
+      dragY = event.offsetY;
+      changedRotation = true;
+    }
+    if (changedRotation)
+      redrawGraph();
+  });
+
+  function cellSelected(u, v, cell) {
+    plotGraph(u, v);
+    const previousSelected = matrix1.querySelector('td.selected')
+    if (previousSelected)
+      previousSelected.classList.remove('selected');
+    cell.classList.add('selected');
+  }
+
+  function initCoeffMatrix(tbl, onClick) {
+    const cells = [];
+    const values = new Array(64).fill(0);
+    for (var i = 0; i < 64; i++) {
+      const cell = document.createElement('td');
+      cells.push(cell);
+      /* Capture the value of `i` on _this_ iteration */
+      (function(i) {
+        cell.addEventListener('click', function(event) {
+          onClick(i % 8, Math.floor(i / 8), cell, event);
+        });
+      })(i);
+    }
+    for (var i = 0; i < 8; i++) {
+      const tr = document.createElement('tr');
+      for (var j = 0; j < 8; j++)
+        tr.appendChild(cells[i*8 + j]);
+      tbl.appendChild(tr);
+    }
+    return cells;
+  }
+
+  window.addEventListener('load', function() {
+    autosizeGraph(canvas3, function() {
+      gl.viewport(0, 0, canvas3.width, canvas3.height);
+      redrawGraph();
+    });
+
+    const matrix1 = document.getElementById('matrix1');
+    const cells1  = initCoeffMatrix(matrix1, cellSelected);
+    for (var i = 0; i < 64; i++) {
+      cells1[i].innerText = `${i % 8},${Math.floor(i / 8)}`;
+    }
+    cellSelected(0, 0, matrix1.querySelector('td'));
+  })
+</script>
+
+<p>Do you see how the 64 components in the two-dimensional case correspond to the 8 components in the one-dimensional case? Look again at the waveform for coefficient <i>(0, 0)</i>, in the top-left corner. This one is very important, since it gives the average value of all 64 color samples in a block. It is called the <b>DC coefficient</b>. The other 63 coefficients represent all the deviations from the average and are called the <b>AC coefficients</b>.</p>
+
+<p>Now you are ready to see the Inverse Discrete Cosine Transform at work. Click on each of the sample images below to see its DCT coefficients. Click on any coefficient to disable it and see what the image looks like with it removed; or Control-click to enable only a single coefficient and see its contribution to the image.</p>
+
+<div style="margin: auto">
+  <div class="pic-container smallpic">
+    <div class="pic-spacer"></div>
+    <div class="pic" id="smallpic1"></div>
+  </div>
+  <div class="pic-container smallpic">
+    <div class="pic-spacer"></div>
+    <div class="pic" id="smallpic2"></div>
+  </div>
+  <div class="pic-container smallpic">
+    <div class="pic-spacer"></div>
+    <div class="pic" id="smallpic3"></div>
+  </div>
+  <div class="pic-container smallpic">
+    <div class="pic-spacer"></div>
+    <div class="pic" id="smallpic4"></div>
+  </div>
+  <div class="pic-container smallpic">
+    <div class="pic-spacer"></div>
+    <div class="pic" id="smallpic5"></div>
+  </div>
+</div>
+<div class="matrix-container" style="border: none; margin-right: 1.5em; width: 45%">
+  <div class="matrix-spacer"></div>
+  <div class="fill-parent">
+    <table id="matrix2" class="matrix"></table>
+  </div>
+</div>
+<div class="pic-container" style="width: 45%">
+  <div class="pic-spacer"></div>
+  <div class="pic" id="pic4"></div>
+</div>
+<script>
+  const pic4 = document.getElementById('pic4');
+  const px4  = initPixelGrid(pic4);
+
+  const matrix2 = document.getElementById('matrix2');
+  const coeffs  = new Array(64).fill(0);
+  const enabled = new Array(64).fill(true);
+
+  const face1 = [
+    72,   83,  57,  41,  42,  51,  71,  68,
+    79,   70, 101, 150,  96,  39,  71,  72,
+    89,   51, 150, 183, 168,  82,  55,  71,
+    98,   65, 158, 164, 149, 119,  50,  78,
+    109,  43, 159, 174, 164, 132,  34,  62,
+    92,   30, 109, 150, 135,  85,  24,  93,
+    87,   71,  60, 115, 122,  40,  35, 111,
+    96,  176, 160, 101, 140,  98,  37, 137
+  ];
+  const dog1 = [
+    170, 113, 145, 210, 207, 151,  76, 114,
+     79,  94, 122, 212, 230, 218, 162, 118,
+    185, 184, 210, 231, 249, 203, 138, 119,
+    216, 226, 218, 241, 245, 176,  59,  29,
+    196, 201, 217, 244, 238, 198,  90,  79,
+    194, 182, 212, 238, 210, 147,  91,  73,
+    180, 195, 191, 187,  91,  24,   6, 125,
+    216, 220, 207, 118, 105,  43,  62, 172
+  ];
+  const pawprint = [
+    255, 244,  76, 217, 209,  50, 244, 255,
+    255, 217,   0, 168, 134,   0, 231, 255,
+    156, 198, 149, 217, 198, 149, 202, 156,
+     60, 122, 250, 149, 156, 255,  71,  71,
+    209, 202, 156,   0,   0, 191, 198, 217,
+    255, 202,   0,   0,   0,   0, 217, 255,
+    255, 122,   0,   0,   0,   0, 143, 255,
+    255, 174,  50, 143, 134,   0, 202, 255
+  ];
+  const chinese = [
+    255, 255, 255, 103,  17, 255, 255, 255,
+    255, 255, 255, 111,  38, 254, 181, 255,
+    255, 131,  71,  28,  36,  34,   4, 102,
+    255, 182, 122,  44, 140, 255,  28, 129,
+    255, 255, 188,  36, 255, 231,  10, 255,
+    255, 255,  74, 125, 255, 118,  36, 255,
+    255, 104,  59, 255, 144,  42,  54, 255,
+    147, 103, 255, 255, 122,  18, 158, 255
+  ];
+  const rose = [
+    255, 255, 254, 201, 143, 185, 251, 255,
+    241, 152, 128, 104,  90,  96, 138, 213,
+    176,  90, 107, 106,  86, 111, 109, 113,
+    134, 113, 109,  83,  73, 109, 126, 218,
+    175, 112,  97, 100, 110,  96, 124, 254,
+    250, 181,  90,  94,  85,  87,  68, 255,
+    255, 233,  69,  73,  75,  70, 109, 254,
+    255, 251, 177, 135,  76,  96, 201, 251
+  ];
+
+  const smallpic1 = document.getElementById('smallpic1');
+  const smallpic2 = document.getElementById('smallpic2');
+  const smallpic3 = document.getElementById('smallpic3');
+  const smallpic4 = document.getElementById('smallpic4');
+  const smallpic5 = document.getElementById('smallpic5');
+  setPixelValues(initPixelGrid(smallpic1), face1);
+  setPixelValues(initPixelGrid(smallpic2), dog1);
+  setPixelValues(initPixelGrid(smallpic3), pawprint);
+  setPixelValues(initPixelGrid(smallpic4), chinese);
+  setPixelValues(initPixelGrid(smallpic5), rose);
+
+  const cells2 = initCoeffMatrix(matrix2, function(col, row, td, event) {
+    const index = row*8 + col;
+    if (event.ctrlKey)
+      selectCoeff(index, td);
+    else
+      toggleCoeff(index, td);
+  });
+  for (var i = 0; i < 64; i++)
+    cells2[i].innerText = '0';
+
+  function setCoefficients(samples) {
+    const newCoeffs = forwardDCT(samples.map((s) => s - 128));
+    for (var i = 0; i < 64; i++)
+      cells2[i].innerText = coeffs[i] = newCoeffs[i];
+    enableAllCoeffs();
+  }
+
+  smallpic1.addEventListener('click', function() { setCoefficients(face1);    });
+  smallpic2.addEventListener('click', function() { setCoefficients(dog1);     });
+  smallpic3.addEventListener('click', function() { setCoefficients(pawprint); });
+  smallpic4.addEventListener('click', function() { setCoefficients(chinese);  });
+  smallpic5.addEventListener('click', function() { setCoefficients(rose);     });
+
+  function enableCoeff(index, td) {
+    enabled[index] = true;
+    td.classList.remove('disabled');
+    drawPic();
+  }
+
+  function disableCoeff(index, td) {
+    enabled[index] = false;
+    td.classList.add('disabled');
+    drawPic();
+  }
+
+  function toggleCoeff(index, td) {
+    if (coeffs[index] === 0)
+      return;
+    enabled[index] = !enabled[index];
+    td.classList.toggle('disabled');
+    drawPic();
+  }
+
+  function selectCoeff(index, td) {
+    if (coeffs[index] === 0)
+      return;
+    enableCoeff(index, td);
+    for (var i = 0; i < 64; i++) {
+      if (coeffs[i] !== 0 && i !== index) {
+        enabled[i] = false;
+        cells2[i].classList.add('disabled');
+      }
+    }
+    drawPic();
+  }
+
+  function enableAllCoeffs() {
+    for (var i = 0; i < 64; i++) {
+      enabled[i] = true;
+      cells2[i].classList.remove('disabled');
+    }
+    drawPic();
+  }
+
+  function drawPic() {
+    drawCoeffs(coeffs.map((c, idx) => enabled[idx] ? c : 0));
+  }
+
+  function drawCoeffs(coeffs) {
+    const samples = inverseDCT(coeffs);
+    for (var i = 0; i < 64; i++) {
+      const luminance = Math.round(samples[i] + 128);
+      px4[i].style.backgroundColor = `rgb(${luminance},${luminance},${luminance})`;
+    }
+  }
+
+  function forwardDCT(samples) {
+    const coeffs = [];
+
+    for (var v = 0; v < 8; v++) {
+      for (var u = 0; u < 8; u++) {
+        var coeff = 0;
+
+        for (var x = 0; x < 8; x++) {
+          for (var y = 0; y < 8; y++) {
+            coeff += samples[y*8 + x] *
+              Math.cos(Math.PI * u * (2*x + 1) / 16) *
+              Math.cos(Math.PI * v * (2*y + 1) / 16);
+          }
+        }
+
+        if (u == 0)
+          coeff /= Math.sqrt(2);
+        if (v == 0)
+          coeff /= Math.sqrt(2);
+
+        coeffs.push(Math.round(coeff / 4));
+      }
+    }
+
+    return coeffs;
+  }
+
+  function inverseDCT(coeffs) {
+    const samples = new Array(64).fill(0);
+
+    for (var x = 0; x < 8; x++) {
+      for (var y = 0; y < 8; y++) {
+        var sample = 0;
+
+        for (var u = 0; u < 8; u++) {
+          const cu = (u === 0) ? (1 / Math.sqrt(2)) : 1;
+          for (var v = 0; v < 8; v++) {
+            const cv = (v === 0) ? (1 / Math.sqrt(2)) : 1;
+            var coefficient = coeffs[v*8 + u];
+            if (coefficient === 0)
+              continue;
+            sample += cu * cv * coefficient *
+              Math.cos(Math.PI * u * (2*x + 1) / 16) *
+              Math.cos(Math.PI * v * (2*y + 1) / 16);
+          }
+        }
+
+        samples[y*8 + x] = Math.round(sample / 4);
+      }
+    }
+
+    return samples;
+  }
+
+  drawPic();
+</script>
+
+<p>Here's a hint of one interesting thing to look for. If you try disabling various coefficients in the images, which coefficients generally seem to have a smaller effect on the picture? (Those at the top of the matrix, the left, right, bottom, or towards a certain corner?) This has much to do with JPEG compression. More on that towards the end of the post...</p>
+
+<hr>
+
+<p>If you've made it this far, you might want to know how the DCT and IDCT are calculated. (<a href="#why-useful">Don't care about the math? Feel free to skip it.</a>) For simplicity, we'll stick to eight pixel values in one dimension (a row or column). The two-dimensional transforms are very similar.</p>
+
+<p>First, the DCT, which converts pixel values to coefficients:</p>
+
+<span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><msub><mi>S</mi><mi>u</mi></msub><mo>=</mo><mfrac><mn>1</mn><mn>4</mn></mfrac><msub><mi>C</mi><mi>x</mi></msub><munderover><mo>∑</mo><mrow><mi>x</mi><mo>=</mo><mn>0</mn></mrow><mn>7</mn></munderover><msub><mi>s</mi><mi>x</mi></msub><mtext>&nbsp;</mtext><mi>c</mi><mi>o</mi><mi>s</mi><mfrac><mrow><mo stretchy="false">(</mo><mn>2</mn><mi>x</mi><mo>+</mo><mn>1</mn><mo stretchy="false">)</mo><mi>u</mi><mi>π</mi></mrow><mn>16</mn></mfrac></mrow><annotation encoding="application/x-tex">S_{u} = {1 \over 2} C_u \sum_{x=0}^7 s_x\ cos {(2x + 1)\pi u \over 16}</annotation></semantics></math></span>
+<span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height: 0.83333em; vertical-align: -0.15em;"></span>
+  <span class="mord Su"><span class="mord mathnormal" style="margin-right: 0.05764em;">S</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height: 0.151392em;"><span class="" style="top: -2.55em; margin-left: -0.05764em; margin-right: 0.05em;"><span class="pstrut" style="height: 2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">u</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height: 0.15em;"><span class=""></span></span></span></span></span></span>
+  <span class="mspace" style="margin-right: 0.277778em;"></span>
+  <span class="mrel">=</span>
+  <span class="mspace" style="margin-right: 0.277778em;"></span>
+</span>
+<span class="base"><span class="strut" style="height: 3.06823em; vertical-align: -1.26711em;"></span>
+  <span class="mord half"><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height: 1.32144em;"><span class="" style="top: -2.314em;"><span class="pstrut" style="height: 3em;"></span><span class="mord"><span class="mord">2</span></span></span><span class="" style="top: -3.23em;"><span class="pstrut" style="height: 3em;"></span><span class="frac-line" style="border-bottom-width: 0.04em;"></span></span><span class="" style="top: -3.677em;"><span class="pstrut" style="height: 3em;"></span><span class="mord"><span class="mord">1</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height: 0.686em;"><span class=""></span></span></span></span></span><span class="mclose nulldelimiter"></span></span></span>
+  <span class="mord Cu"><span class="mord mathnormal" style="margin-right: 0.07153em;">C</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height: 0.151392em;"><span class="" style="top: -2.55em; margin-left: -0.07153em; margin-right: 0.05em;"><span class="pstrut" style="height: 2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">u</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height: 0.15em;"><span class=""></span></span></span></span></span></span>
+  <span class="mspace" style="margin-right: 0.166667em;"></span>
+  <span class="mop op-limits"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height: 1.80111em;"><span class="" style="top: -1.88289em; margin-left: 0em;"><span class="pstrut" style="height: 3.05em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight x">x</span><span class="mrel mtight">=</span><span class="mord mtight">0</span></span></span></span><span class="" style="top: -3.05001em;"><span class="pstrut" style="height: 3.05em;"></span><span class=""><span class="mop op-symbol large-op sum">∑</span></span></span><span class="" style="top: -4.30001em; margin-left: 0em;"><span class="pstrut" style="height: 3.05em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">7</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height: 1.26711em;"><span class=""></span></span></span></span></span>
+  <span class="mspace" style="margin-right: 0.166667em;"></span>
+  <span class="mord pxval"><span class="mord mathnormal">s</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height: 0.151392em;"><span class="" style="top: -2.55em; margin-left: 0em; margin-right: 0.05em;"><span class="pstrut" style="height: 2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">x</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height: 0.15em;"><span class=""></span></span></span></span></span></span>
+  <span class="mspace">&nbsp;</span>
+  <span class="mord mathnormal">cos</span>
+  <span class="mord"><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height: 1.427em;"><span class="" style="top: -2.314em;"><span class="pstrut" style="height: 3em;"></span><span class="mord"><span class="mord freq">16</span></span></span><span class="" style="top: -3.23em;"><span class="pstrut" style="height: 3em;"></span><span class="frac-line" style="border-bottom-width: 0.04em;"></span></span><span class="" style="top: -3.677em;"><span class="pstrut" style="height: 3em;"></span><span class="mord"><span class="mopen">(</span><span class="mord freq">2</span><span class="mord mathnormal x">x</span><span class="mspace" style="margin-right: 0.222222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right: 0.222222em;"></span><span class="mord freq">1</span><span class="mclose">)</span><span class="mord mathnormal freq">π</span><span class="mord mathnormal u" style="margin-right: 0.03588em;">u</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height: 0.686em;"><span class=""></span></span></span></span></span><span class="mclose nulldelimiter"></span></span></span>
+</span></span></span></span>
+
+<p>where</p>
+
+<span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><msub><mi>C</mi><mn>0</mn></msub><mo>=</mo><mfrac><mn>1</mn><msqrt><mn>2</mn></msqrt></mfrac><mo separator="true">,</mo><msub><mi>C</mi><mrow><mn>1</mn><mo>−</mo><mn>7</mn></mrow></msub><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">C_0 = {1 \over \sqrt 2}, C_{1-7} = 1</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height: 0.83333em; vertical-align: -0.15em;"></span><span class="mord Cu"><span class="mord mathnormal" style="margin-right: 0.07153em;">C</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height: 0.301108em;"><span class="" style="top: -2.55em; margin-left: -0.07153em; margin-right: 0.05em;"><span class="pstrut" style="height: 2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">0</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height: 0.15em;"><span class=""></span></span></span></span></span></span><span class="mspace" style="margin-right: 0.277778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right: 0.277778em;"></span></span><span class="base"><span class="strut" style="height: 2.25144em; vertical-align: -0.93em;"></span><span class="mord"><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height: 1.32144em;"><span class="" style="top: -2.20278em;"><span class="pstrut" style="height: 3em;"></span><span class="mord"><span class="mord sqrt"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height: 0.90722em;"><span class="svg-align" style="top: -3em;"><span class="pstrut" style="height: 3em;"></span><span class="mord" style="padding-left: 0.833em;">2</span></span><span class="" style="top: -2.86722em;"><span class="pstrut" style="height: 3em;"></span><span class="hide-tail" style="min-width: 0.853em; height: 1.08em;"><svg width="400em" height="1.08em" viewBox="0 0 400000 1080" preserveAspectRatio="xMinYMin slice"><path d="M95,702
+c-2.7,0,-7.17,-2.7,-13.5,-8c-5.8,-5.3,-9.5,-10,-9.5,-14
+c0,-2,0.3,-3.3,1,-4c1.3,-2.7,23.83,-20.7,67.5,-54
+c44.2,-33.3,65.8,-50.3,66.5,-51c1.3,-1.3,3,-2,5,-2c4.7,0,8.7,3.3,12,10
+s173,378,173,378c0.7,0,35.3,-71,104,-213c68.7,-142,137.5,-285,206.5,-429
+c69,-144,104.5,-217.7,106.5,-221
+l0 -0
+c5.3,-9.3,12,-14,20,-14
+H400000v40H845.2724
+s-225.272,467,-225.272,467s-235,486,-235,486c-2.7,4.7,-9,7,-19,7
+c-6,0,-10,-1,-12,-3s-194,-422,-194,-422s-65,47,-65,47z
+M834 80h400000v40h-400000z"></path></svg></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height: 0.13278em;"><span class=""></span></span></span></span></span></span></span><span class="" style="top: -3.23em;"><span class="pstrut" style="height: 3em;"></span><span class="frac-line" style="border-bottom-width: 0.04em;"></span></span><span class="" style="top: -3.677em;"><span class="pstrut" style="height: 3em;"></span><span class="mord"><span class="mord">1</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height: 0.93em;"><span class=""></span></span></span></span></span><span class="mclose nulldelimiter"></span></span></span><span class="mpunct">,</span><span class="mspace" style="margin-right: 0.166667em;"></span><span class="mord Cu"><span class="mord mathnormal" style="margin-right: 0.07153em;">C</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height: 0.301108em;"><span class="" style="top: -2.55em; margin-left: -0.07153em; margin-right: 0.05em;"><span class="pstrut" style="height: 2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">1</span><span class="mbin mtight">−</span><span class="mord mtight">7</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height: 0.208331em;"><span class=""></span></span></span></span></span></span><span class="mspace" style="margin-right: 0.277778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right: 0.277778em;"></span></span><span class="base"><span class="strut" style="height: 0.64444em; vertical-align: 0em;"></span><span class="mord">1</span></span></span></span></span>
+
+<p>That's quite a mouthful in English: to calculate <span class="Su">the DCT coefficient <i>u</i></span>, <span class="sum">loop over</span> all eight pixels and <span class="sum">sum up</span>: the <span class="pxval">pixel value</span> times the cosine of: <span class="freq">twice</span> <span class="x">the pixel's <i>x</i> coordinate</span> plus <span class="freq">one</span>, times <span class="freq">π</span>, times <span class="u"><i>u</i></span>, divided by <span class="freq">16</span>. <span class="half">Halve the total.</span> Further, <span class="Cu">if <i>u</i> is zero, divide the total again by root 2</span>.</p>
+
+<p>Or if you speak JavaScript:</p>
+
+<div class="highlight"><pre class="highlight"><code>const coefficients = [];
+for (var <span class="u">u</span> = 0; <span class="u">u</span> < 8; <span class="u">u</span>++) {
+  var <span class="Su">coeff</span> = 0;
+
+  <span class="sum">for (var <span class="x">x</span> = 0; <span class="x">x</span> < 8; <span class="x">x</span>++)</span>
+    <span class="Su">coeff</span> <span class="sum">+=</span> <span class="pxval">pixelValues[x]</span> * Math.cos(((<span class="freq">2</span> * <span class="x">x</span>) + <span class="freq">1</span>) * <span class="freq">Math.PI</span> * <span class="u">u</span> / <span class="freq">16</span>);
+
+  <span class="half">coeff /= 2;</span>
+
+  <span class="Cu">if (u === 0)
+    coeff /= Math.sqrt(2);</span>
+
+  coefficients.push(<span class="Su">coeff</span>);
+}</code></pre></div>
+
+<p>Note that <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><mo stretchy="false">(</mo><mn>2</mn><mi>x</mi><mo>+</mo><mn>1</mn><mo stretchy="false">)</mo><mi>π</mi><mi mathvariant="normal">/</mi><mn>16</mn></mrow><annotation encoding="application/x-tex">(2x + 1)\pi / 16</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height: 1em; vertical-align: -0.25em;"></span><span class="mopen">(</span><span class="mord">2</span><span class="mord mathnormal">x</span><span class="mspace" style="margin-right: 0.222222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right: 0.222222em;"></span></span><span class="base"><span class="strut" style="height: 1em; vertical-align: -0.25em;"></span><span class="mord">1</span><span class="mclose">)</span><span class="mord mathnormal" style="margin-right: 0.03588em;">π</span><span class="mord">/16</span></span></span></span> ranges from just above zero to just below π; that is, half a complete cycle for the cosine function. So when <i>u</i> is one, the component wave only makes half a cycle as <i>x</i> moves from zero to seven. If <i>u</i> is two, then the input to the cosine function increments twice as fast, and a full cycle is made, and so on. Each increment of <i>u</i> increases the frequency of the component wave by 0.5Hz.</p>
+
+<p>On the other hand, when <i>u</i> is zero, the cosine always evaluates to one, and we are essentially just summing up the eight pixel values.</p>
+
+<p>Essentially, coefficient <i>u</i> expresses how well the eight values "fit" a (0.5<i>u</i>)Hz cosine wave. Each value which is positive where the cosine wave is positive (or negative where it is negative) increases the coefficient. Each value which is of opposite sign to the cosine wave at its location on the x-axis decreases the coefficient.</p>
+
+<p>The Inverse DCT is very similar. Shall we stick to JavaScript this time?</p>
+
+<div class="highlight"><pre class="highlight"><code>const pixelValues = [];
+for (var <span class="x">x</span> = 0; <span class="x">x</span> < 8; <span class="x">x</span>++) {
+  var <span class="pxval">value</span> = <span class="Su">coefficients[0]</span> <span class="Cu">/ Math.sqrt(2)</span>;
+
+  <span class="sum">for (var <span class="u">u</span> = 1; <span class="u">u</span> < 8; <span class="u">u</span>++)</span>
+    <span class="pxval">value</span> <span class="sum">+=</span> <span class="Su">coefficients[u]</span> * Math.cos(((<span class="freq">2</span> * <span class="x">x</span>) + <span class="freq">1</span>) * <span class="freq">Math.PI</span> * <span class="u">u</span> / <span class="freq">16</span>);
+
+  <span class="half">value /= 2;</span>
+
+  pixelValues.push(<span class="pxval">value</span>);
+}</code></pre></div>
+
+<hr id="why-useful">
+
+<p>I still haven't told you why the DCT is useful for image compression. First, understand that not all the information contained in an image is equally important or noticeable to a human viewer. It happens that converting color samples to the frequency domain concentrates the information which is most detectable by our visual system in the coefficients at the <i>top-left</i> of the DCT matrix. Conversely, the information which is least perceptible to our visual system is concentrated in the coefficients at the bottom-right.</p>
+
+<p>In this way, the DCT sets everything up for subsequent stages of compression to work their fullest effect. First, <b>quantization</b>. This stage throws away part of the data in the less-significant bits of the DCT coefficients. Since we know that the values of the coefficients towards the bottom-right have less of an effect on what we see, those can be heavily quantized, while retaining more bits of the coefficients toward the top-left. That means we can discard a significant amount of data with little effect on visual quality.</p>
+
+<p>The DCT works synergistically with quantization and the <a href="https://en.wikipedia.org/wiki/JPEG#/media/File:JPEG_ZigZag.svg">zig-zag ordering</a> of coefficients to make the final <b>entropy coding</b> stage more effective. This stage applies a lossless compression algorithm to the quantized coefficients.</p>
+
+<p>Many images will have smaller coefficient values toward the bottom right of the matrix, and after quantization is applied, these may become zeroes. So the <a href="https://en.wikipedia.org/wiki/JPEG#/media/File:JPEG_ZigZag.svg">zig-zag ordering</a> of coefficients will tend to produce runs of zeroes toward the end of each block. Those consecutive zeroes can then be represented using an efficient run-length encoding.</p>
+
+<p>After the DCT and quantization, the remaining non-zero coefficients are also likely to have similar or even repeated values. When many of the values are repeated, entropy coding will become very effective at squeezing the coefficients into fewer bits.</p>
+
+<p>Interestingly, both the <a href="https://en.wikipedia.org/wiki/WebP">WebP</a> and AVIF compressed image formats also transform color samples into the frequency domain. Both can use either the Discrete Cosine Transform or a different transform which serves a similar purpose.</p>
+
+<p>The other popular compressed image formats are PNG and GIF. Neither of these transform samples into the frequency domain.</p>
+
+<p>The next post in this series will explore Huffman coding, a lossless compression algorithm which is another key ingredient of JPEG.</p>
+
+<script>
+  'use strict';
+
+  function revealText() {
+    this.style.color = '#000';
+    this.removeEventListener('click', revealText);
+  }
+  document.querySelectorAll('.reveal').forEach((el) => el.addEventListener('click', revealText));
+</script>

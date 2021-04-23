@@ -1,0 +1,193 @@
+/* 'Spoiler' text which has to be clicked to view */
+.reveal {
+  padding: 1em;
+  border-left: 0.5em solid #555;
+  background-color: #d8c399;
+  color: #d8c399;
+}
+
+/* 'container' and 'spacer' help to make pic a square, where height
+ * naturally scales up or down to match the width */
+.pic-container {
+  display: inline-block;
+  position: relative;
+  width: 40%;
+  min-width: 250px;
+  border: 1px solid #555555;
+}
+.pic-spacer {
+  margin-top: 100%;
+}
+.pic {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  line-height: 0px; /* no space between rows of pixels */
+}
+.pixel {
+  display: inline-block;
+  width: 12.5%;
+  height: 12.5%;
+  margin: 0px;
+  padding: 0px;
+}
+.pic .highlight {
+  position: absolute;
+  background-color: transparent;
+  outline: 0.15em solid #c55;
+  z-index: 10;
+}
+.smallpic {
+  width: 15% !important;
+  min-width: 100px !important;
+  cursor: pointer;
+}
+
+/* Same trick as .pic-container and .pic-spacer */
+.wave-container {
+  display: inline-block;
+  position: relative;
+  width: 55%;
+  min-width: 300px;
+  border: 1px solid #555555;
+}
+.wave-spacer {
+  margin-top: 72.7%;
+}
+.wave-graph {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 28%;
+}
+.wave-legend {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  top: 72%;
+  line-height: 0; /* no space between rows of entries */
+}
+.legend-entry {
+  display: inline-block;
+  width: 25%;
+  height: 50%;
+  margin: 0px;
+  padding: 0px;
+  cursor: pointer;
+}
+.legend-entry .selection {
+  filter: brightness(120%);
+}
+
+/* Coefficient matrix for DCT/IDCT */
+.matrix-container {
+  display: inline-block;
+  position: relative;
+  width: 49%;
+  min-width: 250px;
+  border: 1px solid #555555;
+}
+.matrix-spacer {
+  margin-top: 100%;
+}
+.matrix {
+  position: relative;
+  display: table;
+  table-layout: fixed;
+  box-shadow: none;
+  width: 100%;
+  height: 100%;
+}
+/* Draw square brackets, like mathematical notation for a matrix */
+.matrix:before, .matrix:after {
+  content: "";
+  position: absolute;
+  top: 0;
+  border: 1px solid #555555;
+  width: 6px;
+  height: 100%;
+}
+.matrix:before {
+  left: -6px;
+  border-right: 0;
+}
+.matrix:after {
+  right: -6px;
+  border-left: 0;
+}
+.matrix tr {
+  height: 12.5%;
+}
+.matrix td {
+  position: relative;
+  padding: 0;
+  text-align: center;
+  vertical-align: middle;
+
+  font-size: 1.2em;
+  font-weight: 500;
+  font-style: italic;
+
+  cursor: pointer;
+
+  box-shadow: none;
+}
+.matrix td:hover {
+  background-color: #eee;
+}
+.matrix td.selected {
+  outline: 0.2em solid #c55;
+  z-index: 10; /* make sure outline is visible */
+}
+
+.edge-colors {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 0.5em 1em;
+  border-top: 0.2em solid rgb(51, 105, 210);
+  border-bottom: 0.2em solid rgb(210, 46, 46);
+  border-left: 0.2em solid rgb(230, 218, 36);
+  border-right: 0.2em solid rgb(46, 207, 46);
+}
+
+.disabled:before, .disabled:after {
+  content: '';
+  position: absolute;
+  top: 45%;
+  width: 95%;
+  height: 4px;
+  background-color: #cc2222;
+}
+.disabled:before {
+  transform: rotate(45deg);
+  left: 2.5%;
+}
+.disabled:after {
+  transform: rotate(-45deg);
+  right: 2.5%;
+}
+
+.fill-parent {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: 0;
+  left: 0;
+}
+
+/* For the DCT formula */
+.Su    { color: rgb(200,10,10); }
+.Cu    { color: rgb(210,165,40); }
+.pxval { color: rgb(10,200,130); }
+.sum   { color: rgb(10,200,58); }
+.half  { color: rgb(150,70,235); }
+.x     { color: rgb(200,10,150); }
+.u     { color: rgb(45,125,205); }
+.freq  { color: rgb(210,120,45); }
