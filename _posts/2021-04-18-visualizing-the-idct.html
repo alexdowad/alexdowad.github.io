@@ -875,23 +875,40 @@ stylesheets:
     dragX = event.offsetX;
     dragY = event.offsetY;
   });
-  canvas3.addEventListener('mouseup', function(event) {
-    dragX = dragY = undefined;
-  });
-  canvas3.addEventListener('mousemove', function(event) {
+  canvas3.addEventListener('touchstart', function(event) {
+    const rect = canvas3.getBoundingClientRect();
+    const touch = event.changedTouches[0];
+    dragX = touch.clientX - rect.left;
+    dragY = touch.clientY - rect.top;
+  })
+
+  canvas3.addEventListener('mouseup',     function(event) { dragX = dragY = undefined; });
+  canvas3.addEventListener('mouseleave',  function(event) { dragX = dragY = undefined; });
+  canvas3.addEventListener('touchcancel', function(event) { dragX = dragY = undefined; });
+  canvas3.addEventListener('touchend',    function(event) { dragX = dragY = undefined; });
+
+  function handleGraphDrag(offsetX, offsetY) {
     var changedRotation = false;
-    if (dragX && event.offsetX !== dragX) {
-      rotationMatrix = matrixMultiply(rotationMatrix, yRotationMatrix((event.offsetX - dragX) / 40));
-      dragX = event.offsetX;
+    if (dragX && offsetX !== dragX) {
+      rotationMatrix = matrixMultiply(rotationMatrix, yRotationMatrix((offsetX - dragX) / 40));
+      dragX = offsetX;
       changedRotation = true;
     }
-    if (dragY && event.offsetY !== dragY) {
-      rotationMatrix = matrixMultiply(rotationMatrix, xRotationMatrix((dragY - event.offsetY) / 40));
-      dragY = event.offsetY;
+    if (dragY && offsetY !== dragY) {
+      rotationMatrix = matrixMultiply(rotationMatrix, xRotationMatrix((dragY - offsetY) / 40));
+      dragY = offsetY;
       changedRotation = true;
     }
     if (changedRotation)
       redrawGraph();
+  }
+  canvas3.addEventListener('mousemove', function(event) {
+    handleGraphDrag(event.offsetX, event.offsetY);
+  });
+  canvas3.addEventListener('touchmove', function(event) {
+    const rect = canvas3.getBoundingClientRect();
+    const touch = event.changedTouches[0];
+    handleGraphDrag(touch.clientX - rect.left, touch.clientY - rect.top);
   });
 
   function cellSelected(u, v, cell) {
