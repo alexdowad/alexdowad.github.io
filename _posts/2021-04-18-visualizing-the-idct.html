@@ -343,6 +343,10 @@ stylesheets:
       const rect = canvas.getBoundingClientRect();
       const touch = event.changedTouches[0];
       acquireDot(touch.clientX - rect.left, touch.clientY - rect.top);
+      /* If we acquired a dot, then this touch event should not have other effects
+       * like initiating page scrolling */
+      if (draggedDot || draggedDot === 0)
+        event.preventDefault();
     });
 
     canvas.addEventListener('mouseup',     function() { draggedDot = dragX = dragY = undefined; });
@@ -357,6 +361,7 @@ stylesheets:
     });
     canvas.addEventListener('touchmove', function(event) {
       if (draggedDot || draggedDot === 0) {
+        event.preventDefault();
         const rect = canvas.getBoundingClientRect();
         const touch = event.changedTouches[0];
         callback(draggedDot, dragX, dragY, touch.clientX - rect.left, touch.clientY - rect.top);
@@ -876,6 +881,7 @@ stylesheets:
     dragY = event.offsetY;
   });
   canvas3.addEventListener('touchstart', function(event) {
+    event.preventDefault();
     const rect = canvas3.getBoundingClientRect();
     const touch = event.changedTouches[0];
     dragX = touch.clientX - rect.left;
@@ -906,6 +912,7 @@ stylesheets:
     handleGraphDrag(event.offsetX, event.offsetY);
   });
   canvas3.addEventListener('touchmove', function(event) {
+    event.preventDefault();
     const rect = canvas3.getBoundingClientRect();
     const touch = event.changedTouches[0];
     handleGraphDrag(touch.clientX - rect.left, touch.clientY - rect.top);
