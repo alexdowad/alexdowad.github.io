@@ -323,9 +323,9 @@ stylesheets:
   function onTargetDotDrag(canvas, dotLocations, callback) {
     var draggedDot, dragX, dragY;
 
-    canvas.addEventListener('mousedown', function(event) {
-      dragX = event.offsetX;
-      dragY = event.offsetY;
+    function acquireDot(offsetX, offsetY) {
+      dragX = offsetX;
+      dragY = offsetY;
       for (var i = 0; i < 8; i++) {
         const [x, y] = dotLocations[i];
         if (x && y && ((x - dragX) ** 2 + (y - dragY) ** 2) < 20) {
@@ -334,16 +334,33 @@ stylesheets:
         }
       }
       draggedDot = dragX = dragY = undefined;
+    }
+
+    canvas.addEventListener('mousedown', function(event) {
+      acquireDot(event.offsetX, event.offsetY);
     });
-    canvas.addEventListener('mouseup', function() {
-      draggedDot = dragX = dragY = undefined;
+    canvas.addEventListener('touchstart', function(event) {
+      const rect = canvas.getBoundingClientRect();
+      const touch = event.changedTouches[0];
+      acquireDot(touch.clientX - rect.left, touch.clientY - rect.top);
     });
-    canvas.addEventListener('mouseleave', function() {
-      draggedDot = dragX = dragY = undefined;
-    });
+
+    canvas.addEventListener('mouseup',     function() { draggedDot = dragX = dragY = undefined; });
+    canvas.addEventListener('mouseleave',  function() { draggedDot = dragX = dragY = undefined; });
+    canvas.addEventListener('touchcancel', function() { draggedDot = dragX = dragY = undefined; });
+    canvas.addEventListener('touchend',    function() { draggedDot = dragX = dragY = undefined; });
+
+
     canvas.addEventListener('mousemove', function(event) {
       if (draggedDot || draggedDot === 0)
         callback(draggedDot, dragX, dragY, event.offsetX, event.offsetY);
+    });
+    canvas.addEventListener('touchmove', function(event) {
+      if (draggedDot || draggedDot === 0) {
+        const rect = canvas.getBoundingClientRect();
+        const touch = event.changedTouches[0];
+        callback(draggedDot, dragX, dragY, touch.clientX - rect.left, touch.clientY - rect.top);
+      }
     });
   }
 
