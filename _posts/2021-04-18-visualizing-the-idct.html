@@ -1283,11 +1283,122 @@ for (var <span class="x">x</span> = 0; <span class="x">x</span> < 8; <span class
   pixelValues.push(<span class="pxval">value</span>);
 }</code></pre></div>
 
+<hr>
+
+<p>Let me share another thing which I find fascinating about the DCT. Actually, no; let me show you and see if you can recognize it yourself.</p>
+
+<p>Earlier I showed you waveform graphs demonstrating how the DCT converts a sequence of discrete color samples to a sum of sinusoid waves. The graphs were bounded tightly around the eight samples on the X-axis. This time let's stretch out the X-axis and let the waves carry on to the left and right. I will draw grey dots at evenly spaced intervals, so you can see if the same pattern repeats itself every eight time units or not.</p>
+
+<div class="pic-container">
+  <div class="pic-spacer"></div>
+  <div class="pic" id="pic5"></div>
+</div>
+<div class="wave-container">
+  <div class="wave-spacer"></div>
+  <div class="fill-parent">
+    <canvas id="waveform3" class="wave"></canvas>
+  </div>
+</div>
+<script>
+  'use strict';
+
+  const pic5 = document.getElementById('pic5');
+  const px5  = initPixelGrid(pic5);
+  setPixelValues(px5, coffeeCup);
+
+  const wave3 = document.getElementById('waveform3');
+  const ctx3  = wave3.getContext('2d');
+
+  function graphDrawManyVerticalTicks(canvas, ctx) {
+    const xMin = 10, xMax = canvas.width - 10, yMin = 10, yMax = canvas.height - 10;
+    ctx.lineWidth = 1;
+    const xRange = xMax - xMin;
+
+    for (var i = 0; i < 40; i++) {
+      ctx.strokeStyle = (i % 8 === 0) ? 'rgb(60,100,200)' : vertTickColor;
+      ctx.beginPath();
+      ctx.moveTo(xMin + (xRange * (i + 0.5) / 40), yMin);
+      ctx.lineTo(xMin + (xRange * (i + 0.5) / 40), yMax);
+      ctx.stroke();
+    }
+  }
+
+  function graphTargetDotsExtended(canvas, ctx, values) {
+    const xMin = 10, xMax = canvas.width - 10, yMin = 10, yMax = canvas.height - 10;
+    const xRange = xMax - xMin,
+          yRange = yMax - yMin,
+          yMid = (yMax + yMin) / 2,
+          dotSize = 4.5;
+
+    const reversed = Array.from(values).reverse();
+    values = values.concat(reversed).concat(values).concat(reversed).concat(values);
+
+    for (var i = 0; i < 40; i++) {
+      ctx.fillStyle = (i >= 16 && i < 24) ? 'black' : '#888888';
+      ctx.beginPath();
+      const x = xMin + (xRange * (i + 0.5) / 40);
+      const y = yMid - (values[i] * yRange / 2);
+      ctx.arc(x, y, dotSize, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  function drawExtendedCosineGraph(canvas, ctx, values, coeffs, dotLocations) {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    graphDrawManyVerticalTicks(canvas, ctx);
+    graphDrawZeroLine(canvas, ctx);
+    graphCosines(canvas, ctx, [0, 2.5, 5, 7.5, 10, 12.5, 15, 17.5], coeffs, graphColors);
+    graphSumOfCosines(canvas, ctx, [0, 2.5, 5, 7.5, 10, 12.5, 15, 17.5], coeffs, graphColors);
+    graphTargetDotsExtended(canvas, ctx, values);
+  }
+
+  function updateExtendedCosineGraph(canvas, ctx, samples) {
+    var shifted = samples.map((s) => s - 128);
+    const coeffs = discreteCosTransform1D(shifted).map((c) => c / 420);
+    coeffs[0] *= 1 / Math.sqrt(2);
+    shifted = shifted.map((s) => s / 210);
+    drawExtendedCosineGraph(canvas, ctx, shifted, coeffs);
+  }
+
+  (function() {
+    const image = Array.from(coffeeCup);
+    var samples;
+
+    autosizeGraph(wave3, function() {
+      if (samples) {
+        updateExtendedCosineGraph(wave3, ctx3, samples);
+      } else {
+        graphDrawManyVerticalTicks(wave3, ctx3);
+        graphDrawZeroLine(wave3, ctx3);
+      }
+    });
+
+    onPixelClick(px5, function(i, px) {
+      selectRow(pic5, Math.floor(i / 8));
+      const index = Math.floor(i / 8) * 8;
+      samples = image.slice(index, index + 8);
+      updateExtendedCosineGraph(wave3, ctx3, samples);
+    });
+  })();
+</script>
+
+<p>Look carefully at the pattern created when the waves derived from the DCT are extended to the left and right. Is it simply repeating the same pattern every eight time units? Or...what?</p>
+
+<div class="reveal">
+<p>Every eight time units, the pattern is mirrored left to right. It appears left to right, then right to left, then left to right, and so on. The effect is such that it actually repeats every 16 time units, not every eight.</p>
+
+<p>One of the secrets of the DCT, revealed! The DCT is equivalent to taking our eight samples, concatenating them with the same eight samples (reversed), and doing a discrete Fourier transform on that concatenation. No wonder the frequencies of the resulting sinusoids increment in 0.5F steps; our "Fourier transform" is working on twice as many samples.</p>
+
+<p>Of course, the DCT is much faster to compute than a DFT on twice as many samples.</p>
+</div>
+
+<p>This is part of why the DCT is useful for image compression. When an image is broken down into blocks of pixels, the color of the left edge of a block will often be different from the right edge, and likewise for the top and bottom edges. If we used a discrete Fourier transform on those color samples, the discontinuity between the colors of opposing edges would tend to produce strong high-frequency component waves. But since the DCT, in effect, buts the block up with a mirror image of itself on each side, that discontinuity doesn't exist, and the high-frequency components will usually be much weaker.</p>
+
 <hr id="why-useful">
 
 <p>I still haven't told you why the DCT is useful for image compression. First, understand that not all the information contained in an image is equally important or noticeable to a human viewer. It happens that converting color samples to the frequency domain concentrates the information which is most detectable by our visual system in the coefficients at the <i>top-left</i> of the DCT matrix. Conversely, the information which is least perceptible to our visual system is concentrated in the coefficients at the bottom-right.</p>
 
-<p>In this way, the DCT sets everything up for subsequent stages of compression to work their fullest effect. First, <b>quantization</b>. This stage throws away part of the data in the less-significant bits of the DCT coefficients. Since we know that the values of the coefficients towards the bottom-right have less of an effect on what we see, those can be heavily quantized, while retaining more bits of the coefficients toward the top-left. That means we can discard a significant amount of data with little effect on visual quality.</p>
+<p>In this way, the DCT sets things up for subsequent stages of compression to work their fullest effect. First, <b>quantization</b>. This stage throws away part of the data in the less-significant bits of the DCT coefficients. Since we know that the values of the coefficients towards the bottom-right have less of an effect on what we see, those can be heavily quantized, while retaining more bits of the coefficients toward the top-left. That means we can discard a significant amount of data with little effect on visual quality.</p>
 
 <p>The DCT works synergistically with quantization and the <a href="https://en.wikipedia.org/wiki/JPEG#/media/File:JPEG_ZigZag.svg">zig-zag ordering</a> of coefficients to make the final <b>entropy coding</b> stage more effective. This stage applies a lossless compression algorithm to the quantized coefficients.</p>
 
