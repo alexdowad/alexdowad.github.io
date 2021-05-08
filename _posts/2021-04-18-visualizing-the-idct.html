@@ -328,7 +328,7 @@ stylesheets:
       dragY = offsetY;
       for (var i = 0; i < 8; i++) {
         const [x, y] = dotLocations[i];
-        if (x && y && ((x - dragX) ** 2 + (y - dragY) ** 2) < 20) {
+        if (x && y && ((x - dragX) ** 2 + (y - dragY) ** 2) < 40) {
           draggedDot = i;
           return;
         }
@@ -434,7 +434,7 @@ stylesheets:
 
 <p>The heavy, black waveform is the sum of all the colored sinusoids. The height of the 8 black dots represent the brightness values of the 8 pixels in the selected row. Try comparing several different rows to see that in each case, the height of the dots matches the brightness of the pixels.</p>
 
-<p>You might notice that for darker pixel values, the dots appear below the 'zero line', while for brighter pixels, they appear above it. This is because we subtracted 128 from each brightness value before converting to a waveform, so the range of possible values (0-255) would be centered on the zero line. (This is also done when an image is stored in JPEG format.)</p>
+<p>You might notice that for darker pixel values, the dots appear below the 'zero line', while for brighter pixels, they appear above it. This is because we subtracted 128 from each brightness value before converting to a waveform, so the range of possible values (0-255) would be centered on the zero line. This is also done when an image is stored in JPEG format.</p>
 
 <p>You might have also noticed that one of the component waves doesn't look like a sinusoid; it's the red one. It is just a flat line. That is the <b>zero frequency</b> component; it represents the <b>average</b> of the 8 values. It shifts the black waveform up or down to just the right height for it to hit all 8 target points.</p>
 
@@ -564,7 +564,7 @@ stylesheets:
 
 <p>Do you want to go back and give it a try? Either way, whenever you are ready, click to reveal two major differences:</p>
 
-<p class="reveal">The component waves found by the Fourier transform are <i>integral multiples</i> of the overall period of repetition; i.e. 0, 1F, 2F, 3F, and so on. Those found by the DCT are multiples of <i>half</i> the period of repetition: 0, 0.5F, 1F, 1.5F, 2F, 2.5F, etc.</p>
+<p class="reveal">The frequencies of the component waves found by the Fourier transform are <i>integral multiples</i> of the overall period of repetition; i.e. 0, 1F, 2F, 3F, and so on. Those found by the DCT are multiples of <i>half</i> the period of repetition: 0, 0.5F, 1F, 1.5F, 2F, 2.5F, etc.</p>
 
 <p class="reveal">The component waves found by the Fourier transform often have varying phase shifts (they have to, otherwise it wouldn't be possible to match the input values). Those found by the DCT all have the same phase. Look at the graphs above and you will see this clearly.</p>
 
