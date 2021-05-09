@@ -136,11 +136,11 @@ stylesheets:
   function discreteCosTransform1D(values) {
     const coeffs = [];
     for (var u = 0; u < 8; u++) {
-      const correctionFactor = (u === 0) ? (1 / Math.sqrt(8)) : (1 / 2);
+      const correctionFactor = (u === 0) ? Math.sqrt(8) : 2;
       var sum = 0;
       for (var x = 0; x < 8; x++)
         sum += values[x] * Math.cos(Math.PI * u * ((2 * x) + 1) / 16);
-      coeffs.push(correctionFactor * sum);
+      coeffs.push(sum / correctionFactor);
     }
     return coeffs;
   }
@@ -291,7 +291,7 @@ stylesheets:
      * in the available space */
     const coeffs = discreteCosTransform1D(shifted).map((c) => c / 420);
     /* The IDCT applies a correction factor of 1/sqrt(2) for u=0; do the same */
-    coeffs[0] *= 1 / Math.sqrt(2);
+    coeffs[0] /= Math.sqrt(2);
     /* Scaling factor for distance of target dots from zero line
      * This must be 1/2 the scaling factor for the wave amplitudes for the waveform
      * and dots to line up */
@@ -1355,7 +1355,7 @@ for (var <span class="x">x</span> = 0; <span class="x">x</span> < 8; <span class
   function updateExtendedCosineGraph(canvas, ctx, samples) {
     var shifted = samples.map((s) => s - 128);
     const coeffs = discreteCosTransform1D(shifted).map((c) => c / 420);
-    coeffs[0] *= 1 / Math.sqrt(2);
+    coeffs[0] /= Math.sqrt(2);
     shifted = shifted.map((s) => s / 210);
     drawExtendedCosineGraph(canvas, ctx, shifted, coeffs);
   }
