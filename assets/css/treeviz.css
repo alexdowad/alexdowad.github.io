@@ -1,0 +1,17 @@
+.tree {
+  position: relative;
+}
+.tree svg {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  pointer-events: none;
+}
+.tree svg circle {
+  fill: #f13d2c;
+}
+.tree svg line {
+  stroke: #444;
+}

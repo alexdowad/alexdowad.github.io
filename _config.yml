@@ -11,6 +11,8 @@ lang: "en"
 excerpt_separator: "\n\n\n"
 date_format: "%B %d, %Y"
 
+highlighter: rouge
+
 # Layout
 
 sidebar: false               # show a sidebar instead of the usual header

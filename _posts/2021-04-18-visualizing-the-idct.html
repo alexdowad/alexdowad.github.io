@@ -965,7 +965,7 @@ stylesheets:
 
 <p>Do you see how the 64 components in the two-dimensional case correspond to the 8 components in the one-dimensional case? Look again at the waveform for coefficient <i>(0, 0)</i>, in the top-left corner. This one is very important, since it gives the average value of all 64 color samples in a block. It is called the <b>DC coefficient</b>. The other 63 coefficients represent all the deviations from the average and are called the <b>AC coefficients</b>.</p>
 
-<p>Now you are ready to see the Inverse Discrete Cosine Transform at work. Click on each of the sample images below to see its DCT coefficients. Click on any coefficient to disable it and see what the image looks like with it removed; or Control-click to enable only a single coefficient and see its contribution to the image.</p>
+<p id='idctdemo'>Now you are ready to see the Inverse Discrete Cosine Transform at work. Click on each of the sample images below to see its DCT coefficients. Click on any coefficient to disable it and see what the image looks like with it removed; or Control-click to enable only a single coefficient and see its contribution to the image.</p>
 
 <div style="margin: auto">
   <div class="pic-container smallpic">
@@ -1408,7 +1408,7 @@ for (var <span class="x">x</span> = 0; <span class="x">x</span> < 8; <span class
 
 <p>The other popular compressed image formats are PNG and GIF. Neither of these transform samples into the frequency domain.</p>
 
-<p>The next post in this series will explore Huffman coding, a lossless compression algorithm which is another key ingredient of JPEG.</p>
+<p>The <a href='/huffman-coding'>next post in this series</a> will explore Huffman coding, a lossless compression algorithm which is another key ingredient of JPEG.</p>
 
 <script>
   'use strict';

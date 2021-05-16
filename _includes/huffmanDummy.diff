@@ -1,0 +1,27 @@
+@@ -7,7 +7,9 @@
+ }
+ 
+ function symbols(histogram) {
+-  return Array.from(histogram).map(([char, count]) => ({ value: char, weight: count }));
++  const sym = Array.from(histogram).map(([char, count]) => ({ value: char, weight: count }));
++  sym.push({ value: "🃏", weight: 0, dummy: true });
++  return sym;
+ }
+ 
+ function huffmanTree(symbols) {
+@@ -16,8 +18,13 @@
+     heap.insert(symbol);
+ 
+   while (heap.length > 1) {
+-    const a = heap.pop(), b = heap.pop();
+-    heap.insert({ value: [a, b], weight: a.weight + b.weight });
++    let a = heap.pop(), b = heap.pop();
++    if (a.dummy) {
++      /* Dummy must always be on the right-hand side */
++      let temp = a; a = b; b = temp;
++    }
++    const parent = { value: [a, b], weight: a.weight + b.weight, dummy: a.dummy || b.dummy };
++    heap.insert(parent);
+   }
+ 
+   return heap.pop();

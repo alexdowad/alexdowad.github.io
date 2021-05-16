@@ -1,0 +1,497 @@
+---
+layout: post
+title:  "JPEG Series, Part II: Huffman Coding"
+date:   2021-05-16
+categories:
+  - jpeg
+  - graphics
+stylesheets:
+  - huffman.css
+  - treeviz.css
+---
+
+<p>The <a href='/visualizing-the-idct/'>previous article in this series</a> explored how JPEG compression converts pixel values to DCT coefficients. A later stage of the compression process uses either a method called "Huffman coding" or another called "arithmetic coding" to store those coefficients in a compact manner. The Huffman coding algorithm is very simple, but powerful and widely used. If you've never learned how it works, I promise this will be interesting.</p>
+
+<hr>
+
+<p>You have some data to compress. Your data can be viewed as a sequence of values; perhaps Unicode codepoints, pixel color samples, audio amplitude samples, or something comparable. In the context of Huffman coding, each of these values is called a "symbol".</p>
+
+<p>We are going to encode each symbol using a unique, variable-length string of bits. For example, if each symbol is a letter, the letter "a" could be "10111", "b" could be "00011", and so on. We can pick any series of bits we like to represent each symbol, with the restriction that after all the symbols are converted to bitstrings, and all those little bitstrings are smashed together, it must be possible to figure out what the original sequence of symbols was.</p>
+
+<p>That means the bitstrings for each symbol must be <b>prefix-free</b>; none of them can be a prefix of another. Example of a <i>non</i>-prefix-free code: say we choose "1100" to represent the letter "a", "11" to represent "b", and "00" for "c". When decoding text, we find "1100" somewhere. How are we supposed to know whether that was originally a letter "a", or the two letters "bc"? It's impossible to tell, precisely because "11" is a prefix of "1100". Fortunately, Huffman codes are <i>always</i> prefix-free.</p>
+
+<p>Let's encode this sentence with such a code. Click the button below, and the computer will generate a random prefix-free code. Try clicking a number of times and see what the smallest total number of bits required to encode the sentence appears to be.</p>
+
+<div class='container'>
+  <div class='stiff'>
+    <table id='code0' class='codetbl fillparent'><tbody></tbody></table>
+  </div>
+  <div id='encoded0' class='encoded stretchy'></div>
+</div>
+<a id='genrand0' class='button'>Generate Random Code</a>
+<script>
+  'use strict';
+
+  {% include minheap.js %}
+
+  {% include huffman.js %}
+
+  function shuffle(array) {
+    let index = array.length;
+    while (index > 0) {
+      const randIndex = Math.floor(Math.random() * index--);
+      const temp = array[index];
+      array[index] = array[randIndex];
+      array[randIndex] = temp;
+    }
+    return array;
+  }
+
+  function randomTree(symbols) {
+    const array = Array.from(symbols);
+
+    while (array.length > 1) {
+      shuffle(array);
+      const a = array.pop(), b = array.pop();
+      array.push({ value: [a, b], weight: a.weight + b.weight });
+    }
+
+    return array[0];
+  }
+
+  function dictionary(tree, map = new Map(), prefix = '') {
+    if (tree.value instanceof Array) {
+      dictionary(tree.value[0], map, prefix + '0');
+      dictionary(tree.value[1], map, prefix + '1');
+    } else {
+      map.set(tree.value, prefix);
+    }
+    return map;
+  }
+
+  function randomPrefixFreeCode(string) {
+    const hist = histogram(string),
+          sym  = symbols(hist),
+          tree = randomTree(sym),
+          dict = dictionary(tree);
+    return {
+      string: string,
+      histogram: hist,
+      symbols: sym,
+      tree: tree,
+      dictionary: dict,
+      bitLength: sym.reduce((sum,sym) => sum + (sym.weight * dict.get(sym.value).length), 0)
+    };
+  }
+
+  function addTableRow(tbody, values) {
+    const tr = document.createElement('tr');
+    for (const value of values) {
+      const td = document.createElement('td');
+      td.innerText = value;
+      tr.appendChild(td);
+    }
+    tbody.appendChild(tr);
+  }
+
+  function showCodingTableWithLength(code, table, orderBy) {
+    table.innerHTML = '';
+    const tbody = table.tBodies[0] || table.createTBody();
+
+    for (const sym of Array.from(code.symbols).sort(orderBy)) {
+      const bitstring = code.dictionary.get(sym.value);
+      const displayValue = (sym.value === ' ') ? '_' : sym.value;
+      addTableRow(tbody, [displayValue, bitstring, `${bitstring.length} bits × ${sym.weight} occurrences = ${bitstring.length * sym.weight} bits`]);
+    }
+    addTableRow(tbody, ['', '', `Total encoded bit length: ${code.bitLength}`]);
+  }
+
+  function displayCodedSymbol(char, dict) {
+    const elem = document.createElement('span');
+    elem.classList.add('coded');
+    elem.innerText = (char === ' ' ? '_' : char) + "\n" + dict.get(char);
+    return elem;
+  }
+
+  function showCodedText(container, text, dictionary) {
+    container.textContent = '';
+    for (var char of text) {
+      container.appendChild(displayCodedSymbol(char, dictionary));
+    }
+  }
+
+  function comparator(keyFn) {
+    return function(a, b) {
+      const keyA = keyFn(a), keyB = keyFn(b);
+      if (keyA > keyB)
+        return 1;
+      else if (keyA < keyB)
+        return -1;
+      else
+        return 0;
+    }
+  }
+
+  var alphabeticOrder = comparator((sym) => sym.value);
+
+  function $id(id) {
+    return document.getElementById(id);
+  }
+
+  const sentence = "Let's encode this sentence with such a code";
+
+  $id('genrand0').addEventListener('click', () => {
+    const code = randomPrefixFreeCode(sentence);
+    showCodingTableWithLength(code, $id('code0'), alphabeticOrder);
+    showCodedText($id('encoded0'), sentence, code.dictionary);
+  });
+  $id('genrand0').click();
+</script>
+
+<p>Obviously, the number of bits required to encode a sequence can vary wildly depending on the chosen code. Can you see <i>why</i> some prefix-free codes are more efficient than others? What is the key difference between an efficient code and an inefficient one? (Click to reveal.)</p>
+
+<div class='reveal'>
+<p>Efficient codes use the <i>shortest</i> bitstrings for the <i>most common</i> symbols.</p>
+<p>At the same time, since the code must be prefix-free, if we use a very short bitstring such as "0" for a common symbol, that means "00", "01", "000", "001", and so on will all become unavailable. So we need to strike a balance. While we want to use short bitstrings for common symbols, we don't want to be forced to use excessively long bitstrings for less common symbols.</p>
+</div>
+
+<p>Out of the vast number of prefix-free codes which <i>could</i> be used, we want to find an <b>optimal</b> one; one which will encode our particular data in the smallest number of bits. (There will always be many optimal codes for any sequence, but we just need to find one of them.) At first, it might appear that we need to try millions of possible codes to be sure that we have an optimal one. Fortunately, that is not the case. Just count how many times each symbol appears in the input data, and in an almost trivially simple way, you <i>can</i> find an optimal prefix-free code. It will be easy, and fun!</p>
+
+<p>I could tell you the algorithm right now, but it will be so much more enjoyable to discover it yourself. So I'll take this slow, and reason towards a solution step by deliberate step. If at any point you catch the scent of the solution, stop and think it out before continuing.</p>
+
+<p>The first step is to represent a prefix-free code as a <b>binary tree</b>. Have a look:</p>
+
+<div class='container'>
+  <div class='stiff'>
+    <table id='code1' class='codetbl fillparent'><tbody></tbody></table>
+  </div>
+  <div id='tree0' class='tree stiff' style='flex-basis: 100%'></div>
+</div>
+<a id='genrand1' class='button'>Generate Random Code</a>
+<script type='module'>
+  'use strict';
+
+  import { renderTree } from '/assets/js/treeviz.js';
+
+  function showCodingTable(code, table, orderBy) {
+    table.innerHTML = '';
+    const tbody = table.tBodies[0] || table.createTBody();
+
+    for (const sym of Array.from(code.symbols).sort(orderBy)) {
+      const bitstring = code.dictionary.get(sym.value);
+      const displayValue = (sym.value === ' ') ? '_' : sym.value;
+      addTableRow(tbody, [displayValue, bitstring]);
+    }
+  }
+
+  function showCode1(code, table, treeDiv) {
+    showCodingTable(code, table, alphabeticOrder);
+    const svg = renderTree(code.tree, { width: 700, height: 450, nodeRadius: 50, nodeSpacing: 150, labelLines: true });
+    treeDiv.innerHTML = '';
+    treeDiv.appendChild(svg);
+  }
+
+  $id('genrand1').addEventListener('click', () => {
+    showCode1(randomPrefixFreeCode(sentence), $id('code1'), $id('tree0'));
+  });
+  $id('genrand1').click();
+</script>
+
+<p>Please make sure that you clearly see the correspondence between coding tables and binary trees before continuing.</p>
+
+<p>We can see that the number of bits used to encode each symbol equals the number of links between its tree node and the root node, also called the "depth" of the node. Leaf nodes which are closer to the root (smaller depth) have shorter bitstrings.</p>
+
+<p>We will add a <b>weight</b> to each leaf node, which is simply the number of times its symbol appears in the input data:</p>
+
+<div style='border: 1px solid #aaa; --ratio:70/45'>
+  <div id='tree1' class='tree' style='text-align: center'></div>
+</div>
+<a id='genrand2' class='button'>Generate Random Code</a>
+<script type='module'>
+  'use strict';
+
+  import { renderTree } from '/assets/js/treeviz.js';
+
+  $id('genrand2').addEventListener('click', () => {
+    const code = randomPrefixFreeCode(sentence);
+    const svg = renderTree(code.tree, { width: 700, height: 450, nodeRadius: 50, nodeSpacing: 150, showWeight: true });
+    const treeDiv = $id('tree1');
+    const textNode = document.createElement('h3');
+    textNode.style.marginTop = '0.5em';
+    textNode.innerText = 'Characters from: "' + sentence + '"';
+    treeDiv.innerHTML = '';
+    treeDiv.appendChild(textNode);
+    treeDiv.appendChild(svg);
+  });
+  $id('genrand2').click();
+</script>
+
+<p>Now the total length in bits of the compressed output will equal <b>weight times depth</b>, summed over all the leaf nodes.</p>
+
+<p>So now our goal is to find a binary tree which minimizes the sum of weight times depth. We don't really have an idea how to do that, though. At least we do know what the leaf nodes of the tree should be:</p>
+
+<div style='border: 1px solid #aaa; --ratio:70/15'>
+  <div id='tree2' class='tree'></div>
+</div>
+<script type='module'>
+  'use strict';
+
+  import { renderTrees } from '/assets/js/treeviz.js';
+
+  /* Just draw leaf nodes for the tree with the characters in `sentence` */
+  $id('tree2').appendChild(renderTrees(symbols(histogram(sentence)), { width: 700, height: 150, nodeRadius: 10, nodeSpacing: 25, showWeight: true }));
+</script>
+
+<p>How are we going to find the right structure for the internal nodes? Well, we could try to do it top-down, meaning we figure out what child nodes the root node should have, then the nodes below those, and so on. Or we could work bottom-up, meaning we figure out which leaf nodes should become children of the same parent node, then find which parent nodes should be children of the same "grandparent" node, until the whole tree is joined together. A third option would be to work both up and down from the middle, but that is just as hopeless as it sounds. These animations may help you understand "top-down" and "bottom-up" tree construction:</p>
+
+<div style='--ratio:160/45'>
+  <div class='container'>
+    <div id='animation0' class='tree' style='flex-basis: 45%; text-align: center; border-right: 1px solid #aaa'>
+      <h3 style='margin-top: 0.5em'>Bottom-up</h3>
+    </div>
+    <div id='animation1' class='tree' style='flex-basis: 55%; text-align: center'>
+      <h3 style='margin-top: 0.5em'>Top-down</h3>
+    </div>
+  </div>
+</div>
+<script type='module'>
+  'use strict';
+
+  import { animateRandomBottomUpTree, animateRandomTopDownTree } from '/assets/js/treeviz.js';
+
+  const sym = symbols(histogram(sentence)).slice(0, 6);
+  const animation0 = animateRandomBottomUpTree(sym, { width: 720, height: 450, nodeRadius: 26, nodeSpacing: 65 });
+  $id('animation0').appendChild(animation0);
+  const animation1 = animateRandomTopDownTree(sym, { width: 880, height: 450, nodeRadius: 26, nodeSpacing: 65 });
+  $id('animation1').appendChild(animation1);
+</script>
+
+<p>To build an optimal tree top-down, we would need a way to partition the symbols into two subsets, such that the total weights of each subset are as close as possible to 50%-50%. That might be tricky. On the other hand, if we can come up a simple criterion to identify two leaf nodes which should be siblings in the tree, we might be able to apply the same criterion repeatedly to build an optimal tree bottom-up. That sounds more promising.</p>
+
+<p>Before we consider that further, take note of an important fact. <i>How many</i> internal nodes, including the root, does it take to connect <i>N</i> leaf nodes together into a binary tree? Watch the above animations again and try to figure it out:</p>
+
+<p class="reveal">N - 1.</p>
+
+Good. Another one: When building a tree bottom-up, every time we pick two subtrees and join them together as children of a new internal node, what happens to the <b>depth</b> of all the leaves in the combined subtree?
+
+<p class="reveal">The depth of all the leaf nodes increases by 1.</p>
+
+<p>Remember that the depth of each leaf node equals the number of bits required to encode the corresponding symbol. So every time we join two subtrees, we are in a sense "lengthening" the bitstrings for all the symbols in the new subtree. Since we want the most common symbols to have the shortest bitstrings (equivalent: we want their nodes to be closest to the root), they should be the <i>last</i> ones to be joined into the tree.</p>
+
+<p>With that in mind, can you now see what the first step in building an optimal tree bottom-up should be?</p>
+
+<p class="reveal">Join the two lowest-weighted leaf nodes together into a subtree.</p>
+
+<p>Yes! Just like this:</p>
+
+<div style='border: 1px solid #aaa; --ratio:70/12'>
+  <div id='animation2' class='tree'></div>
+</div>
+<script type='module'>
+  'use strict';
+
+  import { animateOptimalTree } from '/assets/js/treeviz.js';
+
+  /* Just animate the first step, where the two lowest weighted nodes are joined together */
+  $id('animation2').appendChild(animateOptimalTree(symbols(histogram(sentence)), { width: 700, height: 120, nodeRadius: 10, nodeSpacing: 25, showWeight: true }, 2));
+</script>
+
+<hr>
+
+<p>Just another small conceptual leap, and the complete solution will be ours. Here's what we need to figure out: Just now, we took the two lowest-weighted leaf nodes and joined them together. But how should we "weight" the resulting subtree? How will we know when and where to join it into a bigger subtree? More concretely: for the second step, we could either take our new 3-node subtree, and use it as one child of a new 5-node subtree, or we could pick two of the remaining single nodes, and join them into another 3-node subtree. How do we decide which choice is better?</p>
+
+<p style="text-align: center">.</p>
+
+<p style="text-align: center">.</p>
+
+<p style="text-align: center">.</p>
+
+<p>Think about it this way. When we attach a single node into a subtree, the bitstring representation for its symbol is being "lengthened" by one bit. In a sense, it's like the total bit length of the final encoded message is being increased by the weight of the node.</p>
+
+<p>When we attach a subtree into a bigger subtree, the same thing happens to <i>all</i> the leaf nodes in the subtree. <i>All</i> of their bitstrings are growing by one bit, so the final encoded message size is growing by the sum of their weights.</p>
+
+<p>That was a giveaway if there ever was one. So answer now, how should we weight subtrees which contain multiple leaf nodes?</p>
+
+<p class="reveal">The weight of a subtree should be the sum of all its leaves combined.</p>
+
+<p>And then what is our algorithm for building an optimal tree bottom-up?</p>
+
+<p class="reveal">Start with a worklist of the bare leaf nodes. Keep picking the two lowest-weighted subtrees (where a single node also counts as a "subtree") from the worklist, join them together, then put the new, bigger subtree back into the worklist. When only one item remains in the worklist, it is the completed tree.</p>
+
+<p>Type any text in the below entry field, and I'll animate the process for you:</p>
+
+<div style='border: 1px solid #aaa; --ratio:80/35'>
+  <div id='animation3' class='tree'></div>
+</div>
+<input type='text' id='text0' style='width: 100%; box-sizing: border-box;' value='Type something here' />
+<script type='module'>
+  'use strict';
+
+  import { animateOptimalTree } from '/assets/js/treeviz.js';
+
+  function showOptimalCode() {
+    const text = $id('text0').value;
+    const sym = symbols(histogram(text));
+    sym.sort((a, b) => a.weight < b.weight ? -1 : 1);
+    const animation3 = animateOptimalTree(sym, { width: 800, height: 350, nodeRadius: 12, nodeSpacing: 30, showWeight: true });
+    $id('animation3').innerHTML = '';
+    $id('animation3').appendChild(animation3);
+  }
+
+  $id('text0').addEventListener('input', showOptimalCode);
+  showOptimalCode();
+</script>
+
+<p>Yes, that tree represents an <b>optimal</b> prefix-free code!</p>
+
+<hr>
+
+<p>That can't be hard to code, can it? (It's not.) One thing, though: Since the symbol set might be large, we need a data structure which allows quick retrieval of the two lowest-weighted subtrees at each step. A <a href="https://en.wikipedia.org/wiki/Binary_heap">minheap</a> fits the bill perfectly. Here's an minimal implementation using JavaScript Arrays:</p>
+
+{% highlight javascript %}
+{% include minheap.js %}
+{% endhighlight %}
+
+<p>It would be fun to animate the minheap operations and show you how they work, but that would have to be a different article.</p>
+
+<p>The rest of the code to build Huffman trees is almost anticlimactic:</p>
+
+{% highlight javascript %}
+{% include huffman.js %}
+{% endhighlight %}
+
+<h2>Modifying the Basic Algorithm for JPEG</h2>
+
+<p>The Huffman codes generated above have <b>two</b> important differences from those used to compress pixel data in JPEG files.</p>
+
+<p><b>Difference #1:</b> JPEG Huffman tables never use bitstrings which are composed of only 1's. "111" is out. "1111" is forbidden. And you can just forget about "111111".</p>
+
+<p><i>BUT WHY?</i> Because while sections of Huffman-coded data in a JPEG file must always occupy a whole number of 8-bit bytes, all those variable-length bitstrings will not necessarily add up to a multiple of 8 bits. If there are some extra bits left to fill in the last byte, "1" bits are used as padding. If bitstrings composed of only 1's were used, the padding in the last byte could be mistakenly decoded to an extraneous trailing symbol. By avoiding such bitstrings, it is always possible to recognize the padding.</p>
+
+<p>How can we modify our algorithm to account for that? Can you think of an idea?</p>
+
+<div class="reveal"><p>Here's one solution: Include a "dummy" symbol when building the tree. The dummy symbol should have the lowest possible weight, so it does not uselessly occupy a desirable position in the tree (meaning a short bitstring). When subtrees are joined, we must make sure any subtree containing the dummy is always used as the <i>right</i> child. That guarantees that the dummy will end up at the far right of the tree, and will have a bitstring consisting of all 1's.</p>
+<p>Since the generated code is prefix-free, we can be sure no other node will get a bitstring with only 1's.</p>
+<p>After the entire tree is completed, we can delete the dummy node.</p></div>
+
+<p>That just takes a few more lines of code:</p>
+
+{% highlight diff %}
+{% include huffmanDummy.diff %}
+{% endhighlight %}
+
+<p>This is optimal tree construction with a dummy node:</p>
+
+<div id='animation4' class='tree' style='border: 1px solid #aaa; --ratio:80/35'></div>
+<script type='module'>
+  'use strict';
+
+  import { animateDummyTree } from '/assets/js/treeviz.js';
+
+  (function() {
+    {% include huffmanDummy.js %}
+
+    $id('animation4').appendChild(animateDummyTree(symbols(histogram(sentence)), { width: 800, height: 350, nodeRadius: 11, nodeSpacing: 28, showWeight: true }));
+  })();
+</script>
+
+<p><b>Difference #2:</b> JPEG Huffman codes are always <b>canonical</b>.</p>
+
+<p>In a <a href='https://en.wikipedia.org/wiki/Canonical_Huffman_code'>canonical Huffman code</a>, when the bitstrings are read as binary numbers, shorter bitstrings are always smaller numbers. For example, such a code could not use both "000" and "10", since the former bitstring is longer, but is a smaller binary number. Further, when all the bitstrings used in the code are sorted by their numeric value, each successive bitstring increments by the smallest amount possible while remaining prefix-free. Here's an example, courtesy of Wikipedia:</p>
+
+<table>
+  <tr><td>0</td></tr>
+  <tr><td>10</td></tr>
+  <tr><td>110</td></tr>
+  <tr><td>111</td></tr>
+</table>
+
+<p>Interpreted as numbers, those are zero, two, six, and seven. Why wasn't the second bitstring "01", or one? Because then the first would have been its prefix. Likewise, if the third was "011" (three), "100" (four), or "101" (five), in each case one of the first two would have been a prefix. For the fourth, incrementing by one to "111" didn't create a prefix, so "111" it is. (Hopefully that example gives you the idea; hit me up if you need more!)</p>
+
+<p><i>But WHY does JPEG use canonical codes?</i> Because they can be represented in a very compact way<sup><a href='#footnote1' id='fnref1'>[1]</a></sup>, which makes our JPEG files smaller and faster to decode. (Yes, JPEG files must contain not just Huffman-encoded pixel data but also the coding tables which were used.)</p>
+
+<p>So given a symbol set and frequencies, how can we generate a canonical Huffman code? Unfortunately, there is no straightforward way to do it directly by building a binary tree. But we can use our existing method to generate a non-canonical (but optimal) code, and then <i>rewrite the bitstrings to make them canonical</i> while maintaining their length. Remember, it's the length of the bitstrings assigned to each symbol which makes a prefix-free code optimal. The exact bitstrings which are used don't matter; we can shuffle them around and assign different ones with the same length.</p>
+
+<p>The algorithm suggested in the JPEG specification (Appendix K) gets a step ahead of the game by not explicitly building a binary tree with left and right child pointers. It just tracks what the depth of each leaf node <i>would have been</i> had they actually been built into a binary tree. So these depths can be incremented whenever two "subtrees" are "joined together", the leaf nodes for each subtree are kept on a linked list. "Subtrees" are "joined" by concatenating their linked lists. (Libjpeg uses this trick when saving a Huffman-encoded JPEG file.<sup><a href='#footnote2' id='fnref2'>[2]</a></sup>)</p>
+
+<p>Regardless of whether you actually build a binary tree or use the trick from Appendix K, once you know what the lengths of all the bitstrings in an optimal code should be, generating a canonical code is as simple as this:</p>
+
+{% highlight javascript %}
+{% include canonical.js %}
+{% endhighlight %}
+
+<p>Here is an example. Note that we are not using a dummy, so bitstrings with all 1 bits may be included.</p>
+
+<table id='code2'>
+  <thead>
+    <tr><th>Random Code</th><th>Sorted by Bitstring Length</th><th>Canonicalized</th></tr>
+  </thead>
+  <tbody></tbody>
+</table>
+<script>
+  'use strict';
+
+  {% include canonical.js %}
+
+  function showCanonicalCodeTable(table) {
+    const code = randomPrefixFreeCode(sentence);
+    const col1 = Array.from(code.symbols).sort(alphabeticOrder).map((sym) => sym.value);
+    const bitlength = (sym) => code.dictionary.get(sym.value).length;
+    const col2 = Array.from(code.symbols).sort(comparator(bitlength)).map((sym) => sym.value);
+    const col3 = makeCanonical(code.symbols.map(bitlength).sort());
+    const display = function(str) { return str === ' ' ? '_' : str; };
+
+    const tbody = table.tBodies[0];
+    for (var i = 0; i < col1.length; i++) {
+      addTableRow(tbody, [
+        `${display(col1[i])} ${code.dictionary.get(col1[i])}`,
+        `${display(col2[i])} ${code.dictionary.get(col2[i])}`,
+        `${display(col2[i])} ${col3[i]}`
+      ]);
+    }
+  }
+
+  showCanonicalCodeTable($id('code2'));
+</script>
+
+<h2>Huffman Coding in Practice</h2>
+
+<p>All through this article, ASCII characters have been used as Huffman symbols. But in reality, if you want to compress English text, Huffman coding with each character treated as a separate symbol would be a terrible way to do it. Note two big weaknesses with that approach:</p>
+
+<ul>
+  <li>Huffman coding is oblivious to patterns which involve the <i>order</i> of symbols. It only cares about their frequency, not their order. But real-life data usually has patterns related to the order of values, which can be exploited to achieve better compression.</li>
+  <li>Huffman coding always uses at least one bit for each symbol, and usually much more. So in the "ideal" case of a text file which just contains a single ASCII character repeated thousands of times, Huffman coding with one symbol per letter could only compress it to ⅛ of its original size. 8× compression may sound good, but any reasonable compression method should get far greater gains in that ridiculously easy-to-compress case.</li>
+</ul>
+
+<p>So just what am I saying here? Is Huffman coding a bad algorithm?</p>
+
+<p>Not at all! But it is just one piece of a practical compression method; it's not a complete compression method by itself. And to make Huffman coding work to greatest advantage, it may be necessary to find an alternative data representation which is well-suited to such coding. Just taking the most "natural" or intuitive representation and directly applying Huffman coding to it will probably not work well.</p>
+
+<p>As an example, in JPEG, the values which we want to compress are quantized DCT coefficients <a href='/visualizing-the-idct/'>(see the previous post for details)</a>, which have 8 bits of precision each.<sup><a href='#footnote3' id='fnref3'>[3]</a></sup> We could take the 256 possible coefficient values as 256 Huffman symbols and Huffman-code them directly, but this would be very suboptimal.</p>
+
+<p>In the symbol set which is actually used, each symbol represents either:</p>
+
+<ul>
+  <li>Some specific number of successive zero coefficients (0-15 of them), <i>and</i> the number of significant bits in the following non-zero coefficient.</li>
+  <li>A run of zeroes filling the remainder of a 64-coefficient block.</li>
+</ul>
+
+<p>Note that each symbol only tells us the <i>number</i> of significant bits in the next non-zero coefficient, not what those bits actually are. The actual coefficient value bits are simply inserted into the output data stream uncompressed. This is because the values of non-zero DCT coefficients don't actually repeat very much, so Huffman-coding them wouldn't really help. (See <a href='/visualizing-the-idct#idctdemo'>the demonstration in the previous post</a>. Does it look like the coefficients within an 8-by-8 DCT matrix repeat much?) However, since the Huffman symbols tell us the number of significant bits, high-order zero bits can be discarded, which does help significantly.</p>
+
+<p>JPEG files can use "arithmetic coding" as an alternative to Huffman coding (although this is not common). I dare say arithmetic coding is a more intriguing and fascinating algorithm than Huffman coding. So it will not surprise you that the next article on this blog will focus on arithmetic coding. See you then!</p>
+
+<p id='footnote1' style='font-size: 0.8em; margin-top: 2.5em'>[1] With a canonical code, only the number of bitstrings used of each possible length need to be stored; how many are 1 bit long, how many 2 bits long, how many 3 bits long, and so on. The actual bitstrings can be quickly recovered from that. <a href='#fnref1'>⏎</a></p>
+
+<p id='footnote2' style='font-size: 0.8em'>[2] But interestingly, libjpeg does <i>not</i> use a minheap when generating a Huffman code. Instead, it uses an array of symbol frequencies, and scans the whole array at each step to find the two lowest-weighted subtrees. <a href='#fnref2'>⏎</a></p>
+
+<p id='footnote3' style='font-size: 0.8em'>[3] The JPEG standard actually allows DCT coefficients to be either 8-bit or 12-bit, but 8 bits is almost universally used. <a href='#fnref3'>⏎</a></p>
+
+<script>
+  'use strict';
+
+  function revealText() {
+    this.style.color = '#000';
+    this.removeEventListener('click', revealText);
+  }
+  document.querySelectorAll('.reveal').forEach((el) => el.addEventListener('click', revealText));
+</script>
