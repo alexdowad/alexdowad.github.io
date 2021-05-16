@@ -1404,8 +1404,6 @@ for (var <span class="x">x</span> = 0; <span class="x">x</span> < 8; <span class
 
 <p>Many images will have smaller coefficient values toward the bottom right of the matrix, and after quantization is applied, these may become zeroes. So the <a href="https://en.wikipedia.org/wiki/JPEG#/media/File:JPEG_ZigZag.svg">zig-zag ordering</a> of coefficients will tend to produce runs of zeroes toward the end of each block. Those consecutive zeroes can then be represented using an efficient run-length encoding.</p>
 
-<p>After the DCT and quantization, the remaining non-zero coefficients are also likely to have similar or even repeated values. When many of the values are repeated, entropy coding will become very effective at squeezing the coefficients into fewer bits.</p>
-
 <p>Interestingly, both the <a href="https://en.wikipedia.org/wiki/WebP">WebP</a> and AVIF compressed image formats also transform color samples into the frequency domain. Both can use either the Discrete Cosine Transform or a different transform which serves a similar purpose.</p>
 
 <p>The other popular compressed image formats are PNG and GIF. Neither of these transform samples into the frequency domain.</p>
