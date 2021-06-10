@@ -1,6 +1,6 @@
 ---
 layout: post
-title:  "Visualizing the Inverse Discrete Cosine Transform"
+title:  "JPEG Series, Part I: Visualizing the Inverse Discrete Cosine Transform"
 date:   2021-04-18
 categories:
   - jpeg
@@ -568,7 +568,7 @@ stylesheets:
 
 <p class="reveal">The component waves found by the Fourier transform often have varying phase shifts (they have to, otherwise it wouldn't be possible to match the input values). Those found by the DCT all have the same phase. Look at the graphs above and you will see this clearly.</p>
 
-<p>Other differences which you can't see from the demonstrations:</p>
+<p>Other differences which you can't see from the demonstrations are:</p>
 
 <ul>
 <li>While the computation of the Fourier transform uses complex numbers, the DCT only involves real numbers.</li>
@@ -1263,7 +1263,7 @@ for (var <span class="u">u</span> = 0; <span class="u">u</span> < 8; <span class
   coefficients.push(<span class="Su">coeff</span>);
 }</code></pre></div>
 
-<p>Note that <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><mo stretchy="false">(</mo><mn>2</mn><mi>x</mi><mo>+</mo><mn>1</mn><mo stretchy="false">)</mo><mi>π</mi><mi mathvariant="normal">/</mi><mn>16</mn></mrow><annotation encoding="application/x-tex">(2x + 1)\pi / 16</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height: 1em; vertical-align: -0.25em;"></span><span class="mopen">(</span><span class="mord">2</span><span class="mord mathnormal">x</span><span class="mspace" style="margin-right: 0.222222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right: 0.222222em;"></span></span><span class="base"><span class="strut" style="height: 1em; vertical-align: -0.25em;"></span><span class="mord">1</span><span class="mclose">)</span><span class="mord mathnormal" style="margin-right: 0.03588em;">π</span><span class="mord">/16</span></span></span></span> ranges from just above zero to just below π; that is, half a complete cycle for the cosine function. So when <i>u</i> is one, the component wave only makes half a cycle as <i>x</i> moves from zero to seven. If <i>u</i> is two, then the input to the cosine function increments twice as fast, and a full cycle is made, and so on. Each increment of <i>u</i> increases the frequency of the component wave by 0.5Hz.</p>
+<p>Note that <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><mo stretchy="false">(</mo><mn>2</mn><mi>x</mi><mo>+</mo><mn>1</mn><mo stretchy="false">)</mo><mi>π</mi><mi mathvariant="normal">/</mi><mn>16</mn></mrow><annotation encoding="application/x-tex">(2x + 1)\pi / 16</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height: 1em; vertical-align: -0.25em;"></span><span class="mopen">(</span><span class="mord">2</span><span class="mord mathnormal">x</span><span class="mspace" style="margin-right: 0.222222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right: 0.222222em;"></span></span><span class="base"><span class="strut" style="height: 1em; vertical-align: -0.25em;"></span><span class="mord">1</span><span class="mclose">)</span><span class="mord mathnormal" style="margin-right: 0.03588em;">π</span><span class="mord">/16</span></span></span></span> ranges from just above zero to just below π; that is, half a complete cycle for the cosine function. So when <i>u</i> is one, the component wave only makes half a cycle as <i>x</i> moves from zero to seven. If <i>u</i> is two, then the input to the cosine function increments twice as fast, and a full cycle is made. Each increment of <i>u</i> increases the frequency of the component wave by 0.5Hz.</p>
 
 <p>On the other hand, when <i>u</i> is zero, the cosine always evaluates to one, and we are essentially just summing up the eight pixel values.</p>
 
