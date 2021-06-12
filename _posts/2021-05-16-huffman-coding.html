@@ -247,10 +247,10 @@ stylesheets:
 <div style='--ratio:160/45'>
   <div class='container'>
     <div id='animation0' class='tree' style='flex-basis: 45%; text-align: center; border-right: 1px solid #aaa'>
-      <h3 style='margin-top: 0.5em'>Bottom-up</h3>
+      <h3 style='margin-top: 0.35em'>Bottom-up</h3>
     </div>
     <div id='animation1' class='tree' style='flex-basis: 55%; text-align: center'>
-      <h3 style='margin-top: 0.5em'>Top-down</h3>
+      <h3 style='margin-top: 0.35em'>Top-down</h3>
     </div>
   </div>
 </div>
@@ -459,7 +459,7 @@ Good. Another one: When building a tree bottom-up, every time we pick two subtre
 <p>All through this article, ASCII characters have been used as Huffman symbols. But in reality, if you want to compress English text, Huffman coding with each character treated as a separate symbol would be a terrible way to do it. Note two big weaknesses with that approach:</p>
 
 <ul>
-  <li>Huffman coding is oblivious to patterns which involve the <i>order</i> of symbols. It only cares about their frequency, not their order. But real-life data usually has patterns related to the order of values, which can be exploited to achieve better compression.</li>
+  <li>Huffman coding is oblivious to patterns which involve the <i>order</i> of symbols. It only cares about their frequency. But real-life data usually has patterns related to the order of values, which can be exploited to achieve better compression.</li>
   <li>Huffman coding always uses at least one bit for each symbol, and usually much more. So in the "ideal" case of a text file which just contains a single ASCII character repeated thousands of times, Huffman coding with one symbol per letter could only compress it to ⅛ of its original size. 8× compression may sound good, but any reasonable compression method should get far greater gains in that ridiculously easy-to-compress case.</li>
 </ul>
 
@@ -484,7 +484,7 @@ Good. Another one: When building a tree bottom-up, every time we pick two subtre
 
 <p id='footnote2' style='font-size: 0.8em'>[2] But interestingly, libjpeg does <i>not</i> use a minheap when generating a Huffman code. Instead, it uses an array of symbol frequencies, and scans the whole array at each step to find the two lowest-weighted subtrees. <a href='#fnref2'>⏎</a></p>
 
-<p id='footnote3' style='font-size: 0.8em'>[3] The JPEG standard actually allows DCT coefficients to be either 8-bit or 12-bit, but 8 bits is almost universally used. <a href='#fnref3'>⏎</a></p>
+<p id='footnote3' style='font-size: 0.8em'>[3] The JPEG standard actually allows DCT coefficients to be either 8-bit or 12-bit, but 8 bits is almost universally used. Libjpeg can theoretically handle JPEG files with 12-bit coefficients, but it must be specially configured to do so at compile time, and binary distributions are not generally built in that way. <a href='#fnref3'>⏎</a></p>
 
 <script>
   'use strict';
