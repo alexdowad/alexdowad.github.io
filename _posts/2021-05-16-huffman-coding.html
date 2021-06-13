@@ -254,16 +254,28 @@ stylesheets:
     </div>
   </div>
 </div>
+<a id='genrand3' class='button'>Generate Random Examples</a>
 <script type='module'>
   'use strict';
 
   import { animateRandomBottomUpTree, animateRandomTopDownTree } from '/assets/js/treeviz.js';
 
+  function removeNode(node) {
+    if (node)
+      node.parentNode.removeChild(node);
+  }
+
   const sym = symbols(histogram(sentence)).slice(0, 6);
-  const animation0 = animateRandomBottomUpTree(sym, { width: 720, height: 450, nodeRadius: 26, nodeSpacing: 65 });
-  $id('animation0').appendChild(animation0);
-  const animation1 = animateRandomTopDownTree(sym, { width: 880, height: 450, nodeRadius: 26, nodeSpacing: 65 });
-  $id('animation1').appendChild(animation1);
+
+  $id('genrand3').addEventListener('click', () => {
+    const animation0 = animateRandomBottomUpTree(sym, { width: 720, height: 450, nodeRadius: 26, nodeSpacing: 65 });
+    removeNode($id('animation0').querySelector('svg'));
+    $id('animation0').appendChild(animation0);
+    const animation1 = animateRandomTopDownTree(sym, { width: 880, height: 450, nodeRadius: 26, nodeSpacing: 65 });
+    removeNode($id('animation1').querySelector('svg'));
+    $id('animation1').appendChild(animation1);
+  });
+  $id('genrand3').click();
 </script>
 
 <p>To build an optimal tree top-down, we would need a way to partition the symbols into two subsets, such that the total weights of each subset are as close as possible to 50%-50%. That might be tricky. On the other hand, if we can come up a simple criterion to identify two leaf nodes which should be siblings in the tree, we might be able to apply the same criterion repeatedly to build an optimal tree bottom-up. That sounds more promising.</p>
@@ -428,6 +440,7 @@ Good. Another one: When building a tree bottom-up, every time we pick two subtre
   </thead>
   <tbody></tbody>
 </table>
+<a id='genrand4' class='button'>Generate Random Code</a>
 <script>
   'use strict';
 
@@ -442,6 +455,7 @@ Good. Another one: When building a tree bottom-up, every time we pick two subtre
     const display = function(str) { return str === ' ' ? '_' : str; };
 
     const tbody = table.tBodies[0];
+    tbody.innerHTML = '';
     for (var i = 0; i < col1.length; i++) {
       addTableRow(tbody, [
         `${display(col1[i])} ${code.dictionary.get(col1[i])}`,
@@ -451,6 +465,7 @@ Good. Another one: When building a tree bottom-up, every time we pick two subtre
     }
   }
 
+  $id('genrand4').addEventListener('click', () => showCanonicalCodeTable($id('code2')));
   showCanonicalCodeTable($id('code2'));
 </script>
 
