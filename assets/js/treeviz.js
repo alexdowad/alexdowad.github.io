@@ -295,7 +295,7 @@ function animateTreeConstruction(subtreeSequence, {width, height, nodeRadius, no
       }
 
       if (showWeight && subtree.weight) {
-        const weightNode = addSvgElement(svg, 'text', 'dominant-baseline', 'hanging', 'font-size', nodeRadius, 'dx', nodeRadius);
+        const weightNode = addSvgElement(svg, 'text', 'dominant-baseline', 'hanging', 'font-size', nodeRadius, 'dx', nodeRadius, 'dy', nodeRadius * -0.37);
         weightNode.textContent = subtree.weight;
         animateSvgElement(weightNode, keyframes, 'x', 'y');
       }

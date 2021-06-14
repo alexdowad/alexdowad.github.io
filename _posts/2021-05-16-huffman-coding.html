@@ -330,12 +330,12 @@ Good. Another one: When building a tree bottom-up, every time we pick two subtre
 
 <p class="reveal">Start with a worklist of the bare leaf nodes. Keep picking the two lowest-weighted subtrees (where a single node also counts as a "subtree") from the worklist, join them together, then put the new, bigger subtree back into the worklist. When only one item remains in the worklist, it is the completed tree.</p>
 
-<p>Type any text in the below entry field, and I'll animate the process for you:</p>
+<p>Type some text in the below entry field, and I'll animate the process for you:</p>
 
 <div style='border: 1px solid #aaa; --ratio:80/35'>
   <div id='animation3' class='tree'></div>
 </div>
-<input type='text' id='text0' style='width: 100%; box-sizing: border-box;' value='Type something here' />
+<input type='text' id='text0' style='width: 100%; box-sizing: border-box;' maxlength=32 value='Type something here' />
 <script type='module'>
   'use strict';
 
