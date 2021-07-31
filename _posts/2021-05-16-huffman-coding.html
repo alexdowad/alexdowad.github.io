@@ -324,7 +324,7 @@ Good. Another one: When building a tree bottom-up, every time we pick two subtre
 
 <p>That was a giveaway if there ever was one. So answer now, how should we weight subtrees which contain multiple leaf nodes?</p>
 
-<p class="reveal">The weight of a subtree should be the sum of all its leaves combined.</p>
+<p class="reveal">The weight of a subtree should be the sum of the weights of all its leaves combined.</p>
 
 <p>And then what is our algorithm for building an optimal tree bottom-up?</p>
 
@@ -378,7 +378,7 @@ Good. Another one: When building a tree bottom-up, every time we pick two subtre
 
 <p><b>Difference #1:</b> JPEG Huffman tables never use bitstrings which are composed of only 1's. "111" is out. "1111" is forbidden. And you can just forget about "111111".</p>
 
-<p><i>BUT WHY?</i> Because while sections of Huffman-coded data in a JPEG file must always occupy a whole number of 8-bit bytes, all those variable-length bitstrings will not necessarily add up to a multiple of 8 bits. If there are some extra bits left to fill in the last byte, "1" bits are used as padding. If bitstrings composed of only 1's were used, the padding in the last byte could be mistakenly decoded to an extraneous trailing symbol. By avoiding such bitstrings, it is always possible to recognize the padding.</p>
+<p><i>BUT WHY?</i> Because while sections of Huffman-coded data in a JPEG file must always occupy a whole number of 8-bit bytes, all those variable-length bitstrings will not necessarily add up to a multiple of 8 bits. If there are some extra bits left to fill in the last byte, "1" bits are used as padding. If bitstrings composed of only 1's were used, the padding in the last byte could be mistakenly decoded as an extraneous trailing symbol. By avoiding such bitstrings, it is always possible to recognize the padding.</p>
 
 <p>How can we modify our algorithm to account for that? Can you think of an idea?</p>
 
@@ -420,7 +420,7 @@ Good. Another one: When building a tree bottom-up, every time we pick two subtre
 
 <p>Interpreted as numbers, those are zero, two, six, and seven. Why wasn't the second bitstring "01", or one? Because then the first would have been its prefix. Likewise, if the third was "011" (three), "100" (four), or "101" (five), in each case one of the first two would have been a prefix. For the fourth, incrementing by one to "111" didn't create a prefix, so "111" it is. (Hopefully that example gives you the idea; hit me up if you need more!)</p>
 
-<p><i>But WHY does JPEG use canonical codes?</i> Because they can be represented in a very compact way<sup><a href='#footnote1' id='fnref1'>[1]</a></sup>, which makes our JPEG files smaller and faster to decode. (Yes, JPEG files must contain not just Huffman-encoded pixel data but also the coding tables which were used.)</p>
+<p><i>But WHY does JPEG use canonical codes?</i> Because their coding tables can be represented in a very compact way<sup><a href='#footnote1' id='fnref1'>[1]</a></sup>, which makes our JPEG files smaller and faster to decode. (Yes, JPEG files must contain not just Huffman-encoded pixel data but also the coding tables which were used.)</p>
 
 <p>So given a symbol set and frequencies, how can we generate a canonical Huffman code? Unfortunately, there is no straightforward way to do it directly by building a binary tree. But we can use our existing method to generate a non-canonical (but optimal) code, and then <i>rewrite the bitstrings to make them canonical</i> while maintaining their length. Remember, it's the length of the bitstrings assigned to each symbol which makes a prefix-free code optimal. The exact bitstrings which are used don't matter; we can shuffle them around and assign different ones with the same length.</p>
 
@@ -495,7 +495,7 @@ Good. Another one: When building a tree bottom-up, every time we pick two subtre
 
 <p>JPEG files can use "arithmetic coding" as an alternative to Huffman coding (although this is not common). I dare say arithmetic coding is a more intriguing and fascinating algorithm than Huffman coding. So it will not surprise you that the next article on this blog will focus on arithmetic coding. See you then!</p>
 
-<p id='footnote1' style='font-size: 0.8em; margin-top: 2.5em'>[1] With a canonical code, only the number of bitstrings used of each possible length need to be stored; how many are 1 bit long, how many 2 bits long, how many 3 bits long, and so on. The actual bitstrings can be quickly recovered from that. <a href='#fnref1'>⏎</a></p>
+<p id='footnote1' style='font-size: 0.8em; margin-top: 2.5em'>[1] With a canonical code, only the number of bitstrings used of each possible length needs to be stored; how many are 1 bit long, how many 2 bits long, how many 3 bits long, and so on. The actual bitstrings can be quickly recovered from that. <a href='#fnref1'>⏎</a></p>
 
 <p id='footnote2' style='font-size: 0.8em'>[2] But interestingly, libjpeg does <i>not</i> use a minheap when generating a Huffman code. Instead, it uses an array of symbol frequencies, and scans the whole array at each step to find the two lowest-weighted subtrees. <a href='#fnref2'>⏎</a></p>
 
