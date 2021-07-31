@@ -1267,7 +1267,7 @@ for (var <span class="u">u</span> = 0; <span class="u">u</span> < 8; <span class
 
 <p>On the other hand, when <i>u</i> is zero, the cosine always evaluates to one, and we are essentially just summing up the eight pixel values.</p>
 
-<p>Essentially, coefficient <i>u</i> expresses how well the eight values "fit" a (0.5<i>u</i>)Hz cosine wave. Each value which is positive where the cosine wave is positive (or negative where it is negative) increases the coefficient. Each value which is of opposite sign to the cosine wave at its location on the x-axis decreases the coefficient.</p>
+<p>Essentially, coefficient <i>u</i> expresses how well the eight values "fit" a (0.5<i>u</i>)Hz cosine wave. Each value which is positive where the cosine wave is positive (or negative where it is negative) increases the coefficient. Each value which is of opposite sign to the cosine wave at its location on the x-axis decreases the coefficient. If the coefficient value is very positive, that means the sequence of samples closely fits a cosine wave; or if the coefficient value is very negative, that means the samples are close to the <i>opposite</i> of a cosine wave (that is, a cosine wave shifted by 180 degrees).</p>
 
 <p>The Inverse DCT is very similar. Shall we stick to JavaScript this time?</p>
 
@@ -1392,7 +1392,7 @@ for (var <span class="x">x</span> = 0; <span class="x">x</span> < 8; <span class
 <p>Of course, the DCT is much faster to compute than a DFT on twice as many samples.</p>
 </div>
 
-<p>This is part of why the DCT is useful for image compression. When an image is broken down into blocks of pixels, the color of the left edge of a block will often be different from the right edge, and likewise for the top and bottom edges. If we used a discrete Fourier transform on those color samples, the discontinuity between the colors of opposing edges would tend to produce strong high-frequency component waves. But since the DCT, in effect, buts the block up with a mirror image of itself on each side, that discontinuity doesn't exist, and the high-frequency components will usually be much weaker.</p>
+<p>This is part of why the DCT is useful for image compression. When an image is broken down into blocks of pixels, the color of the left edge of a block will often be different from the right edge, and likewise for the top and bottom edges. If we used a discrete Fourier transform on those color samples, the discontinuity between the colors of opposing edges would tend to produce strong high-frequency component waves. (When breaking a waveform down into sinusoids, any sharp "jumps" result in strong high-frequency components.) But since the DCT, in effect, buts the block up with a mirror image of itself on each side, that discontinuity doesn't exist, and the high-frequency components will usually be much weaker.</p>
 
 <hr id="why-useful">
 
