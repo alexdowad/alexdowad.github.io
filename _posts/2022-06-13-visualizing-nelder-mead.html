@@ -1,0 +1,1247 @@
+---
+layout: post
+title:  "Visualizing Nelder-Mead Optimization"
+date:   2022-06-13
+categories:
+  - optimization
+stylesheets:
+  - nelder.css
+  - katex.css
+---
+
+<p>Recently, I ran across a fantastic article, <a href='https://www.jmeiners.com/why-train-when-you-can-optimize/'>“Why Train When You Can Optimize?”</a>, which introduced me to the Nelder-Mead optimization algorithm. It's a lovely algorithm, and I couldn't wait to create an interactive version. First, though: what does <b>“optimization”</b> mean in this context?</p>
+
+<p>An <b>“optimization”</b> algorithm takes some mathematical function as its input, and tries to find values for the parameters which make the output either as large or as small as possible. If you are like many computer programmers, your first impression might be that you are unlikely to ever use such an algorithm in your own programs. But optimization is a much more general and useful technique than it might seem. The <a href='https://www.jmeiners.com/why-train-when-you-can-optimize/'>article mentioned above</a> gives a great example: a drawing program which detects when the user is trying to draw a straight line and replaces their jittery line with a perfectly straight one. <i>(If you know other examples of good uses for optimization outside science and engineering, please let me know!)</i></p>
+
+<p>Obviously, finding inputs for some function which give you the largest or smallest output value can be done without a special algorithm. You could just use brute force: test many inputs and pick the best one. But if the space of possible inputs is large, that could be too slow.</p>
+
+<p>Optimization algorithms typically avoid exhaustively searching the input space by starting at some arbitrary point, then repeatedly searching for a nearby point which is better, until it hits a maximum or minimum and can't find any better point.</p>
+
+<p>Many such algorithms require that you know how to calculate the derivative (slope) of the function at any given point; but Nelder-Mead doesn't need any derivatives, and combined with its general simplicity, this makes it easy to apply.</p>
+
+<p>Now let me show you how Nelder-Mead works. Rather than starting with one test point and iteratively improving it, Nelder-Mead starts with <b><span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height: 0.7667em; vertical-align: -0.0833em;"></span><span class="mord mathnormal" style="margin-right: 0.109em;">N</span><span class="mspace" style="margin-right: 0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right: 0.2222em;"></span></span><span class="base"><span class="strut" style="height: 0.6444em;"></span><span class="mord">1</span></span></span></span></b> test points, when the input space has <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height: 0.6833em;"></span><span class="mord mathnormal" style="margin-right: 0.109em;">N</span></span></span></span> dimensions. (Or, in other words, when there are <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height: 0.6833em;"></span><span class="mord mathnormal" style="margin-right: 0.109em;">N</span></span></span></span> different input variables whose values need to be found.) For example, if your function has two parameters, there will be 3 starting points, which will form a triangle in the 2-dimensional plane of possible inputs:</p>
+
+<div id='example-triangle' class='plot'></div>
+
+<script src='/assets/js/d3-array.js'></script>
+<script src='/assets/js/d3-color.js'></script>
+<script src='/assets/js/d3-interpolate.js'></script>
+<script src='/assets/js/d3-scale.js'></script>
+<script src='/assets/js/d3-contour.js'></script>
+<script src='/assets/js/d3-geo.js'></script>
+<script>
+	'use strict';
+
+	const $id = document.getElementById.bind(document);
+	Element.prototype.$class = Element.prototype.getElementsByClassName;
+	Element.prototype.$class1 = function(cssClass) { return this.$class(cssClass)?.[0]; }
+	Element.prototype.$tag = Element.prototype.getElementsByTagName;
+	Element.prototype.listen = Element.prototype.addEventListener;
+
+	function makeSvgNode(tag, cssClass, attributes = {}) {
+		const node = document.createElementNS("http://www.w3.org/2000/svg", tag);
+		if (cssClass)
+			node.classList.add(cssClass);
+		for (const [key, value] of Object.entries(attributes))
+			node.setAttribute(key, value);
+		return node;
+	}
+
+	function appendSvgNode(parent, tag, cssClass, attributes = {}) {
+		const node = makeSvgNode(tag, cssClass, attributes);
+		parent.appendChild(node);
+		return node;
+	}
+
+	function prependSvgNode(parent, tag, cssClass, attributes = {}) {
+		const node = makeSvgNode(tag, cssClass, attributes);
+		parent.prepend(node);
+		return node;
+	}
+
+	// When working with functions defined over a 2D space, we express all
+	// coordinates in that space as ranging from 0-100 along both axes
+	function Point(x, y) {
+		this.x = x;
+		this.y = y;
+	}
+
+	Point.prototype.midpoint = function(other) {
+		return new Point((this.x + other.x) / 2, (this.y + other.y) / 2);
+	}
+
+	Point.prototype.moveTowards = function(other, factor) {
+		return new Point(
+			this.x + (other.x - this.x) * factor,
+			this.y + (other.y - this.y) * factor);
+	}
+
+	Point.prototype.dist = function(other) {
+		return Math.sqrt((this.x - other.x) ** 2 + (this.y - other.y) ** 2);
+	}
+
+	Point.prototype.eval = function(fn) {
+		return fn(this.x, this.y);
+	}
+
+	// Test functions
+	// All these functions should (1) always be greater than zero, and (2)
+	// they should increase as one moves outside the 0-100 range which we
+	// use for x,y coordinates (so the algorithm doesn't run off outside
+	// the area which we will plot)
+
+	function himmelblauFunction(x, y) {
+		// Map 0→100 range to -5→5
+		x = (x / 10) - 5;
+		y = (y / 10) - 5;
+		const a = x*x + y - 11;
+		const b = x + y*y - 7;
+		return 1 + a*a + b*b;
+	}
+	himmelblauFunction.scale = d3.scalePow().exponent(2);
+	himmelblauFunction.minima = [[80,70], [21.94882, 81.3], [12.206899, 17.16814], [85.84458, 31.51874]];
+
+	function bealeFunction(x, y) {
+		// Map 0→100 range to -5→5
+		x = (x / 10) - 5;
+		y = (y / 10) - 5;
+		const a = (1.5 - x + x*y);
+		const b = (2.25 - x + x*y*y);
+		const c = (2.625 - x + x*y*y*y);
+		return 1 + a*a + b*b + c*c;
+	}
+	bealeFunction.scale = d3.scalePow().exponent(3.8);
+	bealeFunction.minima = [[80, 55]];
+
+	function rosenbrockFunction(x, y) {
+		// Map 0→100 range to -3→3
+		x = (x * 0.06) - 3;
+		y = (y * 0.06) - 3;
+		const a = (1 - x);
+		const b = (y - x*x);
+		return 1 + a*a + 100*b*b;
+	}
+	rosenbrockFunction.scale = d3.scalePow().exponent(3.5);
+	rosenbrockFunction.minima = [[200/3, 200/3]];
+
+	function squaredDistFunction(x, y) {
+		const a = Math.abs(x - 50);
+		const b = Math.abs(y - 50);
+		return 1 + a*a + b*b;
+	}
+	squaredDistFunction.scale = d3.scalePow().exponent(2);
+	squaredDistFunction.minima = [[50, 50]];
+
+	function goldsteinPriceFunction(x, y) {
+		x = (x / 25) - 2;
+		y = (y / 25) - 2;
+		const a = 1 + ((x + y + 1) ** 2) * (19 - 14*x + (3 * x**2) - 14*y + 6*x*y + (3 * y**2));
+		const b = 30 + ((2*x - 3*y) ** 2) * (18 - 32*x + 12*x*x + 48*y - 36*x*y + (27 * y**2));
+		return a * b;
+	}
+	goldsteinPriceFunction.scale = d3.scalePow().exponent(4);
+	goldsteinPriceFunction.minima = [[50, 25]];
+
+	function bukinFunction(x, y) {
+		x = (x / 10) - 15;
+		y = (y * 0.06) - 3;
+		return 100*Math.sqrt(Math.abs(y - (0.01 * x**2))) + 0.01*Math.abs(x + 10);
+	}
+	bukinFunction.scale = d3.scalePow().exponent(2);
+	bukinFunction.minima = [[50, 200/3]];
+
+	function threeHumpCamel(x, y) {
+		x = (x / 10) - 5;
+		y = (y / 10) - 5;
+		return (2 * x**2) - (1.05 * x**4) + (x**6 / 6) + x*y + y*y;
+	}
+	threeHumpCamel.scale = d3.scalePow().exponent(4);
+	threeHumpCamel.minima = [[50, 50]];
+	threeHumpCamel.localMinima = [[32.7, 58.1], [67.3, 41.9]];
+
+	function mccormickFunction(x, y) {
+		// The McCormick function can go very negative if y goes in the negative
+		// direction, and x is not too far off from y
+		// Add a small factor so our optimization algorithm doesn't "run away"
+		// in that direction
+		let correction = 0;
+		if (y < 0)
+			correction = -4 * y;
+		x = (x * 0.055) - 1.5;
+		y = (y * 0.07) - 3;
+		return Math.sin(x + y) + ((x - y) ** 2) - 1.5*x + 2.5*y + 1 + correction;
+	}
+	mccormickFunction.scale = d3.scalePow().exponent(2);
+	mccormickFunction.minima = [[17.323818,20.754428]];
+	mccormickFunction.localMinima = [[74.2,65.6]];
+
+	const testFunctions = [
+		himmelblauFunction,
+		bealeFunction,
+		rosenbrockFunction,
+		squaredDistFunction,
+		goldsteinPriceFunction,
+		bukinFunction,
+		threeHumpCamel,
+		mccormickFunction
+	];
+
+	// Evaluate 'fn' at every point on a 'steps' by 'steps' grid
+	function gridFromFunction(fn, steps) {
+		const values = [], stepSize = 100 / steps;
+		for (let y = stepSize / 2; y < 100; y += stepSize)
+			for (let x = stepSize / 2; x < 100; x += stepSize)
+				values.push(fn(x, y));
+		return values;
+	}
+
+	function contoursFromGrid(grid, xySteps, zScale, zSteps) {
+		zScale = zScale.domain([0, zSteps-1]).range(d3.extent(grid));
+		const thresholds = Array(zSteps).fill(0).map((_, i) => zScale(i));
+		thresholds.unshift(0); // Ensure the lowest contour will go right around the plotted area
+		return d3.contours().size([xySteps, xySteps]).thresholds(thresholds)(grid);
+	}
+
+	function drawContours(svg, contours) {
+		for (const path of Array.from(svg.$class('contour')))
+			path.remove();
+		const colorScale = d3.scaleLinear().domain([0, contours.length-1]).range(['#66ff99', '#dc143c'])
+		const geoPath = d3.geoPath(d3.geoIdentity().fitSize([100, 100], contours[0]));
+		contours.map((contour, i) => {
+			if (contour.coordinates.length > 0) {
+				const path = prependSvgNode(svg, 'path', 'contour');
+				path.setAttribute('d', geoPath(contour));
+				path.setAttribute('stroke', colorScale(i));
+				path.setAttribute('fill', 'none');
+				path.setAttribute('stroke-width', '.03rem');
+			}
+		});
+	}
+
+	function plotFunction(fn, svg) {
+		const grid = gridFromFunction(fn, 100);
+		const contours = contoursFromGrid(grid, 100, fn.scale ?? d3.scalePow().exponent(2.5), 23);
+		drawContours(svg, contours);
+	}
+
+	// Make SVG which will resize itself to match its container
+	function initDynamicSvg(wrapper, attributes) {
+		// Put this SVG underneath anything else in the same container
+		const svg = prependSvgNode(wrapper, 'svg', undefined, { viewBox: '0 0 100 100', preserveAspectRatio: 'none' });
+		const watcher = new ResizeObserver(entries => {
+			svg.style.width = Math.round(entries[0].contentBoxSize[0].inlineSize);
+			svg.style.height = Math.round(entries[0].contentBoxSize[0].blockSize);
+		});
+		watcher.observe(wrapper);
+		svg.style.width = wrapper.offsetWidth;
+		svg.style.height = wrapper.offsetHeight;
+		return svg;
+	}
+
+	function moveCircleToPoint(circle, point) {
+		// We are using a 'line' element as a circle, so it stays circular
+		// even when the SVG is scaled to a different aspect ratio
+		circle.setAttribute('x1', point.x);
+		circle.setAttribute('x2', point.x);
+		circle.setAttribute('y1', point.y);
+		circle.setAttribute('y2', point.y);
+	}
+
+	const pointColor = '#ddcc44';
+
+	// A triangle is an array of 3 points
+	// Take mathematical points as input, return corresponding SVG elements
+	function showTriangle(svg, triangle) {
+		const circles = [];
+		if (triangle.length >= 1) {
+			circles.push(svg.$class1('point1') || appendSvgNode(svg, 'line', 'point1', { stroke: pointColor }));
+			moveCircleToPoint(circles[0], triangle[0]);
+		}
+		if (triangle.length >= 2) {
+			circles.push(svg.$class1('point2') || appendSvgNode(svg, 'line', 'point2', { stroke: pointColor }));
+			moveCircleToPoint(circles[1], triangle[1]);
+		}
+		if (triangle.length >= 3) {
+			circles.push(svg.$class1('point3') || appendSvgNode(svg, 'line', 'point3', { stroke: pointColor }));
+			moveCircleToPoint(circles[2], triangle[2]);
+		}
+		return circles;
+	}
+
+	function getMousePosition(event, svg) {
+		const CTM = svg.getScreenCTM();
+		if (event.touches)
+			event = event.touches[0];
+		return [
+			(event.clientX - CTM.e) / CTM.a,
+			(event.clientY - CTM.f) / CTM.d
+		];
+	}
+
+	function makeCircleDraggable(svg, circle, callback) {
+		let dragging = false;
+		let startX, startY, circleX, circleY;
+
+		function startDrag(event) {
+			dragging = true;
+			[startX, startY] = getMousePosition(event, svg);
+			circleX = Number(circle.getAttribute('x1'));
+			circleY = Number(circle.getAttribute('y1'));
+			return false;
+		}
+		function drag(event) {
+			if (dragging) {
+				const [dragX, dragY] = getMousePosition(event, svg);
+				const newPoint = new Point(
+					Math.round(circleX + dragX - startX),
+					Math.round(circleY + dragY - startY));
+				moveCircleToPoint(circle, newPoint);
+				if (callback)
+					callback(newPoint);
+				return false;
+			}
+		}
+		function endDrag(event) {
+			if (dragging) {
+				dragging = false;
+				return false;
+			}
+		}
+		circle.listen('mousedown', startDrag);
+		svg.listen('mousemove', drag);
+		svg.listen('mouseup', endDrag)
+		svg.listen('mouseleave', endDrag);
+		circle.listen('touchstart', startDrag, { passive: true });
+		svg.listen('touchmove', drag, { passive: true });
+		circle.listen('touchend', endDrag);
+		svg.listen('touchleave', endDrag);
+		circle.listen('touchcancel', endDrag);
+		circle.classList.add('draggable');
+	}
+
+	function showDraggableTriangle(svg, triangle, callback) {
+		function dragCallback(index) {
+			return point => {
+				if (callback) {
+					triangle = Array.from(triangle);
+					triangle[index] = point;
+					callback(triangle);
+				}
+			}
+		}
+
+		const circles = showTriangle(svg, triangle);
+		makeCircleDraggable(svg, circles[0], dragCallback(0));
+		makeCircleDraggable(svg, circles[1], dragCallback(1));
+		makeCircleDraggable(svg, circles[2], dragCallback(2));
+
+		if (callback)
+			callback(triangle);
+	}
+
+	const svg1 = initDynamicSvg($id('example-triangle'));
+	plotFunction(himmelblauFunction, svg1);
+	showDraggableTriangle(svg1, [
+		new Point(30, 20),
+		new Point(40, 75),
+		new Point(75, 55)
+	]);
+</script>
+
+<p>(From here on, all examples will be 2-dimensional, but the algorithm generalizes naturally to any number of dimensions. Further, we will assume that we are searching for a minimum rather than a maximum.)</p>
+
+<p>Nelder-Mead repeatedly transforms the triangle of test points, replacing the worst point with a better one. This causes the triangle to move across the plane in whichever direction the function's value is dropping, and then contract around a local minimum when it finds one. When the triangle becomes small enough, then the algorithm terminates. Like this:</p>
+
+<div id='example-moving-triangle' class='plot'></div>
+
+<script>
+	'use strict';
+
+	const defaultCoefficients = Object.freeze({
+		reflect: 1,
+		expand: 2,
+		contract: 0.5,
+		shrink: 0.5
+	});
+
+	function readonly(object, property, getter) {
+		Object.defineProperty(object, property, {
+			get: getter
+		});
+	}
+
+	function Demo(fn) {
+		this.fn = fn;
+		this.values = [];
+		this.indices = []; // worst, second, best
+		this.coefficients = defaultCoefficients;
+		this.previousTriangle = undefined;
+
+		let triangle = [];
+		Object.defineProperty(this, 'triangle', {
+			get: () => triangle,
+			set: (t) => {
+				this.previousTriangle = triangle;
+				triangle = Object.freeze(t);
+				this.values = Object.freeze(t.map(point => this.fn(point.x, point.y)));
+				this.indices = Object.freeze([0, 1, 2].sort((a,b) => this.values[b] - this.values[a]));
+			}
+		});
+
+		readonly(this, 'worstPoint', () => this.triangle[this.indices[0]]);
+		readonly(this, 'secondPoint', () => this.triangle[this.indices[1]]);
+		readonly(this, 'bestPoint', () => this.triangle[this.indices[2]]);
+
+		readonly(this, 'worstValue', () => this.values[this.indices[0]]);
+		readonly(this, 'secondValue', () => this.values[this.indices[1]]);
+		readonly(this, 'bestValue', () => this.values[this.indices[2]]);
+
+		readonly(this, 'worstIndex', () => this.indices[0]);
+		readonly(this, 'secondIndex', () => this.indices[1]);
+		readonly(this, 'bestIndex', () => this.indices[2]);
+		readonly(this, 'midpoint', () => this.secondPoint.midpoint(this.bestPoint));
+
+		readonly(this, 'reflectPoint', () => this.worstPoint.moveTowards(this.midpoint, 1 + this.coefficients.reflect));
+		readonly(this, 'expandPoint', () => this.worstPoint.moveTowards(this.midpoint, 1 + this.coefficients.expand));
+		readonly(this, 'insidePoint', () => this.worstPoint.moveTowards(this.midpoint, 1 - this.coefficients.contract));
+		readonly(this, 'outsidePoint', () => this.worstPoint.moveTowards(this.midpoint, 1 + this.coefficients.contract));
+
+		readonly(this, 'reflectValue', () => this.reflectPoint.eval(this.fn));
+		readonly(this, 'expandValue', () => this.expandPoint.eval(this.fn));
+		readonly(this, 'insideValue', () => this.insidePoint.eval(this.fn));
+		readonly(this, 'outsideValue', () => this.outsidePoint.eval(this.fn));
+
+		readonly(this, 'shrunkTriangle', () => this.triangle.map((point,i) => (i === this.bestIndex) ? point : point.moveTowards(this.bestPoint, this.coefficients.shrink)));
+		readonly(this, 'shrinkPoint1', () => this.worstPoint.moveTowards(this.bestPoint, this.coefficients.shrink));
+		readonly(this, 'shrinkPoint2', () => this.secondPoint.moveTowards(this.bestPoint, this.coefficients.shrink));
+	}
+
+	Demo.prototype.doReflect = function() {
+		const newTriangle = Array.from(this.triangle);
+		newTriangle[this.worstIndex] = this.reflectPoint;
+		this.triangle = newTriangle;
+	}
+
+	Demo.prototype.doExpand = function() {
+		const newTriangle = Array.from(this.triangle);
+		newTriangle[this.worstIndex] = this.expandPoint;
+		this.triangle = newTriangle;
+	}
+
+	Demo.prototype.doContractInside = function() {
+		const newTriangle = Array.from(this.triangle);
+		newTriangle[this.worstIndex] = this.insidePoint;
+		this.triangle = newTriangle;
+	}
+
+	Demo.prototype.doContractOutside = function() {
+		const newTriangle = Array.from(this.triangle);
+		newTriangle[this.worstIndex] = this.outsidePoint;
+		this.triangle = newTriangle;
+	}
+
+	Demo.prototype.doShrink = function() {
+		this.triangle = this.shrunkTriangle;
+	}
+
+	Demo.prototype.doNelderMead = function() {
+		if (this.reflectValue < this.bestValue) {
+			if (this.expandValue < this.reflectValue)
+				this.doExpand();
+			else
+				this.doReflect();
+		} else if (this.reflectValue < this.secondValue) {
+			this.doReflect();
+		} else if (this.reflectValue < this.worstValue) {
+			if (this.outsideValue < this.worstValue)
+				this.doContractOutside();
+			else
+				this.doShrink();
+		} else if (this.insideValue < this.worstValue) {
+			this.doContractInside();
+		} else {
+			this.doShrink();
+		}
+	}
+
+	Demo.prototype.drawContours = function(svg) {
+		plotFunction(this.fn, svg);
+	}
+
+	Demo.prototype.showTriangle = function(svg) {
+		showTriangle(svg, this.triangle);
+	}
+
+	function clearAnimations(svg) {
+		for (const anim of Array.from(svg.$tag('animate')))
+			anim.remove();
+	}
+
+	function slideCircleToPoint(circle, oldPoint, point) {
+		moveCircleToPoint(circle, oldPoint);
+		clearAnimations(circle);
+		// Move at a constant speed most of the time, but make sure we get there
+		// in time even if it means speeding up
+		const duration = Math.min((oldPoint.dist(point) / 32), 1.25) + 's';
+		if (point.x !== oldPoint.x) {
+			appendSvgNode(circle, 'animate', undefined, { attributeName: 'x1', dur: duration, from: oldPoint.x, to: point.x, fill: 'freeze' })
+			appendSvgNode(circle, 'animate', undefined, { attributeName: 'x2', dur: duration, from: oldPoint.x, to: point.x, fill: 'freeze' })
+		}
+		if (point.y !== oldPoint.y) {
+			appendSvgNode(circle, 'animate', undefined, { attributeName: 'y1', dur: duration, from: oldPoint.y, to: point.y, fill: 'freeze' })
+			appendSvgNode(circle, 'animate', undefined, { attributeName: 'y2', dur: duration, from: oldPoint.y, to: point.y, fill: 'freeze' })
+		}
+		for (const anim of circle.$tag('animate'))
+			anim.beginElement();
+	}
+
+	function slideTriangle(svg, oldTriangle, triangle) {
+		slideCircleToPoint(svg.$class1('point1'), oldTriangle[0], triangle[0]);
+		slideCircleToPoint(svg.$class1('point2'), oldTriangle[1], triangle[1]);
+		slideCircleToPoint(svg.$class1('point3'), oldTriangle[2], triangle[2]);
+	}
+
+	Demo.prototype.slideTriangle = function(svg) {
+		slideTriangle(svg, this.previousTriangle, this.triangle);
+	}
+
+	Demo.prototype.showColoredTriangle = function(svg) {
+		this.showTriangle(svg);
+		const cssClasses = ['point1', 'point2', 'point3'];
+		svg.$class1(cssClasses[this.worstIndex]).setAttribute('stroke', d3.color(pointColor).darker());
+		svg.$class1(cssClasses[this.secondIndex]).setAttribute('stroke', pointColor);
+		svg.$class1(cssClasses[this.bestIndex]).setAttribute('stroke', d3.color(pointColor).brighter());
+	}
+
+	Demo.prototype.showMinima = function(svg) {
+		for (const circle of Array.from(svg.$class('minimum')))
+			circle.remove();
+		for (const [x, y] of this.fn.minima) {
+			const minCircle = makeSvgNode('line', 'minimum', { stroke: '#d55' });
+			if (svg.$class1('point1'))
+				svg.insertBefore(minCircle, svg.$class1('point1'));
+			else
+				svg.appendChild(minCircle);
+			moveCircleToPoint(minCircle, { x, y });
+		}
+	}
+
+	Demo.prototype.showLocalMinima = function(svg) {
+		for (const circle of Array.from(svg.$class('localMinimum')))
+			circle.remove();
+		for (const [x, y] of this.fn.localMinima || []) {
+			const minCircle = makeSvgNode('line', 'localMinimum', { stroke: '#ffa500' });
+			if (svg.$class1('point1'))
+				svg.insertBefore(minCircle, svg.$class1('point1'));
+			else
+				svg.appendChild(minCircle);
+			moveCircleToPoint(minCircle, { x, y });
+		}
+	}
+
+	Demo.prototype.showReflectPoint = function(svg) {
+		const circle = svg.$class1('reflectPoint') || makeSvgNode('line', 'reflectPoint', { stroke: '#80bde3' });
+		svg.insertBefore(circle, svg.$class1('point1'));
+		moveCircleToPoint(circle, this.reflectPoint);
+	}
+
+	Demo.prototype.showExpandPoint = function(svg) {
+		const circle = svg.$class1('expandPoint') || makeSvgNode('line', 'expandPoint', { stroke: '#ffa500' });
+		svg.insertBefore(circle, svg.$class1('point1'));
+		moveCircleToPoint(circle, this.expandPoint);
+	}
+
+	Demo.prototype.showInsideContractionPoint = function(svg) {
+		const circle = svg.$class1('contractPoint') || makeSvgNode('line', 'contractPoint', { stroke: '#ffc0cb' });
+		svg.insertBefore(circle, svg.$class1('point1'));
+		moveCircleToPoint(circle, this.insidePoint);
+	}
+
+	Demo.prototype.showOutsideContractionPoint = function(svg) {
+		const circle = svg.$class1('contractPoint') || makeSvgNode('line', 'contractPoint', { stroke: '#ffc0cb' });
+		svg.insertBefore(circle, svg.$class1('point1'));
+		moveCircleToPoint(circle, this.outsidePoint);
+	}
+
+	Demo.prototype.showShrinkPoints = function(svg) {
+		const circle1 = svg.$class1('shrinkPoint1') || makeSvgNode('line', 'shrinkPoint1', { stroke: '#a0d468' });
+		svg.insertBefore(circle1, svg.$class1('point1'));
+		moveCircleToPoint(circle1, this.shrinkPoint1);
+		const circle2 = svg.$class1('shrinkPoint2') || makeSvgNode('line', 'shrinkPoint2', { stroke: '#a0d468' });
+		svg.insertBefore(circle2, svg.$class1('point1'));
+		moveCircleToPoint(circle2, this.shrinkPoint2);
+	}
+
+	function moveLabelToPoint(label, point) {
+		label.setAttribute('x', point.x);
+		label.setAttribute('y', point.y);
+	}
+
+	function setLabelText(label, value) {
+		value = Math.round(value * 1000) / 1000;
+		label.textContent = value;
+	}
+
+	Demo.prototype.showLabels = function(svg) {
+		const cssClasses = ['label1', 'label2', 'label3'];
+		for (let i = 0; i < this.triangle.length; i++) {
+			const cssClass = cssClasses[i];
+			const label = svg.$class1(cssClass) || appendSvgNode(svg, 'text', cssClass, { transform: 'translate(-2.5 -2.5)' });
+			moveLabelToPoint(label, this.triangle[i]);
+			setLabelText(label, this.values[i]);
+		}
+	}
+
+	function insidePlot(point) {
+		return point.x >= 0 && point.x <= 100 && point.y >= 0 && point.y <= 100;
+	}
+
+	Demo.prototype.canReflect = function() {
+		return insidePlot(this.reflectPoint);
+	}
+
+	Demo.prototype.canExpand = function() {
+		return insidePlot(this.expandPoint);
+	}
+
+	Demo.prototype.canContractInside = function() {
+		return insidePlot(this.insidePoint);
+	}
+
+	Demo.prototype.canContractOutside = function() {
+		return insidePlot(this.outsidePoint);
+	}
+
+	Demo.prototype.canShrink = function() {
+		return this.shrunkTriangle.every(point => insidePlot(point));
+	}
+
+	function randomTriangle() {
+		function randInt() {
+			return Math.floor(Math.random() * 100);
+		}
+		return [
+			new Point(randInt(), randInt()),
+			new Point(randInt(), randInt()),
+			new Point(randInt(), randInt())
+		];
+	}
+
+	function triangleArea(triangle) {
+		// Area of a triangle is half the determinant of a 2x2 matrix,
+		// where the columns are two side vectors of the triangle
+		const dx1 = triangle[1].x - triangle[0].x;
+		const dx2 = triangle[2].x - triangle[0].x;
+		const dy1 = triangle[1].y - triangle[0].y;
+		const dy2 = triangle[2].y - triangle[0].y;
+		return Math.abs(dx1*dy2 - dx2*dy1) / 2;
+	}
+
+	function maxVertexDist(triangle) {
+		return Math.max(triangle[0].dist(triangle[1]), triangle[0].dist(triangle[2]), triangle[1].dist(triangle[2]));
+	}
+
+	let contoursDrawn = false;
+
+	function initAnimation(svg, fn) {
+		const demo = new Demo(fn);
+		if (!contoursDrawn) {
+			demo.drawContours(svg);
+			contoursDrawn = true;
+		}
+		demo.triangle = randomTriangle();
+		demo.showTriangle(svg);
+		demo.countdown = 3;
+		return demo;
+	}
+
+	function stepAnimation(svg, demo) {
+		if (maxVertexDist(demo.triangle) < 2) {
+			if (demo.countdown-- === 0) {
+				clearAnimations(svg);
+				return initAnimation(svg, demo.fn);
+			}
+		} else {
+			demo.doNelderMead();
+			demo.slideTriangle(svg);
+		}
+		return demo;
+	}
+
+	const svg2 = initDynamicSvg($id('example-moving-triangle'));
+	let demo1 = initAnimation(svg2, himmelblauFunction);
+	setInterval(() => {
+		demo1 = stepAnimation(svg2, demo1);
+	}, 1350);
+</script>
+
+<p>At each iteration, Nelder-Mead will apply one of four possible transformations to the triangle. Let's see them one by one (try dragging around the points or adjusting the coefficient values if you like):</p>
+
+<div class='transformation-container'>
+	<div class='transformation-def'><b>Reflect.</b> Move the worst point through the middle of the other two.</div>
+	<div id='reflect-vis' class='transformation-vis plot'>
+		<input type='number' id='reflect-coeff' class='trans-coeff' value='1.0' step='0.1' min='0'>
+	</div>
+</div>
+
+<div class='transformation-container'>
+	<div class='transformation-def'><b>Expand.</b> Like Reflect, but it moves further.</div>
+	<div id='expand-vis' class='transformation-vis plot'>
+		<input type='number' id='expand-coeff' class='trans-coeff' value='2.0' step='0.1' min='0'>
+	</div>
+</div>
+
+<div class='transformation-container'>
+	<div class='transformation-def'><b>Contract.</b> Move the worst point towards the middle of the other two. Depending on the situation, Contract can either stop short of the opposite side, or move slightly past it. We will call these variants “Contract Inside” and “Contract Outside”.</div>
+	<div id='contract-inside-vis' class='transformation-vis plot'>
+		<input type='number' id='inside-coeff' class='trans-coeff' value='0.5' step='0.1' min='0' max='1.0'>
+	</div>
+</div>
+
+<div class='transformation-container'>
+	<div class='transformation-def'></div>
+	<div id='contract-outside-vis' class='transformation-vis plot'>
+		<input type='number' id='outside-coeff' class='trans-coeff' value='0.5' step='0.1' min='0'>
+	</div>
+</div>
+
+<div class='transformation-container'>
+	<div class='transformation-def'><b>Shrink.</b> Shrink the whole triangle towards the best point, maintaining its angles.</div>
+	<div id='shrink-vis' class='transformation-vis plot'>
+		<input type='number' id='shrink-coeff' class='trans-coeff' value='0.5' step='0.1' min='0' max='1.0'>
+	</div>
+</div>
+
+<script>
+	'use strict';
+
+	function plotMultipleSvgs(fn, svgs) {
+		const grid = gridFromFunction(fn, 100);
+		const contours = contoursFromGrid(grid, 100, fn.scale, 23);
+		for (const svg of svgs)
+			drawContours(svg, contours);
+	}
+
+	const svg3 = initDynamicSvg($id('reflect-vis'));
+	const svg4 = initDynamicSvg($id('expand-vis'));
+	const svg5 = initDynamicSvg($id('contract-inside-vis'));
+	const svg6 = initDynamicSvg($id('contract-outside-vis'));
+	const svg7 = initDynamicSvg($id('shrink-vis'));
+
+	plotMultipleSvgs(himmelblauFunction, [svg3, svg4, svg5, svg6, svg7]);
+
+	const exampleTriangle = [
+		new Point(33, 30),
+		new Point(37, 50),
+		new Point(60, 45)
+	];
+
+	function drawArrow(svg, cssClass, oldPoint, newPoint) {
+		const line = svg.$class1(cssClass) || appendSvgNode(svg, 'line', cssClass, { stroke: '#666' });
+		const lineLength = newPoint.dist(oldPoint);
+		line.setAttribute('stroke-width', 1);
+
+		const marker = addArrowhead(svg);
+
+		// Arrowhead looks silly if the line is too short
+		line.setAttribute('marker-end', (lineLength > 3) ? `url(#${marker.id})` : '');
+		line.setAttribute('x1', oldPoint.x);
+		line.setAttribute('y1', oldPoint.y);
+
+		// Make line a bit shorter so arrowhead point ends on the desired point
+		const scaleFactor = Math.max((lineLength - 2.5) / lineLength, 0);
+		line.setAttribute('x2', oldPoint.x + (newPoint.x - oldPoint.x) * scaleFactor);
+		line.setAttribute('y2', oldPoint.y + (newPoint.y - oldPoint.y) * scaleFactor);
+	}
+
+	function addArrowhead(svg) {
+		let marker = svg.$class1('arrowhead');
+		if (!marker) {
+			marker = appendSvgNode(svg, 'marker', 'arrowhead', { markerWidth: 3, markerHeight: 2, refX: 0, refY: 1, orient: 'auto' });
+			marker.id = Math.floor(Math.random() * 10000000).toString();
+			appendSvgNode(marker, 'polygon', undefined, { points: '0 0, 3 1, 0 2', fill: '#666' });
+		}
+		return marker;
+	}
+
+	// Use an arrow to show where a node will go
+	function illustrateTransform(svg, oldPoint, newPoint) {
+		const point4 = svg.$class1('point4') || appendSvgNode(svg, 'line', 'point4', { stroke: d3.color(pointColor).brighter() });
+		moveCircleToPoint(point4, newPoint);
+		drawArrow(svg, 'arrowline', oldPoint, newPoint);
+	}
+
+	function illustrateShrink(svg, oldPoint1, newPoint1, oldPoint2, newPoint2) {
+		const point4 = svg.$class1('point4') || appendSvgNode(svg, 'line', 'point4', { stroke: d3.color(pointColor).brighter() });
+		moveCircleToPoint(point4, newPoint1);
+		const point5 = svg.$class1('point5') || appendSvgNode(svg, 'line', 'point5', { stroke: d3.color(pointColor).brighter() });
+		moveCircleToPoint(point5, newPoint2);
+
+		drawArrow(svg, 'arrowline1', oldPoint1, newPoint1);
+		drawArrow(svg, 'arrowline2', oldPoint2, newPoint2);
+	}
+
+	// Build callback which can be used when a point is dragged around in visualization
+	// The same callback will also be called if the value of the coefficient is changed
+	function initTransformationVis(svg, triangle, fn, demoProperty, coeffInput, coeffName) {
+		const demo = new Demo(fn);
+		demo.triangle = triangle;
+
+		function callback(triangle) {
+			if (triangle)
+				demo.triangle = triangle;
+			illustrateTransform(svg, demo.worstPoint, demo[demoProperty]);
+		}
+
+		coeffInput.listen('input', () => {
+			demo.coefficients = Object.assign({}, demo.coefficients);
+			demo.coefficients[coeffName] = Number(coeffInput.value);
+			callback();
+		});
+
+		showDraggableTriangle(svg, triangle, callback);
+	}
+
+	function initShrinkVis(svg, triangle, fn, coeffInput) {
+		const demo = new Demo(fn);
+		demo.triangle = triangle;
+
+		function callback(triangle) {
+			if (triangle)
+				demo.triangle = triangle;
+			illustrateShrink(svg, demo.worstPoint, demo.shrinkPoint1, demo.secondPoint, demo.shrinkPoint2);
+		}
+
+		coeffInput.listen('input', () => {
+			demo.coefficients = Object.assign({}, demo.coefficients);
+			demo.coefficients.shrink = Number(coeffInput.value);
+			callback();
+		});
+
+		showDraggableTriangle(svg, triangle, callback);
+	}
+
+	initTransformationVis(svg3, exampleTriangle, himmelblauFunction, 'reflectPoint', $id('reflect-coeff'), 'reflect');
+	initTransformationVis(svg4, exampleTriangle, himmelblauFunction, 'expandPoint', $id('expand-coeff'), 'expand');
+	initTransformationVis(svg5, exampleTriangle, himmelblauFunction, 'insidePoint', $id('inside-coeff'), 'contract');
+	initTransformationVis(svg6, exampleTriangle, himmelblauFunction, 'outsidePoint', $id('outside-coeff'), 'contract');
+	initShrinkVis(svg7, exampleTriangle, himmelblauFunction, $id('shrink-coeff'));
+</script>
+
+<p>The magnitude of each transformation can be tuned by adjusting a coefficient. As shown in the above visualizations, the default coefficient values are 1.0, 2.0, 0.5, and 0.5.</p>
+
+<p>To help get a feel for how these transformations can be used to explore the input space and find a minimum, let's play a game. The below square represents the space of input values for a function <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height: 1em; vertical-align: -0.25em;"></span><span class="mord mathnormal" style="margin-right: 0.1076em;">f</span><span class="mopen">(</span><span class="mord mathnormal">x</span><span class="mpunct">,</span><span class="mspace" style="margin-right: 0.1667em;"></span><span class="mord mathnormal" style="margin-right: 0.0359em;">y</span><span class="mclose">)</span></span></span></span>. Just as Nelder-Mead only computes the function value at the corners of its triangle, I will only show you its value at those three points. Click on any three points to start, then click any of the five transformation buttons to transform your triangle. Once you contract the triangle to a sufficiently small size (or reach 50 iterations), I'll reveal the contours of the graph. You “win” only if your best point is close enough to a minimum point.</p>
+
+<div id='game' class='plot'>
+	<div class='control-wrapper'>
+		<div class='btn-wrapper'>
+			<button type='button' id='reflect-btn' disabled>Reflect</button>
+			<button type='button' id='expand-btn' disabled>Expand</button>
+			<button type='button' id='inside-btn' disabled>Contract Inside</button>
+			<button type='button' id='outside-btn' disabled>Contract Outside</button>
+			<button type='button' id='shrink-btn' disabled>Shrink</button>
+			<button type='button' id='reset-game' disabled>Play Again</button>
+		</div>
+		<div id='final-score'></div>
+	</div>
+</div>
+
+<script>
+	'use strict';
+
+	const gameSvg = initDynamicSvg($id('game'));
+
+	function disableButtons() {
+		$id('reset-game').setAttribute('disabled', true);
+		$id('reflect-btn').setAttribute('disabled', true);
+		$id('expand-btn').setAttribute('disabled', true);
+		$id('inside-btn').setAttribute('disabled', true);
+		$id('outside-btn').setAttribute('disabled', true);
+		$id('shrink-btn').setAttribute('disabled', true);
+	}
+
+	function setButtonState(id, enabled) {
+		$id(id).disabled = !enabled;
+	}
+
+	function initGameState() {
+		const game = new Demo(testFunctions[Math.floor(Math.random() * testFunctions.length)]);
+		game.iterations = 0;
+
+		while (gameSvg.lastChild) {
+			gameSvg.removeChild(gameSvg.lastChild);
+		}
+		$id('final-score').textContent = '';
+		disableButtons();
+
+		return game;
+	}
+
+	// Before starting to play, the user must lay down 3 points
+	function setPoint(clickEvent, game) {
+		if (game.triangle.length === 3)
+			return;
+
+		const cssClass = (['point1', 'point2', 'point3'])[game.triangle.length];
+		const [clickX, clickY] = getMousePosition(clickEvent, gameSvg);
+		const newPoint = new Point(clickX, clickY);
+
+		game.triangle = game.triangle.concat([newPoint]);
+		game.showLabels(gameSvg);
+
+		if (game.triangle.length === 3) {
+			game.showColoredTriangle(gameSvg);
+			startNextTurn(game);
+		} else {
+			game.showTriangle(gameSvg);
+		}
+	}
+
+	function startNextTurn(game) {
+		if (gameTerminationTest(game)) {
+			gameOver(game);
+			return;
+		}
+
+		// Decide which moves are valid, enable/disable buttons accordingly
+		setButtonState('reflect-btn', game.canReflect());
+		setButtonState('expand-btn', game.canExpand());
+		setButtonState('inside-btn', game.canContractInside());
+		setButtonState('outside-btn', game.canContractOutside());
+		setButtonState('shrink-btn', game.canShrink());
+	}
+
+	function stepGame(game) {
+		game.showColoredTriangle(gameSvg);
+		game.showLabels(gameSvg);
+		game.iterations += 1;
+		startNextTurn(game);
+	}
+
+	function gameTerminationTest(game) {
+		return maxVertexDist(game.triangle) < 9 || game.iterations >= 50;
+	}
+
+	function insideTriangle(triangle, x, y) {
+		// Convert (x,y) to barycentric coordinates
+		const [t1, t2, t3] = triangle;
+		const a = ((t2.y - t3.y)*(x - t3.x) + (t3.x - t2.x)*(y - t3.y)) / ((t2.y - t3.y)*(t1.x - t3.x) + (t3.x - t2.x)*(t1.y - t3.y));
+		const b = ((t3.y - t1.y)*(x - t3.x) + (t1.x - t3.x)*(y - t3.y)) / ((t2.y - t3.y)*(t1.x - t3.x) + (t3.x - t2.x)*(t1.y - t3.y));
+		const c = 1 - a - b;
+		return a >= 0 && a <= 1 && b >= 0 && b <= 1 && c >= 0 && c <= 1;
+	}
+
+	function gameOver(game) {
+		disableButtons();
+		$id('reset-game').removeAttribute('disabled');
+		game.drawContours(gameSvg);
+		game.showMinima(gameSvg);
+
+		const distToMin = Math.min(...game.fn.minima.map(([x,y]) => game.bestPoint.dist(new Point(x, y))));
+		console.log(`Best point was ${distToMin} from minimum point`);
+		const won = distToMin < 5.5;
+		if (won)
+			$id('final-score').textContent = `You found a minimum in ${game.iterations} steps. Congratulations!`;
+		else
+			$id('final-score').textContent = 'You did not find a minimum. Too bad! Maybe try again?';
+	}
+
+	let gameState = initGameState();
+	$id('reset-game').listen('click', () => gameState = initGameState());
+	$id('reflect-btn').listen('click', () => { gameState.doReflect(); stepGame(gameState); });
+	$id('expand-btn').listen('click', () => { gameState.doExpand(); stepGame(gameState); });
+	$id('inside-btn').listen('click', () => { gameState.doContractInside(); stepGame(gameState); });
+	$id('outside-btn').listen('click', () => { gameState.doContractOutside(); stepGame(gameState); });
+	$id('shrink-btn').listen('click', () => { gameState.doShrink(); stepGame(gameState); });
+	gameSvg.listen('click', event => setPoint(event, gameState));
+</script>
+
+<p>This game is quite difficult; don't be surprised if you hardly ever “win”. The Nelder-Mead algorithm doesn't always reach a minimum point, either; or at least, not in a reasonable number of iterations. Sometimes it gets <i>close</i> to a minimum point... and then moves <i>very, very</i> slowly towards it.</p>
+
+<p>For that reason, when implementing Nelder-Mead, you need to limit the number of iterations so it doesn't run for too long. Rather than running Nelder-Mead for a huge number of iterations, you will probably get better results by restarting it several times, with different starting points, and then picking the best overall solution found.</p>
+
+<p>You may be wondering why the algorithm works the way it does. Here are some interesting questions to think about (click to reveal possible answers):</p>
+
+<p><b>Why does the algorithm use a triangle rather than a single test point?</b></p>
+
+<p class='reveal'>Remember, one of the key characteristics of Nelder-Mead is that it doesn't require derivatives. However, by comparing the function's value at the corners of a triangle, it's as if Nelder-Mead is estimating the average value of the derivative<sup><a href='#footnote1' id='fnref1'>[1]</a></sup> across the area of the triangle, and using that approximated derivative to decide which direction to move in. This only works using <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height: 0.7667em; vertical-align: -0.0833em;"></span><span class="mord mathnormal" style="margin-right: 0.109em;">N</span><span class="mspace" style="margin-right: 0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right: 0.2222em;"></span></span><span class="base"><span class="strut" style="height: 0.6444em;"></span><span class="mord">1</span></span></span></span> points in an <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height: 0.6833em;"></span><span class="mord mathnormal" style="margin-right: 0.109em;">N</span></span></span></span>-dimensional space; less test points would not be enough to unambiguously determine a direction.</p>
+
+<p><b>Why does the size of the triangle change? Why not use a fixed-size triangle which flips, rotates, and slides around the plane?</b></p>
+
+<div class='reveal'>
+<p>Other optimization algorithms, such as gradient descent, typically have a “step size” which gradually decreases as the search progresses. The “step size” determines how far each new test point will be from the previous one. By starting with a large step size, the algorithm can quickly move through the search space at the beginning, which helps it to find a solution in fewer iterations. But as it approaches an optimum point, maintaining a large step size would be counterproductive; that would make the algorithm overshoot the optimum point, and possibly jump so far away that it couldn't find its way back. So the step size needs to gradually decrease as the search progresses.</p>
+
+<p>For Nelder-Mead, the size of the triangle serves as a kind of “step size” parameter. The transformations which move the triangle across the plane all move it a distance proportional to its size. Just as the step size for gradient descent needs to decrease as it gets closer to a minimum point, as Nelder-Mead approaches a minimum point, it needs to use Contract or Shrink to make the triangle smaller.</p>
+</div>
+
+<p>The final piece of the algorithm, which I haven't described yet, is how it chooses which transformation to use on each iteration. Here is the procedure:</p>
+
+<ol>
+<li>Find the <b>reflection point</b> (the point which Reflect would move the worst point to) and compute the function's value there.</li>
+<li>If the reflection point is better than the second-best point, but not better than the best point, then do Reflect.</li>
+<li>Otherwise, if the reflection point is better than the best point, then check the <b>expansion point</b> (the one which Expand would move to). If the expansion point is better than the reflection point, do Expand. If not, do Reflect.</li>
+<li>Otherwise, if the reflection point is worse than the second-best point but not worse than the worst point, check the <b>outside contraction point</b>. If it's better than the worst point, do Contract Outside. If not, do Shrink.</li>
+<li>Finally, if the reflection point is worse than the worst point, check the <b>inside contraction point</b>. If it's better than the worst point, do Contract Inside. If not, do Shrink.</li>
+</ol>
+
+<p>Does that seem to make sense? Perhaps these comments might make it more understandable:</p>
+
+<p>While we expect that our function's graph has some kind of curved surface, Nelder-Mead can't “see” the curve; it only knows the value at its three test points (as you experienced when playing the above <a href='#game'>game</a>). With only three numbers to work with, the best guess Nelder-Mead can make is that it should move the worst point in the direction of the better two. And in the absence of other information, a reasonable default is to move the worst point just far enough to maintain the size and shape of the triangle (that's what Reflect does). If the default was to move it more or less than that, then the triangle would tend to grow and grow or shrink and shrink, even when there was no reason to do so.</p>
+
+<p>However, that guess isn't always right. Even if the triangle is sitting on a slope, it is possible that Reflect might overshoot the base of the slope and start going up the opposite slope. If the reflection point is <i>worse</i> than the existing points, that indicates that we are going too far and need to back off, perhaps by using Contract Inside or Contract Outside.</p>
+
+<p>On the other hand, if the reflection point is <i>better</i> than all the existing points, that strongly suggests that the triangle really is on a slope and that Reflect really is moving in the right direction. In that case, we can try to go even further in the same direction with Expand. This not only moves the triangle further in a good direction, it also enlarges the triangle, which means the following steps will be bigger. In effect, as long as Nelder-Mead keeps picking good directions and each successive point is better and better than the previous ones, it will “accelerate downhill”. That helps the algorithm to move more quickly towards a minimum and converge in a smaller number of iterations.</p>
+
+<p>As for Shrink, the original paper on the Nelder-Mead algorithm explained that Shrink is necessary for the algorithm to avoid getting stuck in some (rare) situations. One example is below. Try various combinations of Refresh, Expand, Contract Inside, and Contract Outside to see if you can get the triangle to close in on the minimum point (which is marked in red). Then try Shrink and see how it helps.</p>
+
+<div id='shrink-demo' class='plot'>
+	<div class='control-wrapper'>
+		<div class='btn-wrapper'>
+			<button type='button' id='reflect-btn2' disabled>Reflect</button>
+			<button type='button' id='expand-btn2' disabled>Expand</button>
+			<button type='button' id='inside-btn2' disabled>Contract Inside</button>
+			<button type='button' id='outside-btn2' disabled>Contract Outside</button>
+			<button type='button' id='shrink-btn2' disabled>Shrink</button>
+			<button type='button' id='reset-shrink-demo'>Reset</button>
+		</div>
+		<div id='final-score'></div>
+	</div>
+</div>
+
+<script>
+	'use strict';
+
+	const shrinkDemoSvg = initDynamicSvg($id('shrink-demo'));
+
+	// I wanted to make up a function which would have a curved valley
+	// Started with a parabolic curve x = y², then took |x - y²| to get the
+	// distance to the parabolic curve along the y-axis...
+	// That creates a curved valley; then to make sure the minimum is at 0,0,
+	// add terms for x², y², x, and y
+	// The ironic thing is that while Shrink makes Nelder-Mead work a lot better
+	// on this function, it can't actually find the absolute minimum without an
+	// ENORMOUS number of iterations
+	// It does get fairly close, though
+	function shrinkDemoFunction(x, y) {
+		x = (x - 50) / 4;
+		y = (70 - y) / 1.5;
+		return (5 * Math.abs(y - x*x)) + (0.02 * (x*x + y*y)) + (0.002 * Math.abs(y)) + (0.002 * Math.abs(x));
+	}
+	shrinkDemoFunction.scale = d3.scalePow().exponent(2.2);
+	shrinkDemoFunction.minima = [[50,70]];
+
+	let shrinkDemo;
+
+	function initShrinkDemo() {
+		shrinkDemo = new Demo(shrinkDemoFunction);
+		shrinkDemo.drawContours(shrinkDemoSvg);
+		shrinkDemo.triangle = [
+			new Point(50, 82),
+			new Point(34, 40),
+			new Point(66, 40)
+		];
+		shrinkDemo.showColoredTriangle(shrinkDemoSvg);
+		shrinkDemo.showMinima(shrinkDemoSvg);
+		setShrinkDemoButtonState();
+	}
+
+	function setShrinkDemoButtonState() {
+		setButtonState('reflect-btn2', shrinkDemo.canReflect());
+		setButtonState('expand-btn2', shrinkDemo.canExpand());
+		setButtonState('inside-btn2', shrinkDemo.canContractInside());
+		setButtonState('outside-btn2', shrinkDemo.canContractOutside());
+		setButtonState('shrink-btn2', shrinkDemo.canShrink());
+	}
+
+	function stepShrinkDemo() {
+		shrinkDemo.showColoredTriangle(shrinkDemoSvg);
+		setShrinkDemoButtonState();
+	}
+
+	initShrinkDemo();
+
+	$id('reflect-btn2').listen('click', () => { shrinkDemo.doReflect(); stepShrinkDemo(); });
+	$id('expand-btn2').listen('click', () => { shrinkDemo.doExpand(); stepShrinkDemo(); });
+	$id('inside-btn2').listen('click', () => { shrinkDemo.doContractInside(); stepShrinkDemo(); });
+	$id('outside-btn2').listen('click', () => { shrinkDemo.doContractOutside(); stepShrinkDemo(); });
+	$id('shrink-btn2').listen('click', () => { shrinkDemo.doShrink(); stepShrinkDemo(); });
+	$id('reset-shrink-demo').listen('click', initShrinkDemo);
+</script>
+
+<p>This last visualization will show all the points which Nelder-Mead considers on each iteration, and why it chooses the move which it does. Click the 'Next' button to move forward. Reflection points will be shown in <span style='color:#80bde3'>⬤</span> blue, expansion points in <span style='color:#ffa500'>⬤</span> orange, contraction points in <span style='color:#ffc0cb'>⬤</span> pink, and shrink points in <span style='color:#a0d468'>⬤</span> green.</p>
+
+<div id='decision-demo' class='plot'></div>
+<div id='decision-foot'>
+	<div id='step-explanation'></div>
+	<div id='step-btns'>
+		<button id='decision-step' type='button'>Next</button>
+		<button id='decision-reset' type='button'>Reset</button>
+	</div>
+</div>
+
+<script>
+	'use strict';
+
+	const demoSvg = initDynamicSvg($id('decision-demo'));
+	const explanation = $id('step-explanation');
+	let demoState;
+
+	function initDecisionDemo() {
+		const fn = testFunctions[Math.floor(Math.random() * testFunctions.length)];
+		demoState = new Demo(fn);
+		demoState.iterations = 0;
+		demoState.triangle = randomTriangle();
+		// If we randomly picked a 'bad' starting configuration (one which makes
+		// the demo uninteresting), then pick another
+		while (demoTerminationTest(demoState) || !insidePlot(demoState.expandPoint))
+			demoState.triangle = randomTriangle();
+		demoState.drawContours(demoSvg);
+		demoState.showMinima(demoSvg);
+		$id('decision-step').disabled = false;
+		prepareNextStep();
+	}
+
+	function demoTerminationTest(state) {
+		return maxVertexDist(state.triangle) < 6 || state.iterations >= 100;
+	}
+
+	function roundNumber(number) {
+		return Math.round(number * 1000) / 1000;
+	}
+
+	function prepareNextStep() {
+		demoState.showColoredTriangle(demoSvg);
+		demoState.showLabels(demoSvg);
+
+		if (demoTerminationTest(demoState)) {
+			endDemo();
+			return;
+		}
+
+		demoState.showReflectPoint(demoSvg);
+
+		if (demoState.reflectValue < demoState.bestValue) {
+			explanation.innerHTML = `Reflect point (${roundNumber(demoState.reflectValue)}) is better than all 3 points.<br>`;
+			demoState.showExpandPoint(demoSvg);
+			demoSvg.$class1('contractPoint')?.remove();
+			demoSvg.$class1('shrinkPoint1')?.remove();
+			demoSvg.$class1('shrinkPoint2')?.remove();
+			demoSvg.$class1('arrowline2')?.remove();
+
+			if (demoState.expandValue < demoState.reflectValue) {
+				explanation.innerHTML += `Expand point (${roundNumber(demoState.expandValue)}) is better still. Full speed ahead! <b>Expand!</b>`;
+				drawArrow(demoSvg, 'arrowline', demoState.worstPoint, demoState.expandPoint);
+			} else {
+				explanation.innerHTML += `Expand point (${roundNumber(demoState.expandValue)}) is not as good as that, so let's hold back a bit. <b>Reflect!</b>`;
+				drawArrow(demoSvg, 'arrowline', demoState.worstPoint, demoState.reflectPoint);
+			}
+		} else if (demoState.reflectValue < demoState.secondValue) {
+			explanation.innerHTML = `Reflect point (${roundNumber(demoState.reflectValue)}) is at least better than 2 of the 3 points. That's good enough for me. <b>Reflect!</b>`;
+			drawArrow(demoSvg, 'arrowline', demoState.worstPoint, demoState.reflectPoint);
+			demoSvg.$class1('contractPoint')?.remove();
+			demoSvg.$class1('expandPoint')?.remove();
+			demoSvg.$class1('shrinkPoint1')?.remove();
+			demoSvg.$class1('shrinkPoint2')?.remove();
+			demoSvg.$class1('arrowline2')?.remove();
+		} else if (demoState.reflectValue < demoState.worstValue) {
+			explanation.innerHTML = `Reflect point (${roundNumber(demoState.reflectValue)}) is better than the worst point only. This suggests we might be pushing a bit too far.<br>`;
+			demoState.showOutsideContractionPoint(demoSvg);
+			demoSvg.$class1('expandPoint')?.remove();
+
+			if (demoState.outsideValue < demoState.worstValue) {
+				explanation.innerHTML += `Sure enough, outside contraction point (${roundNumber(demoState.outsideValue)}) is better than reflect point. <b>Contract Outside.</b>`;
+				drawArrow(demoSvg, 'arrowline', demoState.worstPoint, demoState.outsidePoint);
+				demoSvg.$class1('shrinkPoint1')?.remove();
+				demoSvg.$class1('shrinkPoint2')?.remove();
+				demoSvg.$class1('arrowline2')?.remove();
+			} else {
+				explanation.innerHTML += `Hmm. Outside contraction point (${roundNumber(demoState.outsideValue)}) isn't any better. <b>Shrink.</b>`;
+				demoState.showShrinkPoints(demoSvg);
+				drawArrow(demoSvg, 'arrowline', demoState.worstPoint, demoState.shrinkPoint1);
+				drawArrow(demoSvg, 'arrowline2', demoState.secondPoint, demoState.shrinkPoint2);
+			}
+		} else {
+			explanation.innerHTML = `Oh, my. Reflect point (${roundNumber(demoState.reflectValue)}) is worse than all 3 points. Maybe we are close to a minimum, or maybe we need to change direction.<br>`;
+			demoState.showInsideContractionPoint(demoSvg);
+			demoSvg.$class1('expandPoint')?.remove();
+
+			if (demoState.insideValue < demoState.worstValue) {
+				explanation.innerHTML += `Inside contraction point (${roundNumber(demoState.insideValue)}) is at least an improvement. <b>Contract Inside.</b>`;
+				drawArrow(demoSvg, 'arrowline', demoState.worstPoint, demoState.insidePoint);
+				demoSvg.$class1('shrinkPoint1')?.remove();
+				demoSvg.$class1('shrinkPoint2')?.remove();
+				demoSvg.$class1('arrowline2')?.remove();
+			} else {
+				explanation.innerHTML += `Hmm. Inside contraction point (${roundNumber(demoState.insideValue)}) is also worse than all 3 points. We are in danger of getting stuck. <b>Shrink.</b>`;
+				demoState.showShrinkPoints(demoSvg);
+				drawArrow(demoSvg, 'arrowline', demoState.worstPoint, demoState.shrinkPoint1);
+				drawArrow(demoSvg, 'arrowline2', demoState.secondPoint, demoState.shrinkPoint2);
+			}
+		}
+	}
+
+	function takeNextStep() {
+		demoState.doNelderMead();
+		demoState.iterations += 1;
+		prepareNextStep();
+	}
+
+	function endDemo() {
+		demoSvg.$class1('arrowline')?.remove();
+		demoSvg.$class1('reflectPoint')?.remove();
+		demoSvg.$class1('contractPoint')?.remove();
+		demoSvg.$class1('expandPoint')?.remove();
+
+		$id('decision-step').disabled = true;
+
+		if (demoState.iterations >= 100)
+			explanation.innerHTML = "We've already done 100 iterations. I think it's time to give up.<br>";
+		else
+			explanation.innerHTML = "Our triangle is becoming small, so we'll stop here.<br>";
+
+		const dist = Math.min(...demoState.fn.minima.map(([x, y]) => demoState.bestPoint.dist(new Point(x, y))));
+		console.log(`Best point was ${dist} from minimum point`);
+		const won = demoState.fn.minima.some((x,y) => insideTriangle(demoState.triangle, x, y)) || dist < 2.5;
+
+		if (!won && demoState.fn.localMinima) {
+			const localMinimaDist = Math.min(...demoState.fn.localMinima.map(([x,y]) => demoState.bestPoint.dist(new Point(x, y))));
+			console.log(`Best point was ${localMinimaDist} from local minimum point`);
+			if (localMinimaDist < 6) {
+				explanation.innerHTML += "It looks like we got caught by a local minimum and missed the global minimum.";
+				return;
+			}
+		}
+
+		if (won)
+			explanation.innerHTML += "And... we found a minimum point! Hooray!";
+		else if (dist < 6)
+			explanation.innerHTML += "We're not right on the minimum point, but it's close. Good enough for me.";
+		else if (dist < 15)
+			explanation.innerHTML += "We're not so far from the minimum point, though it would have been nice to get closer.";
+		else
+			explanation.innerHTML += "And... Nelder-Mead is not looking so hot in this case. Well, maybe it will do better on the next one.";
+	}
+
+	$id('decision-step').listen('click', takeNextStep);
+	$id('decision-reset').listen('click', initDecisionDemo);
+
+	initDecisionDemo();
+</script>
+
+<p>For a sample implementation of Nelder-Mead optimization in JavaScript, see the latter part of Justin Meiners' <a href='https://github.com/justinmeiners/why-train-when-you-can-optimize/blob/4d9a73995800ee7c80f2a7c08bcc2a221449a79d/docs/src/math.js#L359'>math.js.</a></p>
+
+<p><i><b>Special thanks</b> to Justin Meiner for the <a href='https://www.jmeiners.com/why-train-when-you-can-optimize/'>article</a> which inspired this post, to Peter Collingridge for his <a href='https://www.petercollingridge.co.uk/tutorials/svg/interactive/dragging/'>helpful post on making SVG elements draggable</a>, to Mike Bostock for D3.js, to John Nelder and Peter Mead for their lovely algorithm, and... to you for reading all the way to the end!</i></p>
+
+<p id='footnote1' style='font-size: 0.8em; margin-top: 2.5em'>[1] To be precise, the right term is “gradient”. <a href='#fnref1'>⏎</a></p>
+
+<script>
+	'use strict';
+
+	function revealText() {
+		this.style.color = '#000';
+		for (const anchor of this.$tag('a'))
+			anchor.style.color = '#68f';
+		this.removeEventListener('click', revealText);
+	}
+	document.querySelectorAll('.reveal').forEach(el => el.listen('click', revealText));
+</script>

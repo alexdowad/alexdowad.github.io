@@ -1,0 +1,110 @@
+/* 'Spoiler' text which has to be clicked to view */
+.reveal {
+	padding: 1em;
+	border-left: 0.5em solid #555;
+	background-color: #d8c399;
+	color: #d8c399;
+}
+.reveal a {
+	color: #d8c399;
+}
+
+#example-triangle, #example-moving-triangle {
+	/* This box should be square on a narrow screen, but rectangular on wider screens */
+	height: min(100vw, 18rem);
+	width: min(100vw, 29rem);
+	margin: auto;
+
+	border: 1px solid #666;
+}
+
+.draggable {
+	cursor: move;
+}
+
+.transformation-container {
+	display: flex;
+	flex-direction: row;
+	gap: 1rem;
+	margin: 1em 0;
+}
+
+.transformation-def {
+	flex: 1 1 auto;
+}
+
+.transformation-vis {
+	position: relative;
+	flex: 0 0 auto;
+	height: 15rem;
+	width: min(100vw, 30rem);
+	border: 1px solid #666;
+}
+
+@media (max-width: 40rem) {
+	.transformation-container {
+		flex-wrap: wrap;
+	}
+}
+
+.trans-coeff {
+	position: absolute;
+	max-width: 2.5em;
+	right: .8rem;
+	top: .8rem;
+	font-size: 115%;
+}
+
+.plot {
+  position: relative;
+}
+.plot > svg {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+.point1, .point2, .point3, .point4, .point5, .minimum, .localMinimum, .reflectPoint, .contractPoint, .expandPoint, .shrinkPoint1, .shrinkPoint2 {
+	stroke-linecap: round;
+	stroke-width: 1.2em;
+	vector-effect: non-scaling-stroke;
+}
+.label1, .label2, .label3 {
+	font-size: .2em;
+}
+
+#game, #shrink-demo, #decision-demo {
+	position: relative;
+	height: min(100vw, 35rem);
+	width: min(100vw, 35rem);
+	margin: auto;
+
+	border: 1px solid #666;
+}
+#decision-foot {
+	display: flex;
+	width: min(100vw, 35rem);
+	margin: auto;
+	border: 1px solid #666;
+}
+
+.control-wrapper {
+	background-color: #fff;
+	border: 1px solid #666;
+	position: absolute;
+	bottom: 0;
+	left: 0;
+	right: 0;
+	user-select: none;
+	padding: .1rem;
+}
+#step-explanation {
+	padding-left: .25rem;
+	flex: 1 1 auto;
+}
+#step-btns {
+	padding: .25rem;
+	flex: 0 0 min-content;
+}
+button {
+	user-select: none;
+}
