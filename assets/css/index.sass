@@ -17,3 +17,12 @@ body > header
 
 body > footer
   box-shadow: 0 0 .6em rgba($dark, 0.04) inset
+
+// We use sup for references to footnotes
+// They shouldn't affect the line height
+sup
+  font-size: 80%
+  line-height: 0
+  position: relative
+  vertical-align: baseline
+  top: -0.5em
