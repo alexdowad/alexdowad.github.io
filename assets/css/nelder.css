@@ -28,11 +28,14 @@
 	gap: 1rem;
 	margin: 1em 0;
 }
-
+@media (max-width: 40rem) {
+	.transformation-container {
+		flex-wrap: wrap;
+	}
+}
 .transformation-def {
 	flex: 1 1 auto;
 }
-
 .transformation-vis {
 	position: relative;
 	flex: 0 0 auto;
@@ -40,13 +43,6 @@
 	width: min(100vw, 30rem);
 	border: 1px solid #666;
 }
-
-@media (max-width: 40rem) {
-	.transformation-container {
-		flex-wrap: wrap;
-	}
-}
-
 .trans-coeff {
 	position: absolute;
 	max-width: 2.5em;
@@ -80,13 +76,22 @@
 
 	border: 1px solid #666;
 }
+#click-please {
+	display: flex;
+	justify-content: center;
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	pointer-events: none;
+	background: transparent;
+}
 #decision-foot {
 	display: flex;
 	width: min(100vw, 35rem);
 	margin: auto;
 	border: 1px solid #666;
 }
-
 .control-wrapper {
 	background-color: #fff;
 	border: 1px solid #666;

@@ -833,6 +833,9 @@ stylesheets:
 <p>To help get a feel for how these transformations can be used to explore the input space and find a minimum, let's play a game. The below square represents the space of input values for a function <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height: 1em; vertical-align: -0.25em;"></span><span class="mord mathnormal" style="margin-right: 0.1076em;">f</span><span class="mopen">(</span><span class="mord mathnormal">x</span><span class="mpunct">,</span><span class="mspace" style="margin-right: 0.1667em;"></span><span class="mord mathnormal" style="margin-right: 0.0359em;">y</span><span class="mclose">)</span></span></span></span>. Just as Nelder-Mead only computes the function value at the corners of its triangle, I will only show you its value at those three points. Click on any three points to start, then click any of the five transformation buttons to transform your triangle. Once you contract the triangle to a sufficiently small size (or reach 50 iterations), I'll reveal the contours of the graph. You “win” only if your best point is close enough to a minimum point.</p>
 
 <div id='game' class='plot'>
+	<div id='click-please'>
+		<span id='click-msg'>Click three points to start</span>
+	</div>
 	<div class='control-wrapper'>
 		<div class='btn-wrapper'>
 			<button type='button' id='reflect-btn' disabled>Reflect</button>
@@ -872,6 +875,7 @@ stylesheets:
 			gameSvg.removeChild(gameSvg.lastChild);
 		}
 		$id('final-score').textContent = '';
+		$id('click-please').style.display = 'flex';
 		disableButtons();
 
 		return game;
@@ -890,6 +894,7 @@ stylesheets:
 		game.showLabels(gameSvg);
 
 		if (game.triangle.length === 3) {
+			$id('click-please').style.display = 'none';
 			game.showColoredTriangle(gameSvg);
 			startNextTurn(game);
 		} else {
