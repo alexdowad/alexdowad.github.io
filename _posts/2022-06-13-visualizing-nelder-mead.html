@@ -873,17 +873,17 @@ stylesheets:
 	<div id='click-please'>
 		<span id='click-msg'>Click three points to start</span>
 	</div>
-	<div class='control-wrapper'>
-		<div class='btn-wrapper'>
-			<button type='button' id='reflect-btn' disabled>Reflect</button>
-			<button type='button' id='expand-btn' disabled>Expand</button>
-			<button type='button' id='inside-btn' disabled>Contract Inside</button>
-			<button type='button' id='outside-btn' disabled>Contract Outside</button>
-			<button type='button' id='shrink-btn' disabled>Shrink</button>
-			<button type='button' id='reset-game' disabled>Play Again</button>
-		</div>
-		<div id='final-score'></div>
+</div>
+<div class='control-wrapper'>
+	<div class='btn-wrapper'>
+		<button type='button' id='reflect-btn' disabled>Reflect</button>
+		<button type='button' id='expand-btn' disabled>Expand</button>
+		<button type='button' id='inside-btn' disabled>Contract Inside</button>
+		<button type='button' id='outside-btn' disabled>Contract Outside</button>
+		<button type='button' id='shrink-btn' disabled>Shrink</button>
+		<button type='button' id='reset-game' disabled>Play Again</button>
 	</div>
+	<div id='final-score'></div>
 </div>
 
 <script>
@@ -1036,18 +1036,17 @@ stylesheets:
 
 <p>As for Shrink, the original paper on the Nelder-Mead algorithm explained that Shrink is necessary for the algorithm to avoid getting stuck in some (rare) situations. One example is below. Try various combinations of Refresh, Expand, Contract Inside, and Contract Outside to see if you can get the triangle to close in on the minimum point (which is marked in red). Then try Shrink and see how it helps.</p>
 
-<div id='shrink-demo' class='plot'>
-	<div class='control-wrapper'>
-		<div class='btn-wrapper'>
-			<button type='button' id='reflect-btn2' disabled>Reflect</button>
-			<button type='button' id='expand-btn2' disabled>Expand</button>
-			<button type='button' id='inside-btn2' disabled>Contract Inside</button>
-			<button type='button' id='outside-btn2' disabled>Contract Outside</button>
-			<button type='button' id='shrink-btn2' disabled>Shrink</button>
-			<button type='button' id='reset-shrink-demo'>Reset</button>
-		</div>
-		<div id='final-score'></div>
+<div id='shrink-demo' class='plot'></div>
+<div class='control-wrapper'>
+	<div class='btn-wrapper'>
+		<button type='button' id='reflect-btn2' disabled>Reflect</button>
+		<button type='button' id='expand-btn2' disabled>Expand</button>
+		<button type='button' id='inside-btn2' disabled>Contract Inside</button>
+		<button type='button' id='outside-btn2' disabled>Contract Outside</button>
+		<button type='button' id='shrink-btn2' disabled>Shrink</button>
+		<button type='button' id='reset-shrink-demo'>Reset</button>
 	</div>
+	<div id='final-score'></div>
 </div>
 
 <script>

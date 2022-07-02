@@ -85,10 +85,10 @@
 
 #game, #shrink-demo, #decision-demo {
 	position: relative;
+	box-sizing: border-box;
 	height: min(100vw, 35rem);
 	width: min(100vw, 35rem);
 	margin: auto;
-
 	border: 1px solid #666;
 }
 #click-please {
@@ -102,20 +102,19 @@
 	background: transparent;
 }
 #decision-foot {
+	box-sizing: border-box;
 	display: flex;
 	width: min(100vw, 35rem);
 	margin: auto;
 	border: 1px solid #666;
 }
 .control-wrapper {
-	background-color: #fff;
-	border: 1px solid #666;
-	position: absolute;
-	bottom: 0;
-	left: 0;
-	right: 0;
-	user-select: none;
+	box-sizing: border-box;
+	width: min(100vw, 35rem);
+	margin: auto;
 	padding: .1rem;
+	user-select: none;
+	border: 1px solid #666;
 }
 #step-explanation {
 	padding-left: .25rem;
