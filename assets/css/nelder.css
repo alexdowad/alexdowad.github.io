@@ -72,6 +72,11 @@
 .label1, .label2, .label3 {
 	font-size: .2em;
 }
+.line1, .line2, .line3 {
+	stroke: #ddcc44;
+	stroke-width: .04em;
+	stroke-dasharray: 3.5 4.5;
+}
 
 #game, #shrink-demo, #decision-demo {
 	position: relative;

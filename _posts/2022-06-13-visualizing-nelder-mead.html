@@ -238,34 +238,58 @@ stylesheets:
 		return svg;
 	}
 
+	function moveLineToPoints(line, point1, point2) {
+		line.setAttribute('x1', point1.x);
+		line.setAttribute('y1', point1.y);
+		line.setAttribute('x2', point2.x);
+		line.setAttribute('y2', point2.y);
+	}
+
 	function moveCircleToPoint(circle, point) {
 		// We are using a 'line' element as a circle, so it stays circular
 		// even when the SVG is scaled to a different aspect ratio
-		circle.setAttribute('x1', point.x);
-		circle.setAttribute('x2', point.x);
-		circle.setAttribute('y1', point.y);
-		circle.setAttribute('y2', point.y);
+		moveLineToPoints(circle, point, point);
 	}
 
 	const pointColor = '#ddcc44';
+
+	function showTrianglePoint(svg, point, cssClass) {
+		const circle = svg.$class1(cssClass) || appendSvgNode(svg, 'line', cssClass, { stroke: pointColor });
+		moveCircleToPoint(circle, point);
+		return circle;
+	}
 
 	// A triangle is an array of 3 points
 	// Take mathematical points as input, return corresponding SVG elements
 	function showTriangle(svg, triangle) {
 		const circles = [];
-		if (triangle.length >= 1) {
-			circles.push(svg.$class1('point1') || appendSvgNode(svg, 'line', 'point1', { stroke: pointColor }));
-			moveCircleToPoint(circles[0], triangle[0]);
-		}
-		if (triangle.length >= 2) {
-			circles.push(svg.$class1('point2') || appendSvgNode(svg, 'line', 'point2', { stroke: pointColor }));
-			moveCircleToPoint(circles[1], triangle[1]);
-		}
+		if (triangle.length >= 1)
+			circles.push(showTrianglePoint(svg, triangle[0], 'point1'));
+		if (triangle.length >= 2)
+			circles.push(showTrianglePoint(svg, triangle[1], 'point2'));
 		if (triangle.length >= 3) {
-			circles.push(svg.$class1('point3') || appendSvgNode(svg, 'line', 'point3', { stroke: pointColor }));
-			moveCircleToPoint(circles[2], triangle[2]);
+			circles.push(showTrianglePoint(svg, triangle[2], 'point3'));
+			showTriangleLines(svg, triangle);
 		}
 		return circles;
+	}
+
+	function showTriangleLine(svg, cssClass, point1, point2) {
+		let line = svg.$class1(cssClass);
+		if (!line) {
+			line = makeSvgNode('line', cssClass);
+			if (svg.$class1('point1'))
+				svg.insertBefore(line, svg.$class1('point1'));
+			else
+				svg.appendChild(line);
+		}
+		moveLineToPoints(line, point1, point2);
+	}
+
+	function showTriangleLines(svg, triangle) {
+		showTriangleLine(svg, 'line1', triangle[0], triangle[1]);
+		showTriangleLine(svg, 'line2', triangle[1], triangle[2]);
+		showTriangleLine(svg, 'line3', triangle[2], triangle[0]);
 	}
 
 	function getMousePosition(event, svg) {
@@ -323,11 +347,11 @@ stylesheets:
 	function showDraggableTriangle(svg, triangle, callback) {
 		function dragCallback(index) {
 			return point => {
-				if (callback) {
-					triangle = Array.from(triangle);
-					triangle[index] = point;
+				triangle = Array.from(triangle);
+				triangle[index] = point;
+				showTriangleLines(svg, triangle);
+				if (callback)
 					callback(triangle);
-				}
 			}
 		}
 
@@ -478,28 +502,45 @@ stylesheets:
 			anim.remove();
 	}
 
-	function slideCircleToPoint(circle, oldPoint, point) {
+	// line1 must start with this circle, line2 must end with this circle
+	function slideCircleToPoint(circle, oldPoint, point, line1, line2) {
 		moveCircleToPoint(circle, oldPoint);
+		line1.setAttribute('x1', oldPoint.x);
+		line1.setAttribute('y1', oldPoint.y);
+		line2.setAttribute('x2', oldPoint.x);
+		line2.setAttribute('y2', oldPoint.y);
 		clearAnimations(circle);
 		// Move at a constant speed most of the time, but make sure we get there
 		// in time even if it means speeding up
 		const duration = Math.min((oldPoint.dist(point) / 32), 1.25) + 's';
 		if (point.x !== oldPoint.x) {
-			appendSvgNode(circle, 'animate', undefined, { attributeName: 'x1', dur: duration, from: oldPoint.x, to: point.x, fill: 'freeze' })
-			appendSvgNode(circle, 'animate', undefined, { attributeName: 'x2', dur: duration, from: oldPoint.x, to: point.x, fill: 'freeze' })
+			appendSvgNode(circle, 'animate', undefined, { attributeName: 'x1', dur: duration, from: oldPoint.x, to: point.x, fill: 'freeze' });
+			appendSvgNode(circle, 'animate', undefined, { attributeName: 'x2', dur: duration, from: oldPoint.x, to: point.x, fill: 'freeze' });
+			appendSvgNode(line1, 'animate', undefined, { attributeName: 'x1', dur: duration, from: oldPoint.x, to: point.x, fill: 'freeze' });
+			appendSvgNode(line2, 'animate', undefined, { attributeName: 'x2', dur: duration, from: oldPoint.x, to: point.x, fill: 'freeze' });
 		}
 		if (point.y !== oldPoint.y) {
-			appendSvgNode(circle, 'animate', undefined, { attributeName: 'y1', dur: duration, from: oldPoint.y, to: point.y, fill: 'freeze' })
-			appendSvgNode(circle, 'animate', undefined, { attributeName: 'y2', dur: duration, from: oldPoint.y, to: point.y, fill: 'freeze' })
+			appendSvgNode(circle, 'animate', undefined, { attributeName: 'y1', dur: duration, from: oldPoint.y, to: point.y, fill: 'freeze' });
+			appendSvgNode(circle, 'animate', undefined, { attributeName: 'y2', dur: duration, from: oldPoint.y, to: point.y, fill: 'freeze' });
+			appendSvgNode(line1, 'animate', undefined, { attributeName: 'y1', dur: duration, from: oldPoint.y, to: point.y, fill: 'freeze' });
+			appendSvgNode(line2, 'animate', undefined, { attributeName: 'y2', dur: duration, from: oldPoint.y, to: point.y, fill: 'freeze' });
+
 		}
 		for (const anim of circle.$tag('animate'))
+			anim.beginElement();
+		for (const anim of line1.$tag('animate'))
+			anim.beginElement();
+		for (const anim of line2.$tag('animate'))
 			anim.beginElement();
 	}
 
 	function slideTriangle(svg, oldTriangle, triangle) {
-		slideCircleToPoint(svg.$class1('point1'), oldTriangle[0], triangle[0]);
-		slideCircleToPoint(svg.$class1('point2'), oldTriangle[1], triangle[1]);
-		slideCircleToPoint(svg.$class1('point3'), oldTriangle[2], triangle[2]);
+		clearAnimations(svg.$class1('line1'));
+		clearAnimations(svg.$class1('line2'));
+		clearAnimations(svg.$class1('line3'));
+		slideCircleToPoint(svg.$class1('point1'), oldTriangle[0], triangle[0], svg.$class1('line1'), svg.$class1('line3'));
+		slideCircleToPoint(svg.$class1('point2'), oldTriangle[1], triangle[1], svg.$class1('line2'), svg.$class1('line1'));
+		slideCircleToPoint(svg.$class1('point3'), oldTriangle[2], triangle[2], svg.$class1('line3'), svg.$class1('line2'));
 	}
 
 	Demo.prototype.slideTriangle = function(svg) {
@@ -746,13 +787,10 @@ stylesheets:
 
 		// Arrowhead looks silly if the line is too short
 		line.setAttribute('marker-end', (lineLength > 3) ? `url(#${marker.id})` : '');
-		line.setAttribute('x1', oldPoint.x);
-		line.setAttribute('y1', oldPoint.y);
 
 		// Make line a bit shorter so arrowhead point ends on the desired point
 		const scaleFactor = Math.max((lineLength - 2.5) / lineLength, 0);
-		line.setAttribute('x2', oldPoint.x + (newPoint.x - oldPoint.x) * scaleFactor);
-		line.setAttribute('y2', oldPoint.y + (newPoint.y - oldPoint.y) * scaleFactor);
+		moveLineToPoints(line, oldPoint, oldPoint.moveTowards(newPoint, scaleFactor));
 	}
 
 	function addArrowhead(svg) {
