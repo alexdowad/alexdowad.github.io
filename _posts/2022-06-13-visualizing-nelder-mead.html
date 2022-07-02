@@ -779,10 +779,8 @@ stylesheets:
 	];
 
 	function drawArrow(svg, cssClass, oldPoint, newPoint) {
-		const line = svg.$class1(cssClass) || appendSvgNode(svg, 'line', cssClass, { stroke: '#666' });
+		const line = svg.$class1(cssClass) || appendSvgNode(svg, 'line', cssClass);
 		const lineLength = newPoint.dist(oldPoint);
-		line.setAttribute('stroke-width', 1);
-
 		const marker = addArrowhead(svg);
 
 		// Arrowhead looks silly if the line is too short

@@ -77,6 +77,11 @@
 	stroke-width: .04em;
 	stroke-dasharray: 3.5 4.5;
 }
+.arrowline, .arrowline1, .arrowline2 {
+	stroke: #666;
+	stroke-width: 1;
+	pointer-events: none;
+}
 
 #game, #shrink-demo, #decision-demo {
 	position: relative;
