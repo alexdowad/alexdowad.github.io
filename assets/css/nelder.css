@@ -3,10 +3,15 @@
 	padding: 1em;
 	border-left: 0.5em solid #555;
 	background-color: #d8c399;
-	color: #d8c399;
 }
-.reveal a {
+.reveal.hidden {
 	color: #d8c399;
+	cursor: pointer;
+	user-select: none;
+}
+.reveal.hidden a {
+	color: #d8c399;
+	pointer-events: none;
 }
 
 #example-triangle, #example-moving-triangle {

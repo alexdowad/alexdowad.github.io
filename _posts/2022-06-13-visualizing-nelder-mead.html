@@ -969,11 +969,11 @@ stylesheets:
 
 <p><b>Why does the algorithm use a triangle rather than a single test point?</b></p>
 
-<p class='reveal'>Remember, one of the key characteristics of Nelder-Mead is that it doesn't require derivatives. However, by comparing the function's value at the corners of a triangle, it's as if Nelder-Mead is estimating the average value of the derivative<sup><a href='#footnote2' id='fnref2'>[2]</a></sup> across the area of the triangle, and using that approximated derivative to decide which direction to move in. This only works using <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height: 0.7667em; vertical-align: -0.0833em;"></span><span class="mord mathnormal" style="margin-right: 0.109em;">N</span><span class="mspace" style="margin-right: 0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right: 0.2222em;"></span></span><span class="base"><span class="strut" style="height: 0.6444em;"></span><span class="mord">1</span></span></span></span> points in an <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height: 0.6833em;"></span><span class="mord mathnormal" style="margin-right: 0.109em;">N</span></span></span></span>-dimensional space; less test points would not be enough to unambiguously determine a direction.</p>
+<p class='reveal hidden'>Remember, one of the key characteristics of Nelder-Mead is that it doesn't require derivatives. However, by comparing the function's value at the corners of a triangle, it's as if Nelder-Mead is estimating the average value of the derivative<sup><a href='#footnote2' id='fnref2'>[2]</a></sup> across the area of the triangle, and using that approximated derivative to decide which direction to move in. This only works using <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height: 0.7667em; vertical-align: -0.0833em;"></span><span class="mord mathnormal" style="margin-right: 0.109em;">N</span><span class="mspace" style="margin-right: 0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right: 0.2222em;"></span></span><span class="base"><span class="strut" style="height: 0.6444em;"></span><span class="mord">1</span></span></span></span> points in an <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height: 0.6833em;"></span><span class="mord mathnormal" style="margin-right: 0.109em;">N</span></span></span></span>-dimensional space; less test points would not be enough to unambiguously determine a direction.</p>
 
 <p><b>Why does the size of the triangle change? Why not use a fixed-size triangle which flips, rotates, and slides around the plane?</b></p>
 
-<div class='reveal'>
+<div class='reveal hidden'>
 <p>Other optimization algorithms, such as gradient descent, typically have a “step size” which gradually decreases as the search progresses. The “step size” determines how far each new test point will be from the previous one. By starting with a large step size, the algorithm can quickly move through the search space at the beginning, which helps it to find a solution in fewer iterations. But as it approaches an optimum point, maintaining a large step size would be counterproductive; that would make the algorithm overshoot the optimum point, and possibly jump so far away that it couldn't find its way back. So the step size needs to gradually decrease as the search progresses.</p>
 
 <p>For Nelder-Mead, the size of the triangle serves as a kind of “step size” parameter. The transformations which move the triangle across the plane all move it a distance proportional to its size. Just as the step size for gradient descent needs to decrease as it gets closer to a minimum point, as Nelder-Mead approaches a minimum point, it needs to use Contract or Shrink to make the triangle smaller.</p>
@@ -1244,10 +1244,9 @@ stylesheets:
 <script>
 	'use strict';
 
-	function revealText() {
-		this.style.color = '#000';
-		for (const anchor of this.$tag('a'))
-			anchor.style.color = '#68f';
+	function revealText(event) {
+		event.preventDefault();
+		this.classList.remove('hidden');
 		this.removeEventListener('click', revealText);
 	}
 	document.querySelectorAll('.reveal').forEach(el => el.listen('click', revealText));
