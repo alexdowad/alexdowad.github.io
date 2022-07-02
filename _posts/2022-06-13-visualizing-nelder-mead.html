@@ -958,13 +958,13 @@ stylesheets:
 
 <p>This game is quite difficult; don't be surprised if you hardly ever “win”. The Nelder-Mead algorithm doesn't always reach a minimum point, either; or at least, not in a reasonable number of iterations. Sometimes it gets <i>close</i> to a minimum point... and then moves <i>very, very</i> slowly towards it.</p>
 
-<p>For that reason, when implementing Nelder-Mead, you need to limit the number of iterations so it doesn't run for too long. Rather than running Nelder-Mead for a huge number of iterations, you will probably get better results by restarting it several times, with different starting points, and then picking the best overall solution found.</p>
+<p>For that reason, when implementing Nelder-Mead, you need to limit the number of iterations so it doesn't run for too long. Rather than running Nelder-Mead for a huge number of iterations, you will probably get better results by restarting it several times, with different starting points, and then picking the best overall solution found.<sup><a href='#footnote1' id='fnref1'>[1]</a></sup></p>
 
 <p>You may be wondering why the algorithm works the way it does. Here are some interesting questions to think about (click to reveal possible answers):</p>
 
 <p><b>Why does the algorithm use a triangle rather than a single test point?</b></p>
 
-<p class='reveal'>Remember, one of the key characteristics of Nelder-Mead is that it doesn't require derivatives. However, by comparing the function's value at the corners of a triangle, it's as if Nelder-Mead is estimating the average value of the derivative<sup><a href='#footnote1' id='fnref1'>[1]</a></sup> across the area of the triangle, and using that approximated derivative to decide which direction to move in. This only works using <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height: 0.7667em; vertical-align: -0.0833em;"></span><span class="mord mathnormal" style="margin-right: 0.109em;">N</span><span class="mspace" style="margin-right: 0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right: 0.2222em;"></span></span><span class="base"><span class="strut" style="height: 0.6444em;"></span><span class="mord">1</span></span></span></span> points in an <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height: 0.6833em;"></span><span class="mord mathnormal" style="margin-right: 0.109em;">N</span></span></span></span>-dimensional space; less test points would not be enough to unambiguously determine a direction.</p>
+<p class='reveal'>Remember, one of the key characteristics of Nelder-Mead is that it doesn't require derivatives. However, by comparing the function's value at the corners of a triangle, it's as if Nelder-Mead is estimating the average value of the derivative<sup><a href='#footnote2' id='fnref2'>[2]</a></sup> across the area of the triangle, and using that approximated derivative to decide which direction to move in. This only works using <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height: 0.7667em; vertical-align: -0.0833em;"></span><span class="mord mathnormal" style="margin-right: 0.109em;">N</span><span class="mspace" style="margin-right: 0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right: 0.2222em;"></span></span><span class="base"><span class="strut" style="height: 0.6444em;"></span><span class="mord">1</span></span></span></span> points in an <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height: 0.6833em;"></span><span class="mord mathnormal" style="margin-right: 0.109em;">N</span></span></span></span>-dimensional space; less test points would not be enough to unambiguously determine a direction.</p>
 
 <p><b>Why does the size of the triangle change? Why not use a fixed-size triangle which flips, rotates, and slides around the plane?</b></p>
 
@@ -1232,7 +1232,9 @@ stylesheets:
 
 <p><i><b>Special thanks</b> to Justin Meiners for the <a href='https://www.jmeiners.com/why-train-when-you-can-optimize/'>article</a> which inspired this post, to Peter Collingridge for his <a href='https://www.petercollingridge.co.uk/tutorials/svg/interactive/dragging/'>helpful post on making SVG elements draggable</a>, to Mike Bostock for D3.js, to John Nelder and Peter Mead for their lovely algorithm, and... to you for reading all the way to the end!</i></p>
 
-<p id='footnote1' style='font-size: 0.8em; margin-top: 2.5em'>[1] To be precise, the right term is “gradient”. <a href='#fnref1'>⏎</a></p>
+<p id='footnote1' style='font-size: 0.8em; margin-top: 2.5em'>[1] In <a href='http://enricoschumann.net/R/restartnm.htm'>this post by Enrico Schumann</a>, the performance of a single run of Nelder-Mead with N iterations is compared empirically with 4 runs of N/4 iterations each, over varying values of N. The version which restarts 4 times completely dominates the one which doesn't restart. <a href='#fnref1'>⏎</a></p>
+
+<p id='footnote2' style='font-size: 0.8em;'>[2] To be precise, the right term is “gradient”. <a href='#fnref2'>⏎</a></p>
 
 <script>
 	'use strict';
