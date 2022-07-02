@@ -286,9 +286,12 @@ function animateTreeConstruction(subtreeSequence, {width, height, nodeRadius, no
 
   function renderNodes(svg) {
     keyframeMap.forEach(function(keyframes, subtree) {
-      animateSvgElement(addSvgElement(svg, 'circle', 'r', nodeRadius), keyframes, 'cx', 'cy');
+      const circle = addSvgElement(svg, 'circle', 'r', nodeRadius);
+      animateSvgElement(circle, keyframes, 'cx', 'cy');
 
       if (!(subtree.value instanceof Array)) {
+        if (subtree.dummy)
+          circle.classList.add('dummy');
         const textNode = addSvgElement(svg, 'text', 'text-anchor', 'middle', 'dominant-baseline', 'central', 'font-size', nodeRadius * 1.5, 'dy', nodeRadius * -0.07);
         textNode.textContent = (subtree.value == ' ') ? '_' : subtree.value;
         animateSvgElement(textNode, keyframes, 'x', 'y');
