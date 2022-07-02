@@ -298,6 +298,7 @@ stylesheets:
 				moveCircleToPoint(circle, newPoint);
 				if (callback)
 					callback(newPoint);
+				event.preventDefault(); // Suppress scrolling of page on mobile
 				return false;
 			}
 		}
@@ -312,7 +313,7 @@ stylesheets:
 		svg.listen('mouseup', endDrag)
 		svg.listen('mouseleave', endDrag);
 		circle.listen('touchstart', startDrag, { passive: true });
-		svg.listen('touchmove', drag, { passive: true });
+		svg.listen('touchmove', drag, { passive: false });
 		circle.listen('touchend', endDrag);
 		svg.listen('touchleave', endDrag);
 		circle.listen('touchcancel', endDrag);
