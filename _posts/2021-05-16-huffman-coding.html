@@ -169,8 +169,6 @@ stylesheets:
 </div>
 <a id='genrand1' class='button'>Generate Random Code</a>
 <script type='module'>
-  'use strict';
-
   import { renderTree } from '/assets/js/treeviz.js';
 
   function showCodingTable(code, table, orderBy) {
@@ -208,8 +206,6 @@ stylesheets:
 </div>
 <a id='genrand2' class='button'>Generate Random Code</a>
 <script type='module'>
-  'use strict';
-
   import { renderTree } from '/assets/js/treeviz.js';
 
   $id('genrand2').addEventListener('click', () => {
@@ -234,8 +230,6 @@ stylesheets:
   <div id='tree2' class='tree'></div>
 </div>
 <script type='module'>
-  'use strict';
-
   import { renderTrees } from '/assets/js/treeviz.js';
 
   /* Just draw leaf nodes for the tree with the characters in `sentence` */
@@ -256,8 +250,6 @@ stylesheets:
 </div>
 <a id='genrand3' class='button'>Generate Random Examples</a>
 <script type='module'>
-  'use strict';
-
   import { animateRandomBottomUpTree, animateRandomTopDownTree } from '/assets/js/treeviz.js';
 
   function removeNode(node) {
@@ -300,8 +292,6 @@ Good. Another one: When building a tree bottom-up, every time we pick two subtre
   <div id='animation2' class='tree'></div>
 </div>
 <script type='module'>
-  'use strict';
-
   import { animateOptimalTree } from '/assets/js/treeviz.js';
 
   /* Just animate the first step, where the two lowest weighted nodes are joined together */
@@ -337,8 +327,6 @@ Good. Another one: When building a tree bottom-up, every time we pick two subtre
 </div>
 <input type='text' id='text0' style='width: 100%; box-sizing: border-box;' maxlength=32 value='Type something here' />
 <script type='module'>
-  'use strict';
-
   import { animateOptimalTree } from '/assets/js/treeviz.js';
 
   function showOptimalCode() {
@@ -396,8 +384,6 @@ Good. Another one: When building a tree bottom-up, every time we pick two subtre
 
 <div id='animation4' class='tree' style='border: 1px solid #aaa; --ratio:80/35'></div>
 <script type='module'>
-  'use strict';
-
   import { animateDummyTree } from '/assets/js/treeviz.js';
 
   (function() {
