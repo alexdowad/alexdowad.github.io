@@ -106,6 +106,8 @@
 	display: flex;
 	width: min(100vw, 35rem);
 	margin: auto;
+	/* To avoid shifting the text below this element if it changes in height: */
+	min-height: 7em;
 	border: 1px solid #666;
 }
 .control-wrapper {
