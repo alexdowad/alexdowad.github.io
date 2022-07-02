@@ -107,8 +107,14 @@
 	width: min(100vw, 35rem);
 	margin: auto;
 	/* To avoid shifting the text below this element if it changes in height: */
-	min-height: 7em;
+	min-height: 9em;
 	border: 1px solid #666;
+}
+@media (min-width: 40em) {
+	.decision-foot {
+		/* When the page is wider, this box doesn't need to be quite as tall */
+		min-height: 7em;
+	}
 }
 .control-wrapper {
 	box-sizing: border-box;
