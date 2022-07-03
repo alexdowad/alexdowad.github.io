@@ -15,11 +15,9 @@
 }
 
 #example-triangle, #example-moving-triangle {
-	/* This box should be square on a narrow screen, but rectangular on wider screens */
-	height: min(100vw, 18rem);
+	height: min(100vw, 29rem);
 	width: min(100vw, 29rem);
 	margin: auto;
-
 	border: 1px solid #666;
 }
 
@@ -44,8 +42,8 @@
 .transformation-vis {
 	position: relative;
 	flex: 0 0 auto;
-	height: 15rem;
-	width: min(100vw, 30rem);
+	height: min(100vw, 29rem);;
+	width: min(100vw, 29rem);
 	border: 1px solid #666;
 }
 .trans-coeff {
@@ -63,11 +61,6 @@
   position: absolute;
   top: 0;
   left: 0;
-}
-.point1, .point2, .point3, .point4, .point5, .minimum, .localMinimum, .reflectPoint, .contractPoint, .expandPoint, .shrinkPoint1, .shrinkPoint2 {
-	stroke-linecap: round;
-	stroke-width: 1.2em;
-	vector-effect: non-scaling-stroke;
 }
 .label1, .label2, .label3 {
 	font-size: .2em;

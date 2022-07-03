@@ -246,15 +246,15 @@ stylesheets:
 	}
 
 	function moveCircleToPoint(circle, point) {
-		// We are using a 'line' element as a circle, so it stays circular
-		// even when the SVG is scaled to a different aspect ratio
-		moveLineToPoints(circle, point, point);
+		circle.setAttribute('cx', point.x);
+		circle.setAttribute('cy', point.y);
 	}
 
 	const pointColor = '#ddcc44';
+	const radius = '.13rem';
 
 	function showTrianglePoint(svg, point, cssClass) {
-		const circle = svg.$class1(cssClass) || appendSvgNode(svg, 'line', cssClass, { stroke: pointColor });
+		const circle = svg.$class1(cssClass) || appendSvgNode(svg, 'circle', cssClass, { r: radius, fill: pointColor });
 		moveCircleToPoint(circle, point);
 		return circle;
 	}
@@ -309,8 +309,8 @@ stylesheets:
 		function startDrag(event) {
 			dragging = true;
 			[startX, startY] = getMousePosition(event, svg);
-			circleX = Number(circle.getAttribute('x1'));
-			circleY = Number(circle.getAttribute('y1'));
+			circleX = Number(circle.getAttribute('cx'));
+			circleY = Number(circle.getAttribute('cy'));
 			return false;
 		}
 		function drag(event) {
@@ -514,14 +514,12 @@ stylesheets:
 		// in time even if it means speeding up
 		const duration = Math.min((oldPoint.dist(point) / 32), 1.25) + 's';
 		if (point.x !== oldPoint.x) {
-			appendSvgNode(circle, 'animate', undefined, { attributeName: 'x1', dur: duration, from: oldPoint.x, to: point.x, fill: 'freeze' });
-			appendSvgNode(circle, 'animate', undefined, { attributeName: 'x2', dur: duration, from: oldPoint.x, to: point.x, fill: 'freeze' });
+			appendSvgNode(circle, 'animate', undefined, { attributeName: 'cx', dur: duration, from: oldPoint.x, to: point.x, fill: 'freeze' });
 			appendSvgNode(line1, 'animate', undefined, { attributeName: 'x1', dur: duration, from: oldPoint.x, to: point.x, fill: 'freeze' });
 			appendSvgNode(line2, 'animate', undefined, { attributeName: 'x2', dur: duration, from: oldPoint.x, to: point.x, fill: 'freeze' });
 		}
 		if (point.y !== oldPoint.y) {
-			appendSvgNode(circle, 'animate', undefined, { attributeName: 'y1', dur: duration, from: oldPoint.y, to: point.y, fill: 'freeze' });
-			appendSvgNode(circle, 'animate', undefined, { attributeName: 'y2', dur: duration, from: oldPoint.y, to: point.y, fill: 'freeze' });
+			appendSvgNode(circle, 'animate', undefined, { attributeName: 'cy', dur: duration, from: oldPoint.y, to: point.y, fill: 'freeze' });
 			appendSvgNode(line1, 'animate', undefined, { attributeName: 'y1', dur: duration, from: oldPoint.y, to: point.y, fill: 'freeze' });
 			appendSvgNode(line2, 'animate', undefined, { attributeName: 'y2', dur: duration, from: oldPoint.y, to: point.y, fill: 'freeze' });
 
@@ -550,16 +548,16 @@ stylesheets:
 	Demo.prototype.showColoredTriangle = function(svg) {
 		this.showTriangle(svg);
 		const cssClasses = ['point1', 'point2', 'point3'];
-		svg.$class1(cssClasses[this.worstIndex]).setAttribute('stroke', d3.color(pointColor).darker());
-		svg.$class1(cssClasses[this.secondIndex]).setAttribute('stroke', pointColor);
-		svg.$class1(cssClasses[this.bestIndex]).setAttribute('stroke', d3.color(pointColor).brighter());
+		svg.$class1(cssClasses[this.worstIndex]).setAttribute('fill', d3.color(pointColor).darker());
+		svg.$class1(cssClasses[this.secondIndex]).setAttribute('fill', pointColor);
+		svg.$class1(cssClasses[this.bestIndex]).setAttribute('fill', d3.color(pointColor).brighter());
 	}
 
 	Demo.prototype.showMinima = function(svg) {
 		for (const circle of Array.from(svg.$class('minimum')))
 			circle.remove();
 		for (const [x, y] of this.fn.minima) {
-			const minCircle = makeSvgNode('line', 'minimum', { stroke: '#d55' });
+			const minCircle = makeSvgNode('circle', 'minimum', { r: radius, fill: '#d55' });
 			if (svg.$class1('point1'))
 				svg.insertBefore(minCircle, svg.$class1('point1'));
 			else
@@ -572,7 +570,7 @@ stylesheets:
 		for (const circle of Array.from(svg.$class('localMinimum')))
 			circle.remove();
 		for (const [x, y] of this.fn.localMinima || []) {
-			const minCircle = makeSvgNode('line', 'localMinimum', { stroke: '#ffa500' });
+			const minCircle = makeSvgNode('circle', 'localMinimum', { r: radius, fill: '#ffa500' });
 			if (svg.$class1('point1'))
 				svg.insertBefore(minCircle, svg.$class1('point1'));
 			else
@@ -582,34 +580,34 @@ stylesheets:
 	}
 
 	Demo.prototype.showReflectPoint = function(svg) {
-		const circle = svg.$class1('reflectPoint') || makeSvgNode('line', 'reflectPoint', { stroke: '#80bde3' });
+		const circle = svg.$class1('reflectPoint') || makeSvgNode('circle', 'reflectPoint', { r: radius, fill: '#80bde3' });
 		svg.insertBefore(circle, svg.$class1('point1'));
 		moveCircleToPoint(circle, this.reflectPoint);
 	}
 
 	Demo.prototype.showExpandPoint = function(svg) {
-		const circle = svg.$class1('expandPoint') || makeSvgNode('line', 'expandPoint', { stroke: '#ffa500' });
+		const circle = svg.$class1('expandPoint') || makeSvgNode('circle', 'expandPoint', { r: radius, fill: '#ffa500' });
 		svg.insertBefore(circle, svg.$class1('point1'));
 		moveCircleToPoint(circle, this.expandPoint);
 	}
 
 	Demo.prototype.showInsideContractionPoint = function(svg) {
-		const circle = svg.$class1('contractPoint') || makeSvgNode('line', 'contractPoint', { stroke: '#ffc0cb' });
+		const circle = svg.$class1('contractPoint') || makeSvgNode('circle', 'contractPoint', { r: radius, fill: '#ffc0cb' });
 		svg.insertBefore(circle, svg.$class1('point1'));
 		moveCircleToPoint(circle, this.insidePoint);
 	}
 
 	Demo.prototype.showOutsideContractionPoint = function(svg) {
-		const circle = svg.$class1('contractPoint') || makeSvgNode('line', 'contractPoint', { stroke: '#ffc0cb' });
+		const circle = svg.$class1('contractPoint') || makeSvgNode('circle', 'contractPoint', { r: radius, fill: '#ffc0cb' });
 		svg.insertBefore(circle, svg.$class1('point1'));
 		moveCircleToPoint(circle, this.outsidePoint);
 	}
 
 	Demo.prototype.showShrinkPoints = function(svg) {
-		const circle1 = svg.$class1('shrinkPoint1') || makeSvgNode('line', 'shrinkPoint1', { stroke: '#a0d468' });
+		const circle1 = svg.$class1('shrinkPoint1') || makeSvgNode('circle', 'shrinkPoint1', { r: radius, fill: '#a0d468' });
 		svg.insertBefore(circle1, svg.$class1('point1'));
 		moveCircleToPoint(circle1, this.shrinkPoint1);
-		const circle2 = svg.$class1('shrinkPoint2') || makeSvgNode('line', 'shrinkPoint2', { stroke: '#a0d468' });
+		const circle2 = svg.$class1('shrinkPoint2') || makeSvgNode('circle', 'shrinkPoint2', { r: radius, fill: '#a0d468' });
 		svg.insertBefore(circle2, svg.$class1('point1'));
 		moveCircleToPoint(circle2, this.shrinkPoint2);
 	}
@@ -779,8 +777,12 @@ stylesheets:
 	];
 
 	function drawArrow(svg, cssClass, oldPoint, newPoint) {
-		const line = svg.$class1(cssClass) || appendSvgNode(svg, 'line', cssClass);
 		const lineLength = newPoint.dist(oldPoint);
+		if (lineLength < 0.5) {
+			svg.$class1(cssClass)?.remove();
+			return; // Don't even draw line if it will be extremely short
+		}
+		const line = svg.$class1(cssClass) || appendSvgNode(svg, 'line', cssClass);
 		const marker = addArrowhead(svg);
 
 		// Arrowhead looks silly if the line is too short
@@ -803,15 +805,15 @@ stylesheets:
 
 	// Use an arrow to show where a node will go
 	function illustrateTransform(svg, oldPoint, newPoint) {
-		const point4 = svg.$class1('point4') || appendSvgNode(svg, 'line', 'point4', { stroke: d3.color(pointColor).brighter() });
+		const point4 = svg.$class1('point4') || appendSvgNode(svg, 'circle', 'point4', { r: radius, fill: d3.color(pointColor).brighter() });
 		moveCircleToPoint(point4, newPoint);
 		drawArrow(svg, 'arrowline', oldPoint, newPoint);
 	}
 
 	function illustrateShrink(svg, oldPoint1, newPoint1, oldPoint2, newPoint2) {
-		const point4 = svg.$class1('point4') || appendSvgNode(svg, 'line', 'point4', { stroke: d3.color(pointColor).brighter() });
+		const point4 = svg.$class1('point4') || appendSvgNode(svg, 'circle', 'point4', { r: radius, fill: d3.color(pointColor).brighter() });
 		moveCircleToPoint(point4, newPoint1);
-		const point5 = svg.$class1('point5') || appendSvgNode(svg, 'line', 'point5', { stroke: d3.color(pointColor).brighter() });
+		const point5 = svg.$class1('point5') || appendSvgNode(svg, 'circle', 'point5', { r: radius, fill: d3.color(pointColor).brighter() });
 		moveCircleToPoint(point5, newPoint2);
 
 		drawArrow(svg, 'arrowline1', oldPoint1, newPoint1);
