@@ -15,8 +15,8 @@
 }
 
 #example-triangle, #example-moving-triangle {
-	height: min(calc(100vw - 1.5em), 29rem);
-	width: min(calc(100vw - 1.5em), 29rem);
+	height: min(calc(100vw - 3em), 29rem);
+	width: min(calc(100vw - 3em), 29rem);
 	margin: auto;
 	border: 1px solid #666;
 }
@@ -42,8 +42,8 @@
 .transformation-vis {
 	position: relative;
 	flex: 0 0 auto;
-	height: min(calc(100vw - 1.5em), 29rem);
-	width: min(calc(100vw - 1.5em), 29rem);
+	height: min(calc(100vw - 3em), 29rem);
+	width: min(calc(100vw - 3em), 29rem);
 	border: 1px solid #666;
 }
 .trans-coeff {
@@ -79,8 +79,8 @@
 #game, #shrink-demo, #decision-demo {
 	position: relative;
 	box-sizing: border-box;
-	height: min(calc(100vw - 1.5em), 35rem);
-	width: min(calc(100vw - 1.5em), 35rem);
+	height: min(calc(100vw - 3em), 35rem);
+	width: min(calc(100vw - 3em), 35rem);
 	margin: auto;
 	border: 1px solid #666;
 }
@@ -97,7 +97,7 @@
 #decision-foot {
 	box-sizing: border-box;
 	display: flex;
-	width: min(calc(100vw - 1.5em), 35rem);
+	width: min(calc(100vw - 3em), 35rem);
 	margin: auto;
 	/* To avoid shifting the text below this element if it changes in height: */
 	min-height: 9em;
@@ -111,7 +111,7 @@
 }
 .control-wrapper {
 	box-sizing: border-box;
-	width: min(calc(100vw - 1.5em), 35rem);
+	width: min(calc(100vw - 3em), 35rem);
 	margin: auto;
 	padding: .1rem;
 	user-select: none;
