@@ -313,6 +313,16 @@ stylesheets:
 			circleY = Number(circle.getAttribute('cy'));
 			return false;
 		}
+		function touchStartDrag(event) {
+			if (!dragging) {
+				const [touchX, touchY] = getMousePosition(event, svg);
+				circleX = Number(circle.getAttribute('cx'));
+				circleY = Number(circle.getAttribute('cy'));
+				const dist = (new Point(touchX, touchY)).dist(new Point(circleX, circleY));
+				if (dist < 5.5)
+					startDrag(event);
+			}
+		}
 		function drag(event) {
 			if (dragging) {
 				const [dragX, dragY] = getMousePosition(event, svg);
@@ -329,18 +339,17 @@ stylesheets:
 		function endDrag(event) {
 			if (dragging) {
 				dragging = false;
-				return false;
 			}
 		}
 		circle.listen('mousedown', startDrag);
 		svg.listen('mousemove', drag);
 		svg.listen('mouseup', endDrag)
 		svg.listen('mouseleave', endDrag);
-		circle.listen('touchstart', startDrag, { passive: true });
+		svg.listen('touchstart', touchStartDrag, { passive: false });
 		svg.listen('touchmove', drag, { passive: false });
-		circle.listen('touchend', endDrag);
+		svg.listen('touchend', endDrag);
 		svg.listen('touchleave', endDrag);
-		circle.listen('touchcancel', endDrag);
+		svg.listen('touchcancel', endDrag);
 		circle.classList.add('draggable');
 	}
 
