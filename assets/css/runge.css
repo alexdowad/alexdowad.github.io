@@ -1,0 +1,52 @@
+.viewport {
+	cursor: zoom-in;
+}
+.viewport.panning {
+	cursor: move;
+}
+
+.axis {
+	stroke-width: .08em;
+}
+.axis text {
+	font-size: .6em;
+}
+
+#exp1wrapper, #exp2wrapper, #typewrapper {
+	display: flex;
+	gap: .4rem;
+	margin-top: .5rem;
+}
+#exp1, #exp2 {
+	flex-grow: 1;
+}
+
+.params {
+	display: grid;
+	grid-template-columns: 2fr 1fr 2fr 1fr 4fr 1fr 1fr 1fr;
+	gap: .2rem;
+	justify-items: end;
+	margin-top: .5rem;
+}
+.params input {
+	width: 8ch;
+}
+.params .rowstart {
+	grid-column: 1;
+}
+
+@media (max-width: 620px) {
+	.params {
+		font-size: 80%;
+	}
+}
+@media (min-width: 621px) and (max-width: 710px) {
+	.params {
+		font-size: 90%;
+	}
+}
+
+.err {
+	background-color: hsl(0 45% 90%);
+	color: hsl(0 80% 25%);
+}

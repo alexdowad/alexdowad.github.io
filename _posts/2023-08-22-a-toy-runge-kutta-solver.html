@@ -1,0 +1,975 @@
+---
+layout: post
+title:  "A Toy Runge-Kutta Differential Equation Solver"
+date:   2023-08-22
+categories:
+  - differential equations
+stylesheets:
+  - runge.css
+  - katex.css
+---
+
+<p>This post presents a simple, interactive <a>differential equation</a> solution grapher based on the classic Runge-Kutta method (which is really an algorithm).</p>
+
+<hr>
+
+<!--
+
+To complete this post:
+
+- Styling for input fields
+
+- Error handling for parse errors
+
+- Then add a bit more explanatory text and a display of code with syntax highlighting
+
+- Choose type of graphs???
+
+- Responsive layout for narrow screens
+
+- Once code is done, do cross-browser testing
+
+-->
+
+<!-- Allow typing RHS of DE using JavaScript expression syntax OR TeX -->
+
+<div id='view1' style='width: 49%; height: 35rem; display: inline-block'></div>
+<div id='view2' style='width: 49%; height: 35rem; display: inline-block'></div>
+
+<div id='typewrapper'>
+	Graph solutions for:
+	<select id='graphtype'>
+		<option value='order1'>one first-order equation</option>
+		<option value='order2' selected>one second-order equation</option>
+		<option value='eqs2_order1'>a system of two first-order equations</option>
+	</select>
+</div>
+<div id='exp1wrapper'>
+	<label for='exp1' style="font-style: italic">y'' =</label> <input id='exp1' value='cos(y)'>
+</div>
+<div id='exp2wrapper' style="display: none">
+	<span style="font-style: italic">z' =</span> <input id='exp2' value='cos(z)'>
+</div>
+<div class='params'>
+	Start time: <input id='starttime' type='number' value='-10'>
+	End time: <input id='endtime' type='number' value='10'>
+	Time step: <input id='timestep' type='number' value='0.1'>
+	<span title="Starting values for variables are at this time">t₀:</span> <input id='t0' type='number' value='0'>
+
+	<label for='starty1' class='rowstart'>Min y(0):</label> <input id='starty1' type='number' value='-3'>
+	<label for='starty2'>Max y(0):</label> <input id='starty2' type='number' value='3'>
+	# values to graph: <input id='nstarty' type='number' value='5' max='50'>
+
+	<label for='startdy1' class='order2only rowstart'>Min y'(0):</label> <input id='startdy1' type='number' value='-3' class='order2only'>
+	<label for='startdy2' class='order2only'>Max y'(0):</label> <input id='startdy2' type='number' value='3' class='order2only'>
+	<span class='order2only'># values to graph:</span> <input id='nstartdy' type='number' value='5' max='50' class='order2only'>
+
+	<label for='startz1' class='eqs2only rowstart' style="display: none">Min z(0):</label> <input id='startz1' type='number' value='-3' class='eqs2only' style="display: none">
+	<label for='startz2' class='eqs2only' style="display: none">Max z(0):</label> <input id='startz2' type='number' value='3' class='eqs2only' style="display: none">
+	<span class='eqs2only' style="display: none"># values to graph:</span> <input id='nstartz' type='number' value='5' max='50' class='eqs2only' style="display: none">
+</div>
+
+<script src='/assets/js/d3-array.js'></script>
+<script src='/assets/js/d3-color.js'></script>
+<script src='/assets/js/d3-interpolate.js'></script>
+<script src='/assets/js/d3-scale.js'></script>
+<script src='/assets/js/d3-selection.js'></script>
+<script src='/assets/js/d3-format.js'></script>
+<script src='/assets/js/d3-axis.js'></script>
+<script src='/assets/js/d3-dispatch.js'></script>
+<script src='/assets/js/d3-timer.js'></script>
+<script src='/assets/js/d3-ease.js'></script>
+<script src='/assets/js/d3-transition.js'></script>
+<script>
+	'use strict';
+
+	const $id = document.getElementById.bind(document);
+	const $class = document.getElementsByClassName.bind(document);
+	Element.prototype.$class = Element.prototype.getElementsByClassName;
+	Element.prototype.$class1 = function(cssClass) { return this.$class(cssClass)?.[0]; }
+	Element.prototype.listen = Element.prototype.addEventListener;
+
+	// When getting min/max of a large array, this is far faster than using Math.min(...array)
+	// and Math.max(...array), at least with V8 JS engine
+	function minMax(array) {
+		let i = 1, limit = array.length, max = array[0], min = array[0];
+		while (i < limit) {
+			let value = array[i];
+			min = Math.min(min, value); // Hopefully this JITs to a single MINSD instruction on x86-64
+			max = Math.max(max, value);
+			i++;
+		}
+		return [min, max];
+	}
+
+	function makeSvgNode(tag, cssClass, attributes = {}) {
+		const node = document.createElementNS("http://www.w3.org/2000/svg", tag);
+		if (cssClass)
+			node.classList.add(cssClass);
+		for (const [key, value] of Object.entries(attributes))
+			node.setAttribute(key, value);
+		return node;
+	}
+
+	function appendSvgNode(parent, tag, cssClass, attributes = {}) {
+		const node = makeSvgNode(tag, cssClass, attributes);
+		parent.appendChild(node);
+		return node;
+	}
+
+	function prependSvgNode(parent, tag, cssClass, attributes = {}) {
+		const node = makeSvgNode(tag, cssClass, attributes);
+		parent.prepend(node);
+		return node;
+	}
+
+	// Make SVG which will resize itself to match its container
+	function initDynamicSvg(wrapper) {
+		const svg = appendSvgNode(wrapper, 'svg', undefined, { viewBox: '0 0 200 200', preserveAspectRatio: 'none' });
+		const watcher = new ResizeObserver(entries => {
+			svg.style.width = Math.round(entries[0].contentBoxSize[0].inlineSize);
+			svg.style.height = Math.round(entries[0].contentBoxSize[0].blockSize);
+		});
+		watcher.observe(wrapper);
+		svg.style.width = wrapper.offsetWidth;
+		svg.style.height = wrapper.offsetHeight;
+		return svg;
+	}
+
+	// Convert position of a mouse event from px coordinates to SVG unit coordinates
+	function getMousePosition(event, svg) {
+		const CTM = svg.getScreenCTM();
+		if (event.touches)
+			event = event.touches[0];
+		return [
+			(event.clientX - CTM.e) / CTM.a,
+			(event.clientY - CTM.f) / CTM.d
+		];
+	}
+
+	// Parser for C/Java/JavaScript-like expression syntax
+	function jsTokenize(str) {
+		if (!str.length)
+			return [];
+		str = str.toLowerCase();
+		const matches = Array.from(str.matchAll(/\-?\d+(\.\d+)?|[()/+-]|\*\*?|[\w'π]+|\s+/gy));
+		const lastMatch = matches.at(-1);
+		if (lastMatch.index + lastMatch[0].length !== str.length) {
+			throw new Error("Parse error"); // TODO: better error handling
+		}
+		return Array.from(matches).map((m) => m[0]).filter((s) => /^\S+$/.test(s));
+	}
+
+	const knownFunctions = new Set(['sqrt', 'sin', 'cos', 'tan', 'arcsin', 'arccos', 'arctan', 'ln', 'log', 'log10', 'log2']);
+
+	function jsParse(tokens) {
+		const exp = jsParseExpression(tokens);
+		if (tokens.length) {
+			// All tokens should have been consumed by the parser
+			throw new Error("Parse error"); // TODO: better error handling
+		}
+		return exp;
+	}
+
+	function jsParseExpression(tokens) {
+		if (!tokens.length)
+			throw new Error("Parse error"); // TODO: better error handling
+
+		let lhs = jsParseNonBinaryExpression(tokens);
+
+		if (!tokens.length)
+			return lhs;
+
+		// Are we in the middle of a binary expression?
+		let tok = tokens[0];
+		while (tok === '+' || tok === '-' || tok === '*' || tok === '/' || tok === '**') {
+			tokens.shift();
+			lhs = [tok, lhs, jsParseNonBinaryExpression(tokens)];
+			tok = tokens[0];
+		}
+		return lhs;
+	}
+
+	function jsParseNonBinaryExpression(tokens) {
+		const tok = tokens.shift();
+		let subExp, nextTok;
+
+		if (tok === '(') {
+			subExp = jsParseExpression(tokens);
+			nextTok = tokens.shift();
+			if (nextTok !== ')') {
+				throw new Error("Parse error"); // TODO: better error handling
+			}
+			return subExp;
+		}
+
+		if (tok === ')' || tok === '+' || tok === '*' || tok === '/' || tok === '**')
+			throw new Error("Parse error"); // TODO: better error handling
+
+		if (/\-?\d+(\.\d+)?/.test(tok) || tok === 't' || tok === 'y' || tok === 'z' || tok === "y'" || tok == 'e' || tok === 'π' || tok === 'pi')
+			return tok;
+
+		if (tok === '-')
+			return ['-', jsParseExpression(tokens)];
+
+		if (/[\w']+/.test(tok)) {
+			if (!knownFunctions.has(tok))
+				throw new Error("Parse error"); // TODO: better error handling
+			nextTok = tokens.shift();
+			if (nextTok !== '(')
+				throw new Error("Parse error"); // TODO: better error handling
+			let param = jsParseExpression(tokens);
+			nextTok = tokens.shift();
+			if (nextTok !== ')')
+				throw new Error("Parse error"); // TODO: better error handling
+			return [tok, param];
+		}
+
+		throw new Error(`Unexpected token: ${tok}`);
+	}
+
+	// Convert parsed expression to a JS function object
+	function compileFunction(ast) {
+		return new Function('t', 'y', 'z', `return ${compileNode(ast)};`);
+	}
+
+	function compileNode(ast) {
+		if (ast === 't' || ast === 'y' || ast === 'z' || (typeof(ast) === 'string' && /\-?\d+(\.\d+)?/.test(ast)))
+			return ast;
+		if (ast === "y'")
+			return 'z';
+		if (ast === 'e')
+			return 'Math.E';
+		if (ast === 'π' || ast === 'pi')
+			return 'Math.PI';
+		if (Array.isArray(ast)) {
+			const fn = ast[0];
+			if (fn === 'cos' || fn === 'sin' || fn === 'tan' || fn === 'sqrt' || fn === 'log2' || fn === 'log10')
+				return `Math.${fn}(${compileNode(ast[1])})`;
+			if (fn === 'arcsin' || fn === 'arccos' || fn === 'arctan')
+				return `Math.a${fn.substr(3,3)}(${compileNode(ast[1])})`;
+			if (fn === 'ln' || fn === 'log')
+				return `Math.log(${compileNode(ast[1])})`
+			if (fn === '-' && ast.length === 2)
+				return `-(${compileNode(ast[1])})`;
+			if (fn === '+' || fn === '-' || fn === '*' || fn === '/' || fn === '**')
+				return `(${compileNode(ast[1])}) ${fn} (${compileNode(ast[2])})`;
+		}
+		throw new Error(`Unexpected AST node: ${JSON.stringify(ast)}`);
+	}
+
+	class Solution {
+		constructor(t_start, t_end, Δt, nVars) {
+			this.t_start = t_start;
+			this.t_end = t_end;
+			this.Δt = Δt;
+			this.nVars = nVars;
+			this.nPoints = Math.floor(((t_end - t_start) / Δt) + 1);
+			// Packed array of values for all variables at each time step:
+			// (Values for each variable occupy a contiguous range of indices)
+			this.array = new Float64Array(nVars * this.nPoints);
+			// Packed array of estimated derivatives of all variables at each time step:
+			this.diff = undefined;
+		}
+
+		// Find range of indices with values for a particular variable
+		startIndex(varIndex) {
+			return this.nPoints * varIndex;
+		}
+		endIndex(varIndex) {
+			return this.startIndex(varIndex+1);
+		}
+
+		// Find index of value for a particular variable and time step
+		timeIndex(varIndex, t) {
+			return this.startIndex(varIndex) + Math.floor((t - this.t_start) / this.Δt);
+		}
+
+		values(varIndex) {
+			return this.array.subarray(this.startIndex(varIndex), this.endIndex(varIndex));
+		}
+
+		firstDifferences(varIndex) {
+			if (this.nPoints === 0)
+				return [];
+			if (this.nPoints === 1)
+				return [0];
+			if (!this.diff) {
+				this.diff = new Float64Array(this.nVars * this.nPoints);
+				for (let v = 0; v < this.nVars; v++) {
+					let i = this.startIndex(v), limit = this.endIndex(v)-1;
+					this.diff[i] = this.array[i+1] - this.array[i];
+					this.diff[limit] = this.array[limit] - this.array[limit-1];
+					while (++i < limit) {
+						this.diff[i] = this.array[i+1] - this.array[i-1];
+					}
+				}
+			}
+			return this.diff.subarray(this.startIndex(varIndex), this.endIndex(varIndex));
+		}
+	}
+
+	class PhaseLine {
+		constructor(solution) {
+			this.solution = solution;
+			this._bounds = undefined;
+		}
+
+		title() {
+			return this.solution.startConditions;
+		}
+
+		svgPath(xScale, yScale) {
+			const limit = this.solution.endIndex(0), ary = this.solution.array, minXDiff = Math.abs(xScale.invert(0.01) - xScale.invert(0)), minYDiff = Math.abs(yScale.invert(0.01) - yScale.invert(0));
+			let s = 'M '
+			if (this.solution.nVars === 1) {
+				const dy_values = this.solution.firstDifferences(0);
+				let x = ary[0], y = dy_values[0];
+				s += xScale(x).toFixed(2) + ',' + yScale(y).toFixed(2);
+				for (let i = 1; i < limit; i++) {
+					if (Math.abs(ary[i] - x) >= minXDiff || Math.abs(dy_values[i] - y) >= minYDiff) {
+						x = ary[i];
+						y = dy_values[i];
+						s += ' L ' + xScale(x).toFixed(2) + ',' + yScale(y).toFixed(2);
+					}
+				}
+			} else {
+				let x = ary[0], y = ary[limit];
+				s += xScale(x).toFixed(2) + ',' + yScale(y).toFixed(2);
+				for (let i = 1; i < limit; i++) {
+					if (Math.abs(ary[i] - x) >= minXDiff || Math.abs(ary[i+limit] - y) >= minYDiff) {
+						x = ary[i];
+						y = ary[i+limit];
+						s += ' L ' + xScale(x).toFixed(2) + ',' + yScale(y).toFixed(2);
+					}
+				}
+			}
+			return s;
+		}
+
+		bounds() {
+			if (this._bounds)
+				return this._bounds;
+			const y_values = this.solution.values(0);
+			if (this.solution.nVars === 1) {
+				const dy_values = this.solution.firstDifferences(0);
+				return this._bounds = minMax(y_values).concat(minMax(dy_values));
+			} else {
+				const z_values = this.solution.values(1);
+				return this._bounds = minMax(y_values).concat(minMax(z_values));
+			}
+		}
+	}
+
+	class TimeLine {
+		constructor(solution) {
+			this.solution = solution;
+			this._bounds = undefined;
+		}
+
+		title() {
+			return this.solution.startConditions;
+		}
+
+		svgPath(xScale, yScale) {
+			const limit = this.solution.endIndex(0), t = this.solution.t_start, Δt = this.solution.Δt, ary = this.solution.array;
+			let s = 'M ';
+			s += xScale(t).toFixed(2) + ',' + yScale(ary[0]).toFixed(2);
+			for (let i = 1; i < limit; i++) {
+				t += Δt;
+				s += ' L ' + xScale(t).toFixed(2) + ',' + yScale(ary[i]).toFixed(2);
+			}
+			return s;
+		}
+
+		bounds() {
+			if (this._bounds)
+				return this._bounds;
+			const y_values = this.solution.values(0);
+			return [this.solution.t_start, this.solution.t_end].concat(minMax(y_values));
+		}
+	}
+
+	function combinedBounds(lines) {
+		const allBounds = lines.map((line) => line.bounds());
+		return [
+			Math.min(...allBounds.map((b) => b[0])),
+			Math.max(...allBounds.map((b) => b[1])),
+			Math.min(...allBounds.map((b) => b[2])),
+			Math.max(...allBounds.map((b) => b[3]))
+		];
+	}
+
+	// Trace out evolution of our system using classic Runge-Kutta (AKA "RK4")
+	// Store results in a packed array of floats
+	function rk4trace(y, t, Δt, fn, ary, i, Δi, limit) {
+		while (i !== limit) {
+			const half_Δt = Δt / 2.0;
+			const next_t = t + Δt;
+			const half_t = t + half_Δt;
+
+			const k_1 = fn(t, y); // Slope at starting point
+			const k_2 = fn(half_t, y + (half_Δt * k_1)); // Estimated slope at mid-point
+			const k_3 = fn(half_t, y + (half_Δt * k_2)); // Another estimate of slope at mid-point
+			const k_4 = fn(next_t, y + (Δt * k_3)); // Estimated slope at endpoint
+
+			const slope = (k_1 + 2*k_2 + 2*k_3 + k_4) / 6.0; // Weighted average of those four slopes
+
+			y += Δt * slope;
+			ary[i] = y;
+			t += Δt;
+			i += Δi;
+		}
+	}
+
+	// Apply RK4 to find phase lines for a system with one dependent variable
+	function rk4solve(y_0, t_0, t_start, t_end, Δt, fn) {
+		let t = t_0, y = y_0, solution = new Solution(t_start, t_end, Δt, 1);
+		let i = solution.timeIndex(0, t_0);
+		solution.array[i] = y_0;
+
+		// Trace out phase line from starting point
+		rk4trace(y_0, t_0, Δt, fn, solution.array, i+1, 1, solution.endIndex(0));
+
+		// Trace out phase line in the opposite direction from the starting point
+		rk4trace(y_0, t_0, -Δt, fn, solution.array, i-1, -1, solution.startIndex(0)-1);
+
+		return solution;
+	}
+
+	function rk4trace_2(y, z, t, Δt, fn_y, fn_z, ary, i, Δi, offset, limit) {
+		while (i !== limit) {
+			const half_Δt = Δt / 2.0;
+			const next_t = t + Δt;
+			const half_t = t + half_Δt;
+
+			const k_1y = fn_y(t, y, z); // Slope at starting point
+			const k_1z = fn_z(t, y, z);
+			const k_2y = fn_y(half_t, y + (half_Δt * k_1y), z + (half_Δt * k_1z)); // Estimated slope at mid-point
+			const k_2z = fn_z(half_t, y + (half_Δt * k_1y), z + (half_Δt * k_1z));
+			const k_3y = fn_y(half_t, y + (half_Δt * k_2y), z + (half_Δt * k_2z)); // Another estimate of slope at mid-point
+			const k_3z = fn_z(half_t, y + (half_Δt * k_2y), z + (half_Δt * k_2z));
+			const k_4y = fn_y(next_t, y + (Δt * k_3y), z + (Δt * k_3z)); // Estimated slope at endpoint
+			const k_4z = fn_z(next_t, y + (Δt * k_3y), z + (Δt * k_3z));
+
+			const slope_y = (k_1y + 2*k_2y + 2*k_3y + k_4y) / 6.0; // Weighted average of those four slopes
+			const slope_z = (k_1z + 2*k_2z + 2*k_3z + k_4z) / 6.0;
+
+			y += Δt * slope_y;
+			z += Δt * slope_z;
+			ary[i] = y;
+			ary[i+offset] = z;
+			t += Δt;
+			i += Δi;
+		}
+	}
+
+	// Apply RK4 to find phase lines for a system with two dependent variables
+	function rk4solve_2(y_0, z_0, t_0, t_start, t_end, Δt, fn_y, fn_z) {
+		let t = t_0, y = y_0, z = z_0, solution = new Solution(t_start, t_end, Δt, 2);
+		let i = solution.timeIndex(0, t_0), offset = solution.startIndex(1);
+		solution.array[i] = y_0;
+		solution.array[i+offset] = z_0;
+
+		// Trace out phase line from starting point
+		rk4trace_2(y_0, z_0, t_0, Δt, fn_y, fn_z, solution.array, i+1, 1, offset, solution.endIndex(0));
+
+		// Trace out phase line in the opposite direction from the starting point
+		rk4trace_2(y_0, z_0, t_0, -Δt, fn_y, fn_z, solution.array, i-1, -1, offset, solution.startIndex(0)-1);
+
+		return solution;
+	}
+
+	function order1_solutions(y_0, t_0, t_start, t_end, Δt, fn) {
+		const result = [];
+		if (!Array.isArray(y_0))
+			y_0 = [y_0];
+		for (const y of y_0) {
+			const solution = rk4solve(y, t_0, t_start, t_end, Δt, fn);
+			solution.startConditions = `y(${t_0}) = ${y}`;
+			solution.startY = y;
+			result.push(solution);
+		}
+		return result;
+	}
+
+	function order2_solutions(y_0, dy_0, t_0, t_start, t_end, Δt, fn) {
+		const result = [];
+		if (!Array.isArray(y_0))
+			y_0 = [y_0];
+		if (!Array.isArray(dy_0))
+			dy_0 = [dy_0];
+		for (const y of y_0) {
+			for (const dy of dy_0) {
+				const solution = rk4solve_2(y, dy, t_0, t_start, t_end, Δt, function(t, y, dy) { return dy; }, fn);
+				solution.startConditions = `y(${t_0}) = ${y}, y'(${t_0}) = ${dy}`;
+				solution.startY = y;
+				solution.startZ = dy;
+				result.push(solution);
+			}
+		}
+		return result;
+	}
+
+	function eqs2_order1_solutions(y_0, z_0, t_0, t_start, t_end, Δt, fn_y, fn_z) {
+		const result = [];
+		if (!Array.isArray(y_0))
+			y_0 = [y_0];
+		if (!Array.isArray(z_0))
+			z_0 = [z_0];
+		for (const y of y_0) {
+			for (const z of y_0) {
+				const solution = rk4solve_2(y, z, t_0, t_start, t_end, Δt, fn_y, fn_z);
+				solution.startConditions = `y(${t_0}) = ${y}, z(${t_0}) = ${z}`;
+				solution.startY = y;
+				solution.startZ = z;
+				result.push(solution);
+			}
+		}
+		return result;
+	}
+
+	function gradations(from, to, n) {
+		if (n === 0)
+			return [];
+		if (n === 1)
+			return [(to - from) / 2];
+		const result = [], interval = (to - from) / (n - 1);
+		let value = from;
+		n--;
+		while (n--) {
+			result.push(value);
+			value += interval;
+		}
+		result.push(to);
+		return result;
+	}
+
+	class Viewport {
+		constructor(div, titles) {
+			this.svg = initDynamicSvg(div);
+			this.svg.classList.add('viewport');
+
+			this.lines = []; this.colors = [];
+			this.xAxis = this.yAxis = undefined; // DOM objects for axes
+			this.xScale = this.yScale = undefined; // Scale objects used to draw graph
+			this.xDomain = this.yDomain = undefined; // Currently displayed range of X/Y coordinates
+			this.drawn = false;
+			this.panning = false;
+			this.touchPos = new Map;
+			this.linkedViews = [];
+
+			if (titles)
+				this.setTitles(titles[0], titles[1]);
+
+			this.svg.listen('wheel', this.mouseWheel.bind(this));
+			this.svg.listen('mousedown', this.mouseDown.bind(this));
+			this.svg.listen('mouseup', this.mouseUp.bind(this));
+			this.svg.listen('mousemove', this.mouseMove.bind(this));
+			this.svg.listen('mouseleave', this.mouseLeave.bind(this));
+			this.svg.listen('touchstart', this.touchStart.bind(this));
+			this.svg.listen('touchmove', this.touchMove.bind(this));
+			this.svg.listen('touchend', this.touchEnd.bind(this));
+			this.svg.listen('touchcancel', this.touchEnd.bind(this));
+		}
+
+		draw(lines, colors) {
+			for (const path of Array.from(this.svg.$class('line')))
+				path.remove();
+
+			const bounds = combinedBounds(lines);
+			const xSize = bounds[1] - bounds[0];
+			const ySize = bounds[3] - bounds[2];
+			const xDomain = [bounds[0] - (xSize * 0.05), bounds[1] + (xSize * 0.05)];
+			const yDomain = [bounds[2] - (ySize * 0.05), bounds[3] + (ySize * 0.05)];
+
+			const xScale = d3.scaleLinear().domain(xDomain).range([25, 190]);
+			const yScale = d3.scaleLinear().domain(yDomain).range([185, 15]);
+			const xAxis = d3.axisBottom().scale(xScale);
+			const yAxis = d3.axisLeft().scale(yScale);
+
+			if (!this.xAxis) {
+				this.xAxis = d3.select(this.svg).append('g').attr('class', 'axis xaxis').attr('transform', 'translate(0,185)').call(xAxis);
+			} else {
+				this.xAxis.transition().duration(250).call(xAxis);
+			}
+			if (!this.yAxis) {
+				this.yAxis = d3.select(this.svg).append('g').attr('class', 'axis yaxis').attr('transform', 'translate(25,0)').call(yAxis);
+			} else {
+				this.yAxis.transition().duration(250).call(yAxis);
+			}
+
+			for (let i = 0; i < lines.length; i++) {
+				const line = lines[i];
+				const node = prependSvgNode(this.svg, 'path', 'line', {
+					d: line.svgPath(xScale, yScale),
+					stroke: colors[i],
+					fill: 'none',
+					'stroke-width': '.12rem',
+					'vector-effect': 'non-scaling-stroke'
+				});
+				node.listen('mouseenter', () => this.linkedViews.forEach((view) => {
+					view.highlightLine(i);
+					node.setAttribute('stroke-width', '.22rem');
+				}));
+				node.listen('mouseleave', () => this.linkedViews.forEach((view) => {
+					view.clearHighlight();
+					node.setAttribute('stroke-width', '.12rem');
+				}));
+				if (line.title()) {
+					const title = appendSvgNode(node, 'title');
+					title.textContent = line.title();
+				}
+			}
+
+			this.xScale = xScale; this.yScale = yScale; // Record scale which graph was first drawn at
+			this.xDomain = xDomain; this.yDomain = yDomain;
+			this.lines = Object.freeze(lines); this.colors = Object.freeze(colors);
+			this.drawn = true;
+		}
+
+		adjustView(xDomain, yDomain, duration = 250) {
+			if (!this.drawn)
+				return;
+
+			const xScale = d3.scaleLinear().domain(xDomain).range([25, 190]);
+			const yScale = d3.scaleLinear().domain(yDomain).range([185, 15]);
+			const xAxis = d3.axisBottom().scale(xScale);
+			const yAxis = d3.axisLeft().scale(yScale);
+
+			this.xAxis.transition().duration(duration).call(xAxis);
+			this.yAxis.transition().duration(duration).call(yAxis);
+
+			const stretchX = (xScale(1) - xScale(0)) / (this.xScale(1) - this.xScale(0));
+			const stretchY = (yScale(1) - yScale(0)) / (this.yScale(1) - this.yScale(0));
+
+			d3.select(this.svg).selectAll('.line').transition().duration(duration)
+				.attr('transform', `matrix(${stretchX} 0 0 ${stretchY} ${xScale(0) - (this.xScale(0) * stretchX)} ${yScale(0) - (this.yScale(0) * stretchY)})`);
+
+			this.xDomain = xDomain; this.yDomain = yDomain;
+		}
+
+		// factor > 1 means zooming out, 0 < factor < 1 means zooming in
+		zoom(factor) {
+			if (factor <= 0)
+				throw new Error("Cannot zoom by negative factor");
+			const xSize = this.xDomain[1] - this.xDomain[0];
+			const ySize = this.yDomain[1] - this.yDomain[0];
+			const newXSize = xSize * factor;
+			const newYSize = ySize * factor;
+			const Δx = (newXSize - xSize) / 2;
+			const Δy = (newYSize - ySize) / 2;
+			this.adjustView([this.xDomain[0] - Δx, this.xDomain[1] + Δx], [this.yDomain[0] - Δy, this.yDomain[1] + Δy]);
+		}
+
+		pan(Δx, Δy, duration = 250) {
+			if (Δx === 0 && Δy === 0)
+				return;
+			this.adjustView([this.xDomain[0] + Δx, this.xDomain[1] + Δx], [this.yDomain[0] + Δy, this.yDomain[1] + Δy], duration);
+		}
+
+		// Get position of mouse event in function input/output space
+		mouseDomainPosition(event) {
+			const pos = getMousePosition(event, this.svg);
+			const xScale = d3.scaleLinear().domain(this.xDomain).range([25, 190]);
+			const yScale = d3.scaleLinear().domain(this.yDomain).range([185, 15]);
+			return [xScale.invert(pos[0]), yScale.invert(pos[1])];
+		}
+
+		mouseWheel(event) {
+			event.preventDefault();
+			if (!this.drawn)
+				return;
+			const [x, y] = this.mouseDomainPosition(event);
+			const factor = Math.E ** (event.deltaY * 0.001);
+
+			function scaleAround(v_0, v_1, factor) {
+				return v_0 + ((v_1 - v_0) * factor);
+			}
+
+			// 100ms delay feels better than 250ms here
+			this.adjustView([scaleAround(x, this.xDomain[0], factor), scaleAround(x, this.xDomain[1], factor)], [scaleAround(y, this.yDomain[0], factor), scaleAround(y, this.yDomain[1], factor)], 100);
+		}
+
+		mouseDown(event) {
+			if (!this.drawn)
+				return;
+			if (event.button === 1 && !this.panning) {
+				// middle/wheel button pressed
+				this.beginPan(event);
+			}
+		}
+
+		mouseUp(event) {
+			if (this.panning) {
+				this.endPan(event);
+			}
+		}
+
+		mouseMove(event) {
+			if (this.panning) {
+				const panPos = this.mouseDomainPosition(event);
+				this.pan(this.panStart[0] - panPos[0], this.panStart[1] - panPos[1], 0);
+			}
+		}
+
+		mouseLeave(event) {
+			if (this.panning) {
+				this.endPan(event);
+			}
+		}
+
+		beginPan(event) {
+			this.panning = true;
+			this.svg.classList.add('panning');
+			this.panStart = this.mouseDomainPosition(event);
+		}
+
+		endPan(event) {
+			this.panning = false;
+			this.svg.classList.remove('panning');
+			this.panStart = undefined;
+		}
+
+		touchStart(event) {
+			this.touchPos.clear();
+			for (const touch of event.targetTouches) {
+				this.touchPos.set(touch.identifier, this.mouseDomainPosition(touch));
+			}
+		}
+
+		touchMove(event) {
+			if (this.touchPos.size === 1) {
+				event.preventDefault();
+				const touch = event.changedTouches[0];
+				const startPos = this.touchPos.get(touch.identifier);
+				if (!startPos)
+					return;
+				const currentPos = this.mouseDomainPosition(touch);
+				this.pan(startPos[0] - currentPos[0], startPos[1] - currentPos[1], 0);
+			} else (this.touchPos.size === 2) {
+				// Pinch to zoom (on mobile)
+				event.preventDefault();
+
+				function boundingBox(points) {
+					const xs = points.map((p) => p[0]);
+					const ys = points.map((p) => p[1]);
+					return [Math.min(xs), Math.max(xs), Math.min(ys), Math.max(ys)];
+				}
+
+				const startBox = boundingBox(this.touchPos.values());
+				const currentBox = boundingBox(event.targetTouches.map((t) => this.mouseDomainPosition(t)));
+
+				// Pan and scale view so that 'startBox' is taken to 'currentBox'
+				const Δx = startBox[0] - currentBox[0];
+				const Δy = startBox[2] - currentBox[2];
+				const xStretch = (startBox[1] - startBox[0]) / (currentBox[1] - currentBox[0]);
+				const yStretch = (startBox[3] - startBox[2]) / (currentBox[3] - currentBox[2]);
+
+				function scaleAround(v_0, v_1, factor) {
+					return v_0 + ((v_1 - v_0) * factor);
+				}
+
+				this.adjustView([scaleAround(startBox[0], this.xDomain[0] + Δx, xStretch), scaleAround(startBox[0], this.xDomain[1] + Δx, xStretch)], [scaleAround(startBox[2], this.yDomain[0] + Δy, yStretch), scaleAround(startBox[2], this.yDomain[1] + Δy, yStretch)], 0);
+			}
+		}
+
+		touchEnd(event) {
+			for (const touch of event.changedTouches) {
+				this.touchPos.delete(touch.identifier);
+			}
+		}
+
+		highlightLine(index) {
+			this.clearHighlight();
+			const line = this.lines[index];
+			if (line) {
+				const xScale = d3.scaleLinear().domain(this.xDomain).range([25, 190]);
+				const yScale = d3.scaleLinear().domain(this.yDomain).range([185, 15]);
+				const node = appendSvgNode(this.svg, 'path', 'line', {
+					d: line.svgPath(xScale, yScale),
+					stroke: this.colors[index],
+					fill: 'none',
+					'stroke-width': '.22rem',
+					'vector-effect': 'non-scaling-stroke'
+				});
+				node.classList.add('highlight');
+			}
+		}
+
+		clearHighlight() {
+			for (const path of Array.from(this.svg.$class('highlight')))
+				path.remove();
+		}
+
+		setTitles(xLabel, yLabel) {
+			const xText = this.svg.$class1('xaxis-label');
+			if (xText)
+				xText.textContent = xLabel;
+			else
+				d3.select(this.svg).append('text').attr('class', 'xaxis-label').attr('transform', 'translate(193,190)').attr('font-size', '8').style('text-anchor', 'left').text(xLabel);
+			const yText = this.svg.$class1('yaxis-label');
+			if (yText)
+				yText.textContent = yLabel;
+			else
+				d3.select(this.svg).append('text').attr('class', 'yaxis-label').attr('transform', 'translate(20,12)').attr('font-size', '8').style('text-anchor', 'left').text(yLabel);
+		}
+	}
+
+	const vp1 = new Viewport($id('view1'), ['y', "y'"]);
+	const vp2 = new Viewport($id('view2'), ['t', 'y']);
+	vp1.linkedViews.push(vp2);
+	vp2.linkedViews.push(vp1);
+
+	const hueScale = d3.scaleLinear().domain([-3,3]).range([0,270]);
+	const satScale = d3.scaleLinear().domain([-3,3]).range([0.34,0.84]);
+	const lightScale = d3.scaleLinear().domain([-3,3]).range([0.78,0.48]);
+
+	function validateField(ok, good, field, message) {
+		if (good) {
+			field.setAttribute('title', '');
+			field.classList.remove('err');
+		} else {
+			field.setAttribute('title', message);
+			field.classList.add('err');
+		}
+		return ok && good;
+	}
+
+	function validate() {
+		let ok = true;
+
+		const timeStep = Number($id('timestep').value);
+		const startTime = Number($id('starttime').value);
+		const endTime = Number($id('endtime').value);
+		const t0 = Number($id('t0').value);
+
+		ok = validateField(ok, timeStep > 0, $id('timestep'), "Time step must be a positive number");
+		ok = validateField(ok, startTime < endTime, $id('starttime'), "Start time must be before end time");
+		ok = validateField(ok, startTime < endTime, $id('endtime'), "End time must be after start time");
+		ok = validateField(ok, t0 >= startTime && t0 <= endTime, $id('t0'), "t₀ must be between start and end time");
+
+		const min_y0 = Number($id('starty1').value);
+		const max_y0 = Number($id('starty2').value);
+		const n_y0 = Number($id('nstarty').value);
+
+		ok = validateField(ok, min_y0 <= max_y0, $id('starty1'), "Min y must not be greater than max y");
+		ok = validateField(ok, min_y0 <= max_y0, $id('starty2'), "Max y must not be less than min y");
+		ok = validateField(ok, n_y0 > 0, $id('nstarty'), "Number of values to graph must be one or more");
+
+		if ($id('startdy1').style.display !== 'none') {
+			const min_dy0 = Number($id('startdy1').value);
+			const max_dy0 = Number($id('startdy2').value);
+			const n_dy0 = Number($id('nstartdy').value);
+
+			ok = validateField(ok, min_dy0 <= max_dy0, $id('startdy1'), "Min y' must not be greater than max y'");
+			ok = validateField(ok, min_dy0 <= max_dy0, $id('startdy2'), "Max y' must not be less than min y'");
+			ok = validateField(ok, n_dy0 > 0, $id('nstartdy'), "Number of values to graph must be one or more");
+		}
+
+		if ($id('startz1').style.display !== 'none') {
+			const min_z0 = Number($id('startz1').value);
+			const max_z0 = Number($id('startz2').value);
+			const n_z0 = Number($id('nstartz').value);
+
+			ok = validateField(ok, min_z0 <= max_z0, $id('startz1'), "Min z must not be greater than max z");
+			ok = validateField(ok, min_z0 <= max_z0, $id('startz2'), "Max z must not be less than min z");
+			ok = validateField(ok, n_z0 > 0, $id('nstartz'), "Number of values to graph must be one or more");
+		}
+
+		return ok;
+	}
+
+	function redraw() {
+		if (!validate())
+			return;
+
+		const timeStep = Number($id('timestep').value);
+		const startTime = Number($id('starttime').value);
+		const endTime = Number($id('endtime').value);
+		const t0 = Number($id('t0').value);
+
+		const ast = jsParse(jsTokenize($id('exp1').value));
+		const fn = compileFunction(ast);
+
+		const min_y0 = Number($id('starty1').value);
+		const max_y0 = Number($id('starty2').value);
+		const n_y0 = Number($id('nstarty').value);
+		const y0_values = gradations(min_y0, max_y0, n_y0);
+
+		let solutions, colors;
+		switch($id('graphtype').value) {
+		case 'order1':
+			solutions = order1_solutions(y0_values, t0, startTime, endTime, timeStep, fn);
+			colors = solutions.map((solution) => d3.hsl(hueScale(solution.startY), 0.75, 0.75).formatHex())
+			break;
+		case 'order2':
+			const min_dy0 = Number($id('startdy1').value);
+			const max_dy0 = Number($id('startdy2').value);
+			const n_dy0 = Number($id('nstartdy').value);
+			const dy0_values = gradations(min_dy0, max_dy0, n_dy0);
+			solutions = order2_solutions(y0_values, dy0_values, t0, startTime, endTime, timeStep, fn);
+			colors = solutions.map((solution) => d3.hsl(hueScale(solution.startY), satScale(solution.startZ), lightScale(solution.startZ)).formatHex())
+			break;
+		case 'eqs2_order1':
+			const min_z0 = Number($id('startz1').value);
+			const max_z0 = Number($id('startz2').value);
+			const n_z0 = Number($id('nstartz').value);
+			const z0_values = gradations(min_z0, max_z0, n_z0);
+			const ast2 = jsParse(jsTokenize($id('exp2').value));
+			const fn2 = compileFunction(ast2);
+			solutions = eqs2_order1_solutions(y0_values, z0_values, t0, startTime, endTime, timeStep, fn, fn2);
+			colors = solutions.map((solution) => d3.hsl(hueScale(solution.startY), satScale(solution.startZ), lightScale(solution.startZ)).formatHex())
+			break;
+		}
+
+		vp1.draw(solutions.map((s) => new PhaseLine(s)), colors);
+		vp2.draw(solutions.map((s) => new TimeLine(s)), colors);
+	}
+
+	$id('graphtype').listen('change', (event) => {
+		if (event.target.value === 'eqs2_order1') {
+			$id('exp2wrapper').style.display = '';
+			for (const elem of $class('eqs2only')) elem.style.display = '';
+			vp1.setTitles('y', 'z');
+		} else {
+			$id('exp2wrapper').style.display = 'none';
+			for (const elem of $class('eqs2only')) elem.style.display = 'none';
+			vp1.setTitles('y', "y'");
+		}
+
+		for (const elem of $class('order2only'))
+			elem.style.display = (event.target.value === 'order2') ? '' : 'none';
+		$id('exp1').labels[0].textContent = (event.target.value === 'order2') ? "y'' =" : "y' =";
+		redraw();
+	});
+
+	$id('exp1').listen('change', redraw);
+	$id('exp2').listen('change', redraw);
+
+	$id('timestep').listen('change', redraw);
+	$id('starttime').listen('change', redraw);
+	$id('endtime').listen('change', redraw);
+
+	$id('t0').listen('change', (event) => {
+		$id('starty1').labels[0].textContent = `Min. y(${event.target.value}):`;
+		$id('starty2').labels[0].textContent = `Max. y(${event.target.value}):`;
+		$id('startdy1').labels[0].textContent = `Min. y'(${event.target.value}):`;
+		$id('startdy2').labels[0].textContent = `Max. y'(${event.target.value}):`;
+		$id('startz1').labels[0].textContent = `Min. z(${event.target.value}):`;
+		$id('startz2').labels[0].textContent = `Max. z(${event.target.value}):`;
+		redraw();
+	});
+
+	$id('starty1').listen('change', redraw);
+	$id('starty2').listen('change', redraw);
+	$id('nstarty').listen('change', redraw);
+	$id('startdy1').listen('change', redraw);
+	$id('startdy2').listen('change', redraw);
+	$id('nstartdy').listen('change', redraw);
+	$id('startz1').listen('change', redraw);
+	$id('startz2').listen('change', redraw);
+	$id('nstartz').listen('change', redraw);
+
+	redraw();
+</script>
