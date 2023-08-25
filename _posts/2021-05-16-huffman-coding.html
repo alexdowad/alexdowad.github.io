@@ -150,7 +150,7 @@ stylesheets:
 
 <p>Obviously, the number of bits required to encode a sequence can vary wildly depending on the chosen code. Can you see <i>why</i> some prefix-free codes are more efficient than others? What is the key difference between an efficient code and an inefficient one? (Click to reveal.)</p>
 
-<div class='reveal'>
+<div class='reveal hidden'>
 <p>Efficient codes use the <i>shortest</i> bitstrings for the <i>most common</i> symbols.</p>
 <p>At the same time, since the code must be prefix-free, if we use a very short bitstring such as "0" for a common symbol, that means "00", "01", "000", "001", and so on will all become unavailable. So we need to strike a balance. While we want to use short bitstrings for common symbols, we don't want to be forced to use excessively long bitstrings for less common symbols.</p>
 </div>
@@ -274,17 +274,17 @@ stylesheets:
 
 <p>Before we consider that further, take note of an important fact. <i>How many</i> internal nodes, including the root, does it take to connect <i>N</i> leaf nodes together into a binary tree? Watch the above animations again and try to figure it out:</p>
 
-<p class="reveal">N - 1.</p>
+<p class="reveal hidden">N - 1.</p>
 
 Good. Another one: When building a tree bottom-up, every time we pick two subtrees and join them together as children of a new internal node, what happens to the <b>depth</b> of all the leaves in the combined subtree?
 
-<p class="reveal">The depth of all the leaf nodes increases by 1.</p>
+<p class="reveal hidden">The depth of all the leaf nodes increases by 1.</p>
 
 <p>Remember that the depth of each leaf node equals the number of bits required to encode the corresponding symbol. So every time we join two subtrees, we are in a sense "lengthening" the bitstrings for all the symbols in the new subtree. Since we want the most common symbols to have the shortest bitstrings (equivalent: we want their nodes to be closest to the root), they should be the <i>last</i> ones to be joined into the tree.</p>
 
 <p>With that in mind, can you now see what the first step in building an optimal tree bottom-up should be?</p>
 
-<p class="reveal">Join the two lowest-weighted leaf nodes together into a subtree.</p>
+<p class="reveal hidden">Join the two lowest-weighted leaf nodes together into a subtree.</p>
 
 <p>Yes! Just like this:</p>
 
@@ -314,11 +314,11 @@ Good. Another one: When building a tree bottom-up, every time we pick two subtre
 
 <p>That was a giveaway if there ever was one. So answer now, how should we weight subtrees which contain multiple leaf nodes?</p>
 
-<p class="reveal">The weight of a subtree should be the sum of the weights of all its leaves combined.</p>
+<p class="reveal hidden">The weight of a subtree should be the sum of the weights of all its leaves combined.</p>
 
 <p>And then what is our algorithm for building an optimal tree bottom-up?</p>
 
-<p class="reveal">Start with a worklist of the bare leaf nodes. Keep picking the two lowest-weighted subtrees (where a single node also counts as a "subtree") from the worklist, join them together, then put the new, bigger subtree back into the worklist. When only one item remains in the worklist, it is the completed tree.</p>
+<p class="reveal hidden">Start with a worklist of the bare leaf nodes. Keep picking the two lowest-weighted subtrees (where a single node also counts as a "subtree") from the worklist, join them together, then put the new, bigger subtree back into the worklist. When only one item remains in the worklist, it is the completed tree.</p>
 
 <p>Type some text in the below entry field, and I'll animate the process for you:</p>
 
@@ -370,7 +370,7 @@ Good. Another one: When building a tree bottom-up, every time we pick two subtre
 
 <p>How can we modify our algorithm to account for that? Can you think of an idea?</p>
 
-<div class="reveal"><p>Here's one solution: Include a "dummy" symbol when building the tree. The dummy symbol should have the lowest possible weight, so it does not uselessly occupy a desirable position in the tree (meaning a short bitstring). When subtrees are joined, we must make sure any subtree containing the dummy is always used as the <i>right</i> child. That guarantees that the dummy will end up at the far right of the tree, and will have a bitstring consisting of all 1's.</p>
+<div class="reveal hidden"><p>Here's one solution: Include a "dummy" symbol when building the tree. The dummy symbol should have the lowest possible weight, so it does not uselessly occupy a desirable position in the tree (meaning a short bitstring). When subtrees are joined, we must make sure any subtree containing the dummy is always used as the <i>right</i> child. That guarantees that the dummy will end up at the far right of the tree, and will have a bitstring consisting of all 1's.</p>
 <p>Since the generated code is prefix-free, we can be sure no other node will get a bitstring with only 1's.</p>
 <p>After the entire tree is completed, we can delete the dummy node.</p></div>
 
@@ -490,8 +490,9 @@ Good. Another one: When building a tree bottom-up, every time we pick two subtre
 <script>
   'use strict';
 
-  function revealText() {
-    this.style.color = '#000';
+  function revealText(event) {
+    event.preventDefault();
+    this.classList.remove('hidden');
     this.removeEventListener('click', revealText);
   }
   document.querySelectorAll('.reveal').forEach((el) => el.addEventListener('click', revealText));
