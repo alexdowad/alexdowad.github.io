@@ -564,9 +564,9 @@ stylesheets:
 
 <p>Do you want to go back and give it a try? Either way, whenever you are ready, click to reveal two major differences:</p>
 
-<p class="reveal">The frequencies of the component waves found by the Fourier transform are <i>integral multiples</i> of the overall period of repetition; i.e. 0, 1F, 2F, 3F, and so on. Those found by the DCT are multiples of <i>half</i> the period of repetition: 0, 0.5F, 1F, 1.5F, 2F, 2.5F, etc.</p>
+<p class="reveal hidden">The frequencies of the component waves found by the Fourier transform are <i>integral multiples</i> of the overall period of repetition; i.e. 0, 1F, 2F, 3F, and so on. Those found by the DCT are multiples of <i>half</i> the period of repetition: 0, 0.5F, 1F, 1.5F, 2F, 2.5F, etc.</p>
 
-<p class="reveal">The component waves found by the Fourier transform often have varying phase shifts (they have to, otherwise it wouldn't be possible to match the input values). Those found by the DCT all have the same phase. Look at the graphs above and you will see this clearly.</p>
+<p class="reveal hidden">The component waves found by the Fourier transform often have varying phase shifts (they have to, otherwise it wouldn't be possible to match the input values). Those found by the DCT all have the same phase. Look at the graphs above and you will see this clearly.</p>
 
 <p>Other differences which you can't see from the demonstrations are:</p>
 
@@ -577,13 +577,13 @@ stylesheets:
 
 <p>Now, another important point. Look back at the interactive DCT. As you drag the target points up and down, what is the maximum number of component waves which are required to match the 8 target points?</p>
 
-<p class="reveal">8.</p>
+<p class="reveal hidden">8.</p>
 
 <p>Right. That is a key point for JPEG image compression. Remember, in a JPEG image, blocks of 8 pixels by 8 pixels are represented as a combination of component waves. The amplitude of each component is called a DCT <b>coefficient</b>. Since each block of input pixels converts to a fixed number of component waves, we just need to store a fixed number of coefficients for each such block. We don't need to store their frequencies, since those are known and are always the same. Nor do we need to store phase shifts, because all are at a constant phase.</p>
 
 <p>Let's move into two dimensions now. We have demonstrated that if we just needed to represent 8 color values in a row, 8 coefficients would be enough. But how many coefficients do we need to represent 8-by-8, or 64, color values? Guess before clicking:</p>
 
-<p class="reveal">64.</p>
+<p class="reveal hidden">64.</p>
 
 <p>You might ask: <i><b>Isn't JPEG a lossy format which compresses images into fewer bits? How can converting 64 numbers into 64 other numbers save storage space?</b></i></p>
 
@@ -1387,7 +1387,7 @@ for (var <span class="x">x</span> = 0; <span class="x">x</span> < 8; <span class
 
 <p>Look carefully at the pattern created when the waves derived from the DCT are extended to the left and right. Is it simply repeating the same pattern every eight time units? Or...what?</p>
 
-<div class="reveal">
+<div class="reveal hidden">
 <p>Every eight time units, the pattern is mirrored left to right. It appears left to right, then right to left, then left to right, and so on. The effect is such that it actually repeats every 16 time units, not every eight.</p>
 
 <p>One of the secrets of the DCT, revealed! The DCT is equivalent to taking our eight samples, concatenating them with the same eight samples (reversed), and doing a discrete Fourier transform on that concatenation. No wonder the frequencies of the resulting sinusoids increment in 0.5F steps; our "Fourier transform" is working on twice as many samples.</p>
@@ -1416,8 +1416,9 @@ for (var <span class="x">x</span> = 0; <span class="x">x</span> < 8; <span class
 <script>
   'use strict';
 
-  function revealText() {
-    this.style.color = '#000';
+  function revealText(event) {
+    event.preventDefault();
+    this.classList.remove('hidden');
     this.removeEventListener('click', revealText);
   }
   document.querySelectorAll('.reveal').forEach((el) => el.addEventListener('click', revealText));

@@ -3,7 +3,11 @@
   padding: 1em;
   border-left: 0.5em solid #555;
   background-color: #d8c399;
+}
+.reveal.hidden {
   color: #d8c399;
+  cursor: pointer;
+  user-select: none;
 }
 
 /* 'container' and 'spacer' help to make pic a square, where height
