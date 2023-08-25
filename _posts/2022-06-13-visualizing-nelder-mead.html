@@ -225,7 +225,7 @@ stylesheets:
 	}
 
 	// Make SVG which will resize itself to match its container
-	function initDynamicSvg(wrapper, attributes) {
+	function initDynamicSvg(wrapper) {
 		// Put this SVG underneath anything else in the same container
 		const svg = prependSvgNode(wrapper, 'svg', undefined, { viewBox: '0 0 100 100', preserveAspectRatio: 'none' });
 		const watcher = new ResizeObserver(entries => {
