@@ -372,8 +372,8 @@ To complete this post:
 		}
 
 		svgPath(xScale, yScale) {
-			const limit = this.solution.endIndex(0), t = this.solution.t_start, Δt = this.solution.Δt, ary = this.solution.array;
-			let s = 'M ';
+			const limit = this.solution.endIndex(0), Δt = this.solution.Δt, ary = this.solution.array;
+			let s = 'M ', t = this.solution.t_start;
 			s += xScale(t).toFixed(2) + ',' + yScale(ary[0]).toFixed(2);
 			for (let i = 1; i < limit; i++) {
 				t += Δt;
@@ -747,7 +747,7 @@ To complete this post:
 					return;
 				const currentPos = this.mouseDomainPosition(touch);
 				this.pan(startPos[0] - currentPos[0], startPos[1] - currentPos[1], 0);
-			} else (this.touchPos.size === 2) {
+			} else if (this.touchPos.size === 2) {
 				// Pinch to zoom (on mobile)
 				event.preventDefault();
 
