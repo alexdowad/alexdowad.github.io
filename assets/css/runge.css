@@ -5,6 +5,13 @@
 	cursor: move;
 }
 
+@media (min-width: 50rem) {
+	#view1, #view2 {
+		display: inline-block;
+		width: 49%;
+	}
+}
+
 .axis {
 	stroke-width: .08em;
 }
@@ -28,7 +35,8 @@
 	justify-items: end;
 	margin-top: .5rem;
 }
-.params input {
+.params input, .params select {
+	box-sizing: border-box;
 	width: 8ch;
 }
 .params .rowstart {
