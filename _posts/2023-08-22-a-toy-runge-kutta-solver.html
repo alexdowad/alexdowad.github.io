@@ -754,11 +754,11 @@ To complete this post:
 				function boundingBox(points) {
 					const xs = points.map((p) => p[0]);
 					const ys = points.map((p) => p[1]);
-					return [Math.min(xs), Math.max(xs), Math.min(ys), Math.max(ys)];
+					return [Math.min(...xs), Math.max(...xs), Math.min(...ys), Math.max(...ys)];
 				}
 
-				const startBox = boundingBox(this.touchPos.values());
-				const currentBox = boundingBox(event.targetTouches.map((t) => this.mouseDomainPosition(t)));
+				const startBox = boundingBox(Array.from(this.touchPos.values()));
+				const currentBox = boundingBox(Array.from(event.targetTouches).map((t) => this.mouseDomainPosition(t)));
 
 				// Pan and scale view so that 'startBox' is taken to 'currentBox'
 				const Δx = startBox[0] - currentBox[0];
