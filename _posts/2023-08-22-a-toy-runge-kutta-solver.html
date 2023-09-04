@@ -936,6 +936,8 @@ To complete this post:
 	function redraw() {
 		if (!validate())
 			return;
+		if (/^\s*$/.test($id('exp1').value))
+			return;
 
 		const timeStep = Number($id('timestep').value);
 		const startTime = Number($id('starttime').value);
@@ -975,6 +977,8 @@ To complete this post:
 			break;
 
 		case 'eqs2_order1':
+			if (/^\s*$/.test($id('exp2').value))
+				return;
 			const min_z0 = Number($id('startz1').value);
 			const max_z0 = Number($id('startz2').value);
 			const n_z0 = Number($id('nstartz').value);
