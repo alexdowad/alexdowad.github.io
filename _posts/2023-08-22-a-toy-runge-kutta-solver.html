@@ -9,7 +9,7 @@ stylesheets:
   - katex.css
 ---
 
-<p>This post presents a simple, interactive <a>differential equation</a> solution grapher based on the classic Runge-Kutta method (which is really an algorithm).</p>
+<p>This post presents a simple, interactive <a href='https://en.wikipedia.org/wiki/Differential_equation'>differential equation</a> solution grapher based on the classic <a href='https://en.wikipedia.org/wiki/Runge%E2%80%93Kutta_methods'>Runge-Kutta method</a> (which is really an algorithm).</p>
 
 <hr>
 
@@ -18,8 +18,6 @@ stylesheets:
 To complete this post:
 
 - More testing for correctness -- test accuracy of solutions
-
-- Styling for input fields
 
 - Error handling for parse errors
 
@@ -299,12 +297,15 @@ To complete this post:
 		timeIndex(varIndex, t) {
 			return this.startIndex(varIndex) + Math.floor((t - this.t_start) / this.Δt);
 		}
+		timeValue(varIndex, t) {
+			return this.array[this.timeIndex(varIndex, t)];
+		}
 
 		values(varIndex) {
 			return this.array.subarray(this.startIndex(varIndex), this.endIndex(varIndex));
 		}
 
-		firstDifferences(varIndex) {
+		estimatedDerivative(varIndex) {
 			if (this.nPoints === 0)
 				return [];
 			if (this.nPoints === 1)
@@ -313,10 +314,10 @@ To complete this post:
 				this.diff = new Float64Array(this.nVars * this.nPoints);
 				for (let v = 0; v < this.nVars; v++) {
 					let i = this.startIndex(v), limit = this.endIndex(v)-1;
-					this.diff[i] = this.array[i+1] - this.array[i];
-					this.diff[limit] = this.array[limit] - this.array[limit-1];
+					this.diff[i] = (this.array[i+1] - this.array[i]) / this.Δt;
+					this.diff[limit] = (this.array[limit] - this.array[limit-1]) / this.Δt;
 					while (++i < limit) {
-						this.diff[i] = this.array[i+1] - this.array[i-1];
+						this.diff[i] = (this.array[i+1] - this.array[i-1]) / (2 * this.Δt);
 					}
 				}
 			}
@@ -375,7 +376,7 @@ To complete this post:
 		svgPath(xScale, yScale) {
 			const values = this.solution.values(this.varIndex), limit = this.solution.endIndex(0), minXDiff = Math.abs(xScale.invert(0.01) - xScale.invert(0)), minYDiff = Math.abs(yScale.invert(0.01) - yScale.invert(0));
 			let s = 'M '
-			const deriv_values = this.solution.firstDifferences(this.varIndex);
+			const deriv_values = this.solution.estimatedDerivative(this.varIndex);
 			let x = values[0], y = deriv_values[0];
 			s += xScale(x).toFixed(2) + ',' + yScale(y).toFixed(2);
 			for (let i = 1; i < limit; i++) {
@@ -392,7 +393,7 @@ To complete this post:
 			if (this._bounds)
 				return this._bounds;
 			const values = this.solution.values(this.varIndex);
-			const deriv_values = this.solution.firstDifferences(this.varIndex);
+			const deriv_values = this.solution.estimatedDerivative(this.varIndex);
 			return this._bounds = minMax(values).concat(minMax(deriv_values));
 		}
 	}
