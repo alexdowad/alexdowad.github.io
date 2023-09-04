@@ -15,7 +15,7 @@ stylesheets:
 
 <p>Hover over a solution line to see what starting conditions it is based on. Roll your mouse wheel to zoom in and out; hold down the middle mouse button to pan. On mobile, use one finger to pan and pinch with two fingers to zoom.</p>
 
-<p><b>Click these buttons to see a variety of samples:</b> <button id='sample_Y'>y' = y</button> <button id='sample_cosY'>y' = cos(y)</button></p>
+<p><b>Click these buttons to see a variety of samples:</b> <button id='sample_Y'>y' = y</button> <button id='sample_cosY'>y' = cos(y)</button> <button id='sample_cosT'>y'' = cos(t)</button> <button id='sample_predprey'>y' = y - (0.01*y*z), z' = -z + (0.02*y*z) <i>(the “predator-prey” equations)</i></button></p>
 
 <hr>
 
@@ -1074,6 +1074,37 @@ To complete this post:
 		$id('starty1').value = '-1';
 		$id('starty2').value = '10.5';
 		$id('nstarty').value = '30';
+		fireEvent($id('graphtype'), 'change');
+	});
+	$id('sample_cosT').listen('click', () => {
+		$id('graphtype').value = 'order2';
+		$id('exp1').value = 'cos(t)';
+		$id('starttime').value = '-10';
+		$id('endtime').value = '10';
+		$id('timestep').value = '0.05';
+		$id('t0').value = '0';
+		$id('starty1').value = '-3';
+		$id('starty2').value = '3';
+		$id('nstarty').value = '5';
+		$id('startdy1').value = '-3';
+		$id('startdy2').value = '3';
+		$id('nstartdy').value = '5';
+		fireEvent($id('graphtype'), 'change');
+	});
+	$id('sample_predprey').listen('click', () => {
+		$id('graphtype').value = 'eqs2_order1';
+		$id('exp1').value = 'y-(0.01*y*z)';
+		$id('exp2').value = '-z+(0.02*y*z)'
+		$id('starttime').value = '0';
+		$id('endtime').value = '20';
+		$id('timestep').value = '0.05';
+		$id('t0').value = '0';
+		$id('starty1').value = '10';
+		$id('starty2').value = '20';
+		$id('nstarty').value = '3';
+		$id('startz1').value = '10';
+		$id('startz2').value = '20';
+		$id('nstartz').value = '3';
 		fireEvent($id('graphtype'), 'change');
 	});
 
