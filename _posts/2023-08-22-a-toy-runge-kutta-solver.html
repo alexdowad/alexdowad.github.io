@@ -9,7 +9,13 @@ stylesheets:
   - katex.css
 ---
 
-<p>This post presents a simple, interactive <a href='https://en.wikipedia.org/wiki/Differential_equation'>differential equation</a> solution grapher based on the classic <a href='https://en.wikipedia.org/wiki/Runge%E2%80%93Kutta_methods'>Runge-Kutta method</a> (which is really an algorithm).</p>
+<p>This post presents a simple, interactive <a href='https://en.wikipedia.org/wiki/Differential_equation'>differential equation</a> solution graphing tool based on the classic <a href='https://en.wikipedia.org/wiki/Runge%E2%80%93Kutta_methods'>Runge-Kutta method</a> (which is really an algorithm).</p>
+
+<p>It graphs solutions to one 1<sup>st</sup>-order equation, one 2<sup>nd</sup>-order equation, or a system of two 1<sup>st</sup>-order equations. The right-hand side of the equation(s) must be entered using syntax similar to expressions in the C, Java, or JavaScript programming languages (<a>syntax help</a>). Since the solution of a differential equation depends on starting conditions, you can set the range of starting conditions which should be graphed and the “time” value at which the starting conditions apply. The tool will draw one line for each set of starting conditions.</p>
+
+<p>Hover over a solution line to see what starting conditions it is based on. Roll your mouse wheel to zoom in and out; hold down the middle mouse button to pan. On mobile, use one finger to pan and pinch with two fingers to zoom.</p>
+
+<p><b>Click these buttons to see a variety of samples:</b> <button id='sample_Y'>y' = y</button> <button id='sample_cosY'>y' = cos(y)</button></p>
 
 <hr>
 
@@ -158,6 +164,10 @@ To complete this post:
 			(event.clientX - CTM.e) / CTM.a,
 			(event.clientY - CTM.f) / CTM.d
 		];
+	}
+
+	function fireEvent(node, eventType) {
+		node.dispatchEvent(new Event(eventType));
 	}
 
 	// Parser for C/Java/JavaScript-like expression syntax
@@ -1032,5 +1042,31 @@ To complete this post:
 
 	$id('graph1').listen('change', redraw);
 	$id('graph2').listen('change', redraw);
+
+	$id('sample_Y').listen('click', () => {
+		$id('graphtype').value = 'order1';
+		$id('exp1').value = 'y';
+		$id('starttime').value = '0';
+		$id('endtime').value = '5';
+		$id('timestep').value = '0.01';
+		$id('t0').value = '0';
+		$id('starty1').value = '-3';
+		$id('starty2').value = '3';
+		$id('nstarty').value = '5';
+		fireEvent($id('graphtype'), 'change');
+	});
+	$id('sample_cosY').listen('click', () => {
+		$id('graphtype').value = 'order1';
+		$id('exp1').value = 'cos(y)';
+		$id('starttime').value = '0';
+		$id('endtime').value = '10';
+		$id('timestep').value = '0.01';
+		$id('t0').value = '0';
+		$id('starty1').value = '-1';
+		$id('starty2').value = '10.5';
+		$id('nstarty').value = '30';
+		fireEvent($id('graphtype'), 'change');
+	});
+
 	redraw();
 </script>
