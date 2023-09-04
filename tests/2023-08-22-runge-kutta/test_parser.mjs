@@ -68,7 +68,7 @@ function jsParseNonBinaryExpression(tokens) {
 		return tok;
 
 	if (tok === '-')
-		return ['-', jsParseExpression(tokens)];
+		return ['-', jsParseNonBinaryExpression(tokens)];
 
 	if (/[\w']+/.test(tok)) {
 		if (!knownFunctions.has(tok))
@@ -149,6 +149,7 @@ suite.testVariables = function() {
 suite.testUnary = function() {
 	tryParse('-1', '-1');
 	tryParse('-y', '-y');
+	tryParse('-y+1', '(-y) + (1)')
 }
 
 suite.testBinary = function() {

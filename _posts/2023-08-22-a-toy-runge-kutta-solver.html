@@ -233,7 +233,7 @@ To complete this post:
 			return tok;
 
 		if (tok === '-')
-			return ['-', jsParseExpression(tokens)];
+			return ['-', jsParseNonBinaryExpression(tokens)];
 
 		if (/[\w']+/.test(tok)) {
 			if (!knownFunctions.has(tok))
