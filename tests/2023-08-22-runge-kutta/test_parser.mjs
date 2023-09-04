@@ -10,13 +10,15 @@ function jsTokenize(str) {
 	if (!str.length)
 		return [];
 	str = str.toLowerCase();
-	const matches = Array.from(str.matchAll(/\-?\d+(\.\d+)?|[()/+-]|\*\*?|[\w'π]+|\s+/gy));
+	const matches = Array.from(str.matchAll(/\d+(\.\d+)?|[()^/+-]|\*\*?|[\w'π]+|\s+/gy));
 	const lastMatch = matches.at(-1);
 	if (lastMatch.index + lastMatch[0].length !== str.length) {
 		throw new Error("Parse error"); // TODO: better error handling
 	}
 	return Array.from(matches).map((m) => m[0]).filter((s) => /^\S+$/.test(s));
 }
+
+const knownFunctions = new Set(['sqrt', 'sin', 'cos', 'tan', 'arcsin', 'arccos', 'arctan', 'ln', 'log', 'log10', 'log2']);
 
 function jsParse(tokens) {
 	const exp = jsParseExpression(tokens);
@@ -38,7 +40,7 @@ function jsParseExpression(tokens) {
 
 	// Are we in the middle of a binary expression?
 	let tok = tokens[0];
-	while (tok === '+' || tok === '-' || tok === '*' || tok === '/' || tok === '**') {
+	while (tok === '+' || tok === '-' || tok === '*' || tok === '/' || tok === '**' || tok === '^') {
 		tokens.shift();
 		lhs = [tok, lhs, jsParseNonBinaryExpression(tokens)];
 		tok = tokens[0];
@@ -59,26 +61,25 @@ function jsParseNonBinaryExpression(tokens) {
 		return subExp;
 	}
 
-	if (tok === ')' || tok === '+' || tok === '*' || tok === '/' || tok === '**')
+	if (tok === ')' || tok === '+' || tok === '*' || tok === '/' || tok === '**' || tok === '^')
 		throw new Error("Parse error"); // TODO: better error handling
 
-	if (/\-?\d+(\.\d+)?/.test(tok) || tok === 't' || tok === 'y' || tok === 'z' || tok === "y'" || tok == 'e' || tok == 'π')
+	if (/\-?\d+(\.\d+)?/.test(tok) || tok === 't' || tok === 'x' || tok === 'y' || tok === 'z' || tok === "y'" || tok == 'e' || tok === 'π' || tok === 'pi')
 		return tok;
 
 	if (tok === '-')
 		return ['-', jsParseExpression(tokens)];
 
 	if (/[\w']+/.test(tok)) {
-		// TODO: check function name
-		nextTok = tokens.shift();
-		if (nextTok !== '(') {
+		if (!knownFunctions.has(tok))
 			throw new Error("Parse error"); // TODO: better error handling
-		}
+		nextTok = tokens.shift();
+		if (nextTok !== '(')
+			throw new Error("Parse error"); // TODO: better error handling
 		let param = jsParseExpression(tokens);
 		nextTok = tokens.shift();
-		if (nextTok !== ')') {
+		if (nextTok !== ')')
 			throw new Error("Parse error"); // TODO: better error handling
-		}
 		return [tok, param];
 	}
 
@@ -95,9 +96,12 @@ function compileNode(ast) {
 		return ast;
 	if (ast === "y'")
 		return 'z';
+	// Both 't' and 'x' are traditional names for the independent variable; accept either
+	if (ast === 'x')
+		return 't';
 	if (ast === 'e')
 		return 'Math.E';
-	if (ast === 'π')
+	if (ast === 'π' || ast === 'pi')
 		return 'Math.PI';
 	if (Array.isArray(ast)) {
 		const fn = ast[0];
@@ -107,10 +111,16 @@ function compileNode(ast) {
 			return `Math.a${fn.substr(3,3)}(${compileNode(ast[1])})`;
 		if (fn === 'ln' || fn === 'log')
 			return `Math.log(${compileNode(ast[1])})`
-		if (fn === '-' && ast.length === 2)
-			return `-(${compileNode(ast[1])})`;
+		if (fn === '-' && ast.length === 2) {
+			if (typeof(ast[1]) === 'string')
+				return `-${compileNode(ast[1])}`;
+			else
+				return `-(${compileNode(ast[1])})`;
+		}
 		if (fn === '+' || fn === '-' || fn === '*' || fn === '/' || fn === '**')
 			return `(${compileNode(ast[1])}) ${fn} (${compileNode(ast[2])})`;
+		if (fn === '^')
+			return `(${compileNode(ast[1])}) ** (${compileNode(ast[2])})`;
 	}
 	throw new Error(`Unexpected AST node: ${JSON.stringify(ast)}`);
 }
@@ -138,7 +148,7 @@ suite.testVariables = function() {
 
 suite.testUnary = function() {
 	tryParse('-1', '-1');
-	tryParse('-y', '-(y)');
+	tryParse('-y', '-y');
 }
 
 suite.testBinary = function() {
@@ -152,6 +162,7 @@ suite.testFunctions = function() {
 	tryParse('cos(y)', 'Math.cos(y)');
 	tryParse('cos(t + y)', 'Math.cos((t) + (y))');
 	tryParse('1 + sin(t)', '(1) + (Math.sin(t))');
+	tryParse('sqrt(y)-1', '(Math.sqrt(y)) - (1)')
 }
 
 suite.testWhitespace = function() {

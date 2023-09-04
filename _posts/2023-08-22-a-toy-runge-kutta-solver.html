@@ -175,7 +175,7 @@ To complete this post:
 		if (!str.length)
 			return [];
 		str = str.toLowerCase();
-		const matches = Array.from(str.matchAll(/\-?\d+(\.\d+)?|[()/+-]|\*\*?|[\w'π]+|\s+/gy));
+		const matches = Array.from(str.matchAll(/\d+(\.\d+)?|[()^/+-]|\*\*?|[\w'π]+|\s+/gy));
 		const lastMatch = matches.at(-1);
 		if (lastMatch.index + lastMatch[0].length !== str.length) {
 			throw new Error("Parse error"); // TODO: better error handling
@@ -205,7 +205,7 @@ To complete this post:
 
 		// Are we in the middle of a binary expression?
 		let tok = tokens[0];
-		while (tok === '+' || tok === '-' || tok === '*' || tok === '/' || tok === '**') {
+		while (tok === '+' || tok === '-' || tok === '*' || tok === '/' || tok === '**' || tok === '^') {
 			tokens.shift();
 			lhs = [tok, lhs, jsParseNonBinaryExpression(tokens)];
 			tok = tokens[0];
@@ -226,10 +226,10 @@ To complete this post:
 			return subExp;
 		}
 
-		if (tok === ')' || tok === '+' || tok === '*' || tok === '/' || tok === '**')
+		if (tok === ')' || tok === '+' || tok === '*' || tok === '/' || tok === '**' || tok === '^')
 			throw new Error("Parse error"); // TODO: better error handling
 
-		if (/\-?\d+(\.\d+)?/.test(tok) || tok === 't' || tok === 'y' || tok === 'z' || tok === "y'" || tok == 'e' || tok === 'π' || tok === 'pi')
+		if (/\-?\d+(\.\d+)?/.test(tok) || tok === 't' || tok === 'x' || tok === 'y' || tok === 'z' || tok === "y'" || tok == 'e' || tok === 'π' || tok === 'pi')
 			return tok;
 
 		if (tok === '-')
@@ -261,6 +261,9 @@ To complete this post:
 			return ast;
 		if (ast === "y'")
 			return 'z';
+		// Both 't' and 'x' are traditional names for the independent variable; accept either
+		if (ast === 'x')
+			return 't';
 		if (ast === 'e')
 			return 'Math.E';
 		if (ast === 'π' || ast === 'pi')
@@ -273,10 +276,16 @@ To complete this post:
 				return `Math.a${fn.substr(3,3)}(${compileNode(ast[1])})`;
 			if (fn === 'ln' || fn === 'log')
 				return `Math.log(${compileNode(ast[1])})`
-			if (fn === '-' && ast.length === 2)
-				return `-(${compileNode(ast[1])})`;
+			if (fn === '-' && ast.length === 2) {
+				if (typeof(ast[1]) === 'string')
+					return `-${compileNode(ast[1])}`;
+				else
+					return `-(${compileNode(ast[1])})`;
+			}
 			if (fn === '+' || fn === '-' || fn === '*' || fn === '/' || fn === '**')
 				return `(${compileNode(ast[1])}) ${fn} (${compileNode(ast[2])})`;
+			if (fn === '^')
+				return `(${compileNode(ast[1])}) ** (${compileNode(ast[2])})`;
 		}
 		throw new Error(`Unexpected AST node: ${JSON.stringify(ast)}`);
 	}
