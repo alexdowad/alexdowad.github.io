@@ -15,7 +15,7 @@ stylesheets:
 
 <p>Hover over a solution line to see what starting conditions it is based on. Roll your mouse wheel to zoom in and out; hold down the middle mouse button to pan. On mobile, use one finger to pan and pinch with two fingers to zoom.</p>
 
-<p><b>Click these buttons to see a variety of samples:</b> <button id='sample_Y'>y' = y</button> <button id='sample_cosY'>y' = cos(y)</button> <button id='sample_cosT'>y'' = cos(t)</button> <button id='sample_predprey'>y' = y - (0.01yz), z' = -z + (0.02yz) <i>(a “predator-prey” system)</i></button> <button id='sample_mathieu'>y'' = y(1 + 2 cos(t)) <i>(Mathieu's equation)</i></button> <button id='sample_riccati'>y' = -y²t² + (2y / t) <i>(a Riccati equation)</i></button> <button id='sample_cauchy'>y'' = -(2.75 / t)y' - (4.8 / t²)y <i>(a Cauchy-Euler equation)</i></button></p>
+<p><b>Click these buttons to see a variety of samples:</b> <button id='sample_Y'>y' = y</button> <button id='sample_cosY'>y' = cos(y)</button> <button id='sample_cosT'>y'' = cos(t)</button> <button id='sample_cosY_2'>y'' = cos(y)</button> <button id='sample_predprey'>y' = y - (0.01yz), z' = -z + (0.02yz) <i>(a “predator-prey” system)</i></button> <button id='sample_mathieu'>y'' = y(a - 2q cos(t)) <i>(Mathieu's equation)</i></button> <button id='sample_riccati'>y' = -y²t² + (2y / t) <i>(a Riccati equation)</i></button> <button id='sample_cauchy'>y'' = -(a / t)y' - (b / t²)y <i>(a Cauchy-Euler equation)</i></button> <button id='sample_meissner'>y'' = -y(α² + ω² sign(cos(t))) <i>(Meissner equation)</i></button></p>
 
 <p>Try playing with the parameters for some of the samples; you can get pretty wild pictures!</p>
 
@@ -59,7 +59,7 @@ To complete this post:
 <div class='params'>
 	Start time: <input id='starttime' type='number' value='-10'>
 	End time: <input id='endtime' type='number' value='10'>
-	Time step: <input id='timestep' type='number' value='0.1'>
+	Time step: <input id='timestep' type='number' value='0.02'>
 	<span title="Starting values for variables are at this time">t₀:</span> <input id='t0' type='number' value='0'>
 
 	<label for='starty1' class='rowstart'>Min y(0):</label> <input id='starty1' type='number' value='-3'>
@@ -187,7 +187,7 @@ To complete this post:
 		return Array.from(matches).map((m) => m[0]).filter((s) => /^\S+$/.test(s));
 	}
 
-	const knownFunctions = new Set(['sqrt', 'sin', 'cos', 'tan', 'arcsin', 'arccos', 'arctan', 'ln', 'log', 'log10', 'log2']);
+	const knownFunctions = new Set(['sqrt', 'sin', 'cos', 'tan', 'arcsin', 'arccos', 'arctan', 'ln', 'log', 'log10', 'log2', 'sgn', 'sign']);
 
 	function jsParse(tokens) {
 		const exp = jsParseExpression(tokens);
@@ -300,6 +300,8 @@ To complete this post:
 				return `Math.a${fn.substr(3,3)}(${compileNode(ast[1])})`;
 			if (fn === 'ln' || fn === 'log')
 				return `Math.log(${compileNode(ast[1])})`
+			if (fn === 'sgn' || fn === 'sign')
+				return `Math.sign(${compileNode(ast[1])})`
 			if (fn === '-' && ast.length === 2) {
 				if (typeof(ast[1]) === 'string')
 					return `-${compileNode(ast[1])}`;
@@ -1133,6 +1135,21 @@ To complete this post:
 		$id('nstartdy').value = '5';
 		fireEvent($id('graphtype'), 'change');
 	});
+	$id('sample_cosY_2').listen('click', () => {
+		$id('graphtype').value = 'order2';
+		$id('exp1').value = 'cos(y)';
+		$id('starttime').value = '-10';
+		$id('endtime').value = '10';
+		$id('timestep').value = '0.02';
+		$id('t0').value = '0';
+		$id('starty1').value = '-3';
+		$id('starty2').value = '3';
+		$id('nstarty').value = '5';
+		$id('startdy1').value = '-3';
+		$id('startdy2').value = '3';
+		$id('nstartdy').value = '5';
+		fireEvent($id('graphtype'), 'change');
+	});
 	$id('sample_mathieu').listen('click', () => {
 		$id('graphtype').value = 'order2';
 		$id('exp1').value = '(1 + (2 * cos(t))) * y';
@@ -1161,6 +1178,21 @@ To complete this post:
 		$id('startdy1').value = '-2';
 		$id('startdy2').value = '2';
 		$id('nstartdy').value = '3';
+		fireEvent($id('graphtype'), 'change');
+	});
+	$id('sample_meissner').listen('click', () => {
+		$id('graphtype').value = 'order2';
+		$id('exp1').value = "-y*(2 + (3 * sgn(cos(t))))";
+		$id('starttime').value = '-10';
+		$id('endtime').value = '10';
+		$id('timestep').value = '0.01';
+		$id('t0').value = '0';
+		$id('starty1').value = '-3';
+		$id('starty2').value = '3';
+		$id('nstarty').value = '5';
+		$id('startdy1').value = '-3';
+		$id('startdy2').value = '3';
+		$id('nstartdy').value = '5';
 		fireEvent($id('graphtype'), 'change');
 	});
 	$id('sample_predprey').listen('click', () => {
