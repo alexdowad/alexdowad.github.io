@@ -221,10 +221,12 @@ suite.test_cosT_order1 = function() {
 }
 
 suite.test_cosY_order1 = function() {
-	// y' = cos(y) decays to the closest zero of cos
+	// If y' = cos(y), y = arcsin(e^2t - 1 / e^2t + 1) for y(0) = 0
+	// (Regardless of y(0), y' = cos(y) always decays to the closest zero of cos)
 	const s = order1_solutions([0, 10], 0, 0, 10, 0.01, function(t, y) { return Math.cos(y); });
 	// Testing first with y(0) = 0
 	assertTolerance(0, s[0].timeValue(0, 0), 0.01);
+	assertTolerance(Math.asin((Math.E ** 2 - 1) / (Math.E ** 2 + 1)), s[0].timeValue(0, 1), 0.01);
 	assertTolerance(Math.PI/2, s[0].timeValue(0, 10), 0.01);
 	// Now testing with y(0) = 10
 	assertTolerance(10, s[1].timeValue(0, 0), 0.01);

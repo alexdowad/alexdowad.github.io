@@ -15,7 +15,9 @@ stylesheets:
 
 <p>Hover over a solution line to see what starting conditions it is based on. Roll your mouse wheel to zoom in and out; hold down the middle mouse button to pan. On mobile, use one finger to pan and pinch with two fingers to zoom.</p>
 
-<p><b>Click these buttons to see a variety of samples:</b> <button id='sample_Y'>y' = y</button> <button id='sample_cosY'>y' = cos(y)</button> <button id='sample_cosT'>y'' = cos(t)</button> <button id='sample_predprey'>y' = y - (0.01*y*z), z' = -z + (0.02*y*z) <i>(the “predator-prey” equations)</i></button></p>
+<p><b>Click these buttons to see a variety of samples:</b> <button id='sample_Y'>y' = y</button> <button id='sample_cosY'>y' = cos(y)</button> <button id='sample_cosT'>y'' = cos(t)</button> <button id='sample_predprey'>y' = y - (0.01yz), z' = -z + (0.02yz) <i>(a “predator-prey” system)</i></button> <button id='sample_mathieu'>y'' = y(1 + 2 cos(t)) <i>(Mathieu's equation)</i></button> <button id='sample_riccati'>y' = -y²t² + (2y / t) <i>(a Riccati equation)</i></button> <button id='sample_cauchy'>y'' = -(2.75 / t)y' - (4.8 / t²)y <i>(a Cauchy-Euler equation)</i></button></p>
+
+<p>Try playing with the parameters for some of the samples; you can get pretty wild pictures!</p>
 
 <hr>
 
@@ -23,13 +25,15 @@ stylesheets:
 
 To complete this post:
 
-- More testing for correctness -- test accuracy of solutions
-
 - Error handling for parse errors
 
 - Pinch-zoom implementation is not 100% on mobile.... also, mobile browser gets stuck sometimes and pinch-zoom stops working
 
 - Then add a bit more explanatory text and a display of code with syntax highlighting
+
+- More samples
+
+- Get rid of "sticking out hairs" in derivative graphs
 
 - Once code is done, do cross-browser testing
 
@@ -589,6 +593,8 @@ To complete this post:
 	function gradations(from, to, n) {
 		if (n === 0)
 			return [];
+		if (to == from)
+			return [to];
 		if (n === 1)
 			return [(to - from) / 2];
 		const result = [], interval = (to - from) / (n - 1);
@@ -1080,6 +1086,18 @@ To complete this post:
 		$id('nstarty').value = '30';
 		fireEvent($id('graphtype'), 'change');
 	});
+	$id('sample_riccati').listen('click', () => {
+		$id('graphtype').value = 'order1';
+		$id('exp1').value = '-((y^2) * (t^2)) + ((2 * y) / t)';
+		$id('starttime').value = '1';
+		$id('endtime').value = '3.5';
+		$id('timestep').value = '0.01';
+		$id('t0').value = '1';
+		$id('starty1').value = '1.5';
+		$id('starty2').value = '3.5';
+		$id('nstarty').value = '8';
+		fireEvent($id('graphtype'), 'change');
+	});
 	$id('sample_cosT').listen('click', () => {
 		$id('graphtype').value = 'order2';
 		$id('exp1').value = 'cos(t)';
@@ -1093,6 +1111,36 @@ To complete this post:
 		$id('startdy1').value = '-3';
 		$id('startdy2').value = '3';
 		$id('nstartdy').value = '5';
+		fireEvent($id('graphtype'), 'change');
+	});
+	$id('sample_mathieu').listen('click', () => {
+		$id('graphtype').value = 'order2';
+		$id('exp1').value = '(1 + (2 * cos(t))) * y';
+		$id('starttime').value = '-12.5';
+		$id('endtime').value = '12.5';
+		$id('timestep').value = '0.05';
+		$id('t0').value = '0';
+		$id('starty1').value = '-5';
+		$id('starty2').value = '5';
+		$id('nstarty').value = '4';
+		$id('startdy1').value = '-3';
+		$id('startdy2').value = '3';
+		$id('nstartdy').value = '4';
+		fireEvent($id('graphtype'), 'change');
+	});
+	$id('sample_cauchy').listen('click', () => {
+		$id('graphtype').value = 'order2';
+		$id('exp1').value = "((-2.75 / t) * y') + ((-4.8 / (t^2)) * y)";
+		$id('starttime').value = '2';
+		$id('endtime').value = '35';
+		$id('timestep').value = '0.05';
+		$id('t0').value = '2';
+		$id('starty1').value = '-1.5';
+		$id('starty2').value = '1.5';
+		$id('nstarty').value = '4';
+		$id('startdy1').value = '-2';
+		$id('startdy2').value = '2';
+		$id('nstartdy').value = '3';
 		fireEvent($id('graphtype'), 'change');
 	});
 	$id('sample_predprey').listen('click', () => {
