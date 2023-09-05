@@ -33,19 +33,39 @@ function jsParseExpression(tokens) {
 	if (!tokens.length)
 		throw new Error("Parse error"); // TODO: better error handling
 
-	let lhs = jsParseNonBinaryExpression(tokens);
+	let exp = jsParseNonBinaryExpression(tokens);
 
 	if (!tokens.length)
-		return lhs;
+		return exp;
 
 	// Are we in the middle of a binary expression?
+	const operands = [exp], operators = [];
 	let tok = tokens[0];
 	while (tok === '+' || tok === '-' || tok === '*' || tok === '/' || tok === '**' || tok === '^') {
 		tokens.shift();
-		lhs = [tok, lhs, jsParseNonBinaryExpression(tokens)];
+		operators.push(tok);
+		operands.push(jsParseNonBinaryExpression(tokens));
 		tok = tokens[0];
 	}
-	return lhs;
+	if (operators.length) {
+		const operatorPriority = [new Set(['**', '^']), new Set(['*', '/']), new Set(['+', '-'])];
+		for (const toCollapse of operatorPriority) {
+			let i = 0;
+			while (i < operators.length) {
+				if (toCollapse.has(operators[i])) {
+					operands[i] = [operators[i], operands[i], operands[i+1]];
+					operands.splice(i+1, 1);
+					operators.splice(i, 1);
+				} else {
+					i++;
+				}
+			}
+		}
+		if (operands.length !== 1)
+			throw new Error("Parser could not properly build parse tree for binary operations");
+		return operands[0];
+	}
+	return exp;
 }
 
 function jsParseNonBinaryExpression(tokens) {
@@ -72,7 +92,7 @@ function jsParseNonBinaryExpression(tokens) {
 
 	if (/[\w']+/.test(tok)) {
 		if (!knownFunctions.has(tok))
-			throw new Error("Parse error"); // TODO: better error handling
+			throw new Error(`Parse error: unknown function ${tok}`); // TODO: better error handling
 		nextTok = tokens.shift();
 		if (nextTok !== '(')
 			throw new Error("Parse error"); // TODO: better error handling
@@ -173,6 +193,11 @@ suite.testWhitespace = function() {
 
 suite.testParens = function() {
 	tryParse('((y + (t)))', '(y) + (t)');
+}
+
+suite.testBinaryPriority = function() {
+	tryParse("x+1*2", '(t) + ((1) * (2))');
+	tryParse('y^2+t^2', '((y) ** (2)) + ((t) ** (2))');
 }
 
 process.exit(unit.runSync(suite));
