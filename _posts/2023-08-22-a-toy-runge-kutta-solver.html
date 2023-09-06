@@ -50,10 +50,10 @@ To complete this post:
 		<option value='eqs2_order1'>a system of two first-order equations</option>
 	</select>
 </div>
-<div id='exp1wrapper'>
+<div class='expwrapper'>
 	<label for='exp1' style="font-style: italic">y'' =</label> <input id='exp1' value='cos(y)'>
 </div>
-<div id='exp2wrapper' class='eqs2only' style="display: none">
+<div class='expwrapper eqs2only' style="display: none">
 	<span style="font-style: italic">z' =</span> <input id='exp2' value='cos(z)'>
 </div>
 <div class='params'>
@@ -189,15 +189,22 @@ To complete this post:
 
 	// Parser for C/Java/JavaScript-like expression syntax
 	function tokenize(str) {
+		str = str.replaceAll(/\s+/g, ''); // strip all whitespace
+		str = str.replaceAll("\u{2212}", '-') // convert Unicode MINUS to ordinary dash
 		if (!str.length)
 			return [];
 		str = str.toLowerCase();
-		const matches = Array.from(str.matchAll(/\d+(\.\d+)?|[()^/+-]|\*\*?|[\w'π]+|\s+/gy));
+		// Use 'sticky' regex so that matches must be contiguous; we don't just want to pick
+		// matches out of the string, but want to split the entire string into matches
+		const matches = Array.from(str.matchAll(/\d+(\.\d+)?|[()^/+-]|\*\*?|[\w'π]+/gy));
 		const lastMatch = matches.at(-1);
-		if (lastMatch.index + lastMatch[0].length !== str.length) {
-			throw new Error("Parse error"); // TODO: better error handling
+		const matchedUpTo = lastMatch.index + lastMatch[0].length;
+		if (matchedUpTo !== str.length) {
+			// The last match did not appear at the end of the string, meaning there was
+			// some text which we couldn't tokenize
+			return [false, { offset: matchedUpTo, length: 1, message: "I don't know what to do with the highlighted character." }];
 		}
-		return Array.from(matches).map((m) => m[0]).filter((s) => /^\S+$/.test(s));
+		return [true, Array.from(matches).map((m) => m[0])]
 	}
 
 	const knownFunctions = new Set(['sqrt', 'sin', 'cos', 'tan', 'arcsin', 'arccos', 'arctan', 'ln', 'log', 'log10', 'log2', 'sgn', 'sign']);
@@ -327,6 +334,39 @@ To complete this post:
 				return `(${compileNode(ast[1])}) ** (${compileNode(ast[2])})`;
 		}
 		throw new Error(`Unexpected AST node: ${JSON.stringify(ast)}`);
+	}
+
+	function highlightParseError(input, error) {
+		const inputStyles = getComputedStyle(input);
+		const textMeasurer = document.createElement('span');
+		textMeasurer.style.visibility = 'hidden';
+		textMeasurer.style.font = inputStyles.font;
+		document.body.appendChild(textMeasurer);
+
+		const xOffset = input.offsetLeft + parseInt(inputStyles.borderLeftWidth) + parseInt(inputStyles.paddingLeft);
+		textMeasurer.innerText = input.value.slice(0, error.offset);
+		const left = textMeasurer.offsetWidth + xOffset;
+		textMeasurer.innerText = input.value.slice(0, error.offset + error.length);
+		const right = textMeasurer.offsetWidth + xOffset;
+		const bottom = parseInt(inputStyles.borderBottomWidth);
+
+		const underline = document.createElement('span');
+		underline.classList.add('underline')
+		underline.style.left = left + 'px';
+		underline.style.width = (right - left) + 'px';
+		underline.style.bottom = bottom + 'px';
+		input.parentNode.appendChild(underline);
+
+		if (error.message)
+			input.setAttribute('title', error.message);
+
+		textMeasurer.remove();
+	}
+
+	function clearParseError(input) {
+		input.setAttribute('title', '');
+		for (const underline of input.parentNode.$class('underline'))
+			underline.remove();
 	}
 
 	class Solution {
@@ -1000,7 +1040,12 @@ To complete this post:
 		const endTime = Number($id('endtime').value);
 		const t0 = Number($id('t0').value);
 
-		const ast = parse(tokenize($id('exp1').value));
+		let [ok, result] = tokenize($id('exp1').value);
+		if (!ok) {
+			highlightParseError($id('exp1'), result);
+			return;
+		}
+		const ast = parse(result);
 		const fn = compileFunction(ast);
 
 		const min_y0 = Number($id('starty1').value);
@@ -1039,7 +1084,12 @@ To complete this post:
 			const max_z0 = Number($id('startz2').value);
 			const n_z0 = Number($id('nstartz').value);
 			const z0_values = gradations(min_z0, max_z0, n_z0);
-			const ast2 = parse(tokenize($id('exp2').value));
+			[ok, result] = tokenize($id('exp2').value);
+			if (!ok) {
+				highlightParseError($id('exp2'), result);
+				return;
+			}
+			const ast2 = parse(result);
 			const fn2 = compileFunction(ast2);
 			solutions = eqs2_order1_solutions(y0_values, z0_values, t0, startTime, endTime, timeStep, fn, fn2);
 			satScale = d3.scaleLinear().domain([min_z0, max_z0]).range([0.34,0.84]);
@@ -1084,6 +1134,8 @@ To complete this post:
 
 	$id('exp1').listen('change', redraw);
 	$id('exp2').listen('change', redraw);
+	$id('exp1').listen('keydown', () => clearParseError($id('exp1')));
+	$id('exp2').listen('keydown', () => clearParseError($id('exp2')));
 
 	$id('timestep').listen('change', redraw);
 	$id('starttime').listen('change', redraw);

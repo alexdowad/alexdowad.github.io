@@ -19,10 +19,13 @@
 	font-size: .6em;
 }
 
-#exp1wrapper, #exp2wrapper, #typewrapper {
+.expwrapper, #typewrapper {
 	display: flex;
 	gap: .4rem;
 	margin-top: .5rem;
+}
+.expwrapper {
+	position: relative; /* For underlining of parse errors */
 }
 #exp1, #exp2 {
 	flex-grow: 1;
@@ -57,4 +60,9 @@
 .err {
 	background-color: hsl(0 45% 90%);
 	color: hsl(0 80% 25%);
+}
+.underline {
+	background-color: rgb(190, 45, 45);
+	position: absolute;
+	height: .2em;
 }
