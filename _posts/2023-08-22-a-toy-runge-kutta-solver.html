@@ -25,8 +25,6 @@ stylesheets:
 
 To complete this post:
 
-- Error handling for parse errors
-
 - Pinch-zoom implementation is not 100% on mobile.... also, mobile browser gets stuck sometimes and pinch-zoom stops working
 
 - Then add a bit more explanatory text and a display of code with syntax highlighting
@@ -210,17 +208,31 @@ To complete this post:
 	const knownFunctions = new Set(['sqrt', 'sin', 'cos', 'tan', 'arcsin', 'arccos', 'arctan', 'ln', 'log', 'log10', 'log2', 'sgn', 'sign']);
 
 	function parse(tokens) {
-		const exp = parseExpression(tokens);
+		const origTokens = Array.from(tokens); // Keep a copy for later inspection
+		let exp;
+		try {
+			exp = parseExpression(tokens);
+		} catch (e) {
+			const match = e.message.match(/^Parse error: (.*)$/)
+			if (match) {
+				let lastTokenIndex = Math.max(0, origTokens.length-tokens.length-1);
+				const precedingLength = origTokens.slice(0, lastTokenIndex).reduce((sum, s) => sum + s.length, 0);
+				return [false, { offset: precedingLength, length: origTokens[lastTokenIndex].length, message: match[1] }]
+			}
+			throw e; // Not a parse error
+		}
 		if (tokens.length) {
 			// All tokens should have been consumed by the parser
-			throw new Error("Parse error"); // TODO: better error handling
+			const entireLength = origTokens.reduce((sum, s) => sum + s.length, 0);
+			const remainingLength = tokens.reduce((sum, s) => sum + s.length, 0);
+			return [false, { offset: entireLength - remainingLength, length: remainingLength, message: "The last part of this expression is extraneous; it doesn't seem like it should be there" }];
 		}
-		return exp;
+		return [true, exp];
 	}
 
 	function parseExpression(tokens) {
 		if (!tokens.length)
-			throw new Error("Parse error"); // TODO: better error handling
+			throw new Error("Parse error: The expression is incomplete, you still need to add something more");
 
 		let exp = parseNonBinaryExpression(tokens);
 
@@ -258,6 +270,8 @@ To complete this post:
 	}
 
 	function parseNonBinaryExpression(tokens) {
+		if (!tokens.length)
+			throw new Error("Parse error: The expression is incomplete, you still need to add something more");
 		const tok = tokens.shift();
 		let subExp, nextTok;
 
@@ -265,15 +279,15 @@ To complete this post:
 			subExp = parseExpression(tokens);
 			nextTok = tokens.shift();
 			if (nextTok !== ')') {
-				throw new Error("Parse error"); // TODO: better error handling
+				throw new Error("Parse error: There should have been a closing parenthesis here");
 			}
 			return subExp;
 		}
 
 		if (tok === ')' || tok === '+' || tok === '*' || tok === '/' || tok === '**' || tok === '^')
-			throw new Error("Parse error"); // TODO: better error handling
+			throw new Error("Parse error: I don't know what to do with the highlighted symbol in this position");
 
-		if (/\-?\d+(\.\d+)?/.test(tok) || tok === 't' || tok === 'x' || tok === 'y' || tok === 'z' || tok === "y'" || tok == 'e' || tok === 'π' || tok === 'pi')
+		if (/^\-?\d+(\.\d+)?$/.test(tok) || tok === 't' || tok === 'x' || tok === 'y' || tok === 'z' || tok === "y'" || tok == 'e' || tok === 'π' || tok === 'pi')
 			return tok;
 
 		if (tok === '-')
@@ -281,14 +295,14 @@ To complete this post:
 
 		if (/[\w']+/.test(tok)) {
 			if (!knownFunctions.has(tok))
-				throw new Error(`Parse error: unknown function ${tok}`); // TODO: better error handling
+				throw new Error(`Parse error: I don't know what '${tok}' means`);
 			nextTok = tokens.shift();
 			if (nextTok !== '(')
-				throw new Error("Parse error"); // TODO: better error handling
+				throw new Error(`Parse error: After the function '${tok}', there should be an opening parenthesis before the parameter`);
 			let param = parseExpression(tokens);
 			nextTok = tokens.shift();
 			if (nextTok !== ')')
-				throw new Error("Parse error"); // TODO: better error handling
+				throw new Error("Parse error: There should be a closing parenthesis after the function parameter");
 			return [tok, param];
 		}
 
@@ -301,7 +315,7 @@ To complete this post:
 	}
 
 	function compileNode(ast) {
-		if (ast === 't' || ast === 'y' || ast === 'z' || (typeof(ast) === 'string' && /\-?\d+(\.\d+)?/.test(ast)))
+		if (ast === 't' || ast === 'y' || ast === 'z' || (typeof(ast) === 'string' && /^\-?\d+(\.\d+)?$/.test(ast)))
 			return ast;
 		if (ast === "y'")
 			return 'z';
@@ -1045,8 +1059,12 @@ To complete this post:
 			highlightParseError($id('exp1'), result);
 			return;
 		}
-		const ast = parse(result);
-		const fn = compileFunction(ast);
+		[ok, result] = parse(result);
+		if (!ok) {
+			highlightParseError($id('exp1'), result);
+			return;
+		}
+		const fn = compileFunction(result);
 
 		const min_y0 = Number($id('starty1').value);
 		const max_y0 = Number($id('starty2').value);
@@ -1089,7 +1107,11 @@ To complete this post:
 				highlightParseError($id('exp2'), result);
 				return;
 			}
-			const ast2 = parse(result);
+			[ok, result] = parse(result);
+			if (!ok) {
+				highlightParseError($id('exp2'), result);
+				return;
+			}
 			const fn2 = compileFunction(ast2);
 			solutions = eqs2_order1_solutions(y0_values, z0_values, t0, startTime, endTime, timeStep, fn, fn2);
 			satScale = d3.scaleLinear().domain([min_z0, max_z0]).range([0.34,0.84]);
