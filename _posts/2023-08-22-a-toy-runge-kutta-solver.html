@@ -114,12 +114,25 @@ To complete this post:
 
 	// When getting min/max of a large array, this is far faster than using Math.min(...array)
 	// and Math.max(...array), at least with V8 JS engine
+	// Plus, we can also filter out NaN and Infinity
 	function minMax(array) {
 		let i = 1, limit = array.length, max = array[0], min = array[0];
+		if (!Number.isFinite(max) || Number.isNaN(max)) {
+			while (i < limit) {
+				let value = array[i];
+				if (Number.isFinite(value) && !Number.isNaN(value)) {
+					min = max = value;
+					break;
+				}
+				i++;
+			}
+		}
 		while (i < limit) {
 			let value = array[i];
-			min = Math.min(min, value); // Hopefully this JITs to a single MINSD instruction on x86-64
-			max = Math.max(max, value);
+			if (Number.isFinite(value) && !Number.isNaN(value)) {
+				min = Math.min(min, value); // Hopefully this JITs to a single MINSD instruction on x86-64
+				max = Math.max(max, value);
+			}
 			i++;
 		}
 		return [min, max];
@@ -383,15 +396,18 @@ To complete this post:
 		}
 
 		svgPath(xScale, yScale) {
-			const limit = this.solution.endIndex(this.varIndexX), ary = this.solution.array, minXDiff = Math.abs(xScale.invert(0.01) - xScale.invert(0)), minYDiff = Math.abs(yScale.invert(0.01) - yScale.invert(0));
-			let s = 'M '
-			let x = ary[this.solution.startIndex(this.varIndexX)], y = ary[this.solution.startIndex(this.varIndexY)];
-			s += xScale(x).toFixed(2) + ',' + yScale(y).toFixed(2);
-			for (let i = this.solution.startIndex(this.varIndexX)+1, j = this.solution.startIndex(this.varIndexY)+1; i < limit; i++, j++) {
-				if (Math.abs(ary[i] - x) >= minXDiff || Math.abs(ary[j] - y) >= minYDiff) {
-					x = ary[i];
-					y = ary[j];
-					s += ' L ' + xScale(x).toFixed(2) + ',' + yScale(y).toFixed(2);
+			const limit = this.solution.endIndex(this.varIndexX), ary = this.solution.array;
+			const minXDiff = Math.abs(xScale.invert(0.01) - xScale.invert(0)), minYDiff = Math.abs(yScale.invert(0.01) - yScale.invert(0));
+			let s = '', startingLine = true, prevX, prevY;
+			for (let i = this.solution.startIndex(this.varIndexX), j = this.solution.startIndex(this.varIndexY); i < limit; i++, j++) {
+				const x = ary[i], y = ary[j];
+				if (Number.isNaN(x) || !Number.isFinite(x) || Number.isNaN(y) || !Number.isFinite(y) || Math.abs(x) > 1000000000000 || Math.abs(y) > 1000000000000) {
+					startingLine = true;
+				} else if (startingLine || Math.abs(x - prevX) >= minXDiff || Math.abs(y - prevY) >= minYDiff) {
+					s += (startingLine ? 'M' : 'L') + xScale(x).toFixed(2) + ',' + yScale(y).toFixed(2);
+					prevX = x;
+					prevY = y;
+					startingLine = false;
 				}
 			}
 			return s;
@@ -419,16 +435,18 @@ To complete this post:
 		}
 
 		svgPath(xScale, yScale) {
-			const values = this.solution.values(this.varIndex), limit = this.solution.endIndex(0), minXDiff = Math.abs(xScale.invert(0.01) - xScale.invert(0)), minYDiff = Math.abs(yScale.invert(0.01) - yScale.invert(0));
-			let s = 'M '
-			const deriv_values = this.solution.estimatedDerivative(this.varIndex);
-			let x = values[0], y = deriv_values[0];
-			s += xScale(x).toFixed(2) + ',' + yScale(y).toFixed(2);
-			for (let i = 1; i < limit; i++) {
-				if (Math.abs(values[i] - x) >= minXDiff || Math.abs(deriv_values[i] - y) >= minYDiff) {
-					x = values[i];
-					y = deriv_values[i];
-					s += ' L ' + xScale(x).toFixed(2) + ',' + yScale(y).toFixed(2);
+			const values = this.solution.values(this.varIndex), deriv_values = this.solution.estimatedDerivative(this.varIndex), limit = this.solution.endIndex(0);
+			const minXDiff = Math.abs(xScale.invert(0.01) - xScale.invert(0)), minYDiff = Math.abs(yScale.invert(0.01) - yScale.invert(0));
+			let s = '', startingLine = true, prevX, prevY;
+			for (let i = 0; i < limit; i++) {
+				const x = values[i], y = deriv_values[i];
+				if (Number.isNaN(x) || !Number.isFinite(x) || Number.isNaN(y) || !Number.isFinite(y) || Math.abs(x) > 1000000000000 || Math.abs(y) > 1000000000000) {
+					startingLine = true;
+				} else if (startingLine || Math.abs(x - prevX) >= minXDiff || Math.abs(y - prevY) >= minYDiff) {
+					s += (startingLine ? 'M' : 'L') + xScale(x).toFixed(2) + ',' + yScale(y).toFixed(2);
+					prevX = x;
+					prevY = y;
+					startingLine = false;
 				}
 			}
 			return s;
@@ -456,11 +474,16 @@ To complete this post:
 
 		svgPath(xScale, yScale) {
 			const limit = this.solution.endIndex(this.varIndex), Δt = this.solution.Δt, ary = this.solution.array;
-			let s = 'M ', t = this.solution.t_start;
-			s += xScale(t).toFixed(2) + ',' + yScale(ary[this.solution.startIndex(this.varIndex)]).toFixed(2);
-			for (let i = this.solution.startIndex(this.varIndex)+1; i < limit; i++) {
+			let s = '', t = this.solution.t_start, startingLine = true;
+			for (let i = this.solution.startIndex(this.varIndex); i < limit; i++) {
+				const val = ary[i];
+				if (!Number.isNaN(val) && Number.isFinite(val) && Math.abs(val) <= 1000000000000) {
+					s += (startingLine ? 'M' : 'L') + xScale(t).toFixed(2) + ',' + yScale(val).toFixed(2);
+					startingLine = false;
+				} else {
+					startingLine = true;
+				}
 				t += Δt;
-				s += ' L ' + xScale(t).toFixed(2) + ',' + yScale(ary[i]).toFixed(2);
 			}
 			return s;
 		}
@@ -474,7 +497,7 @@ To complete this post:
 	}
 
 	function combinedBounds(lines) {
-		const allBounds = lines.map((line) => line.bounds());
+		const allBounds = lines.map((line) => line.bounds()).filter((bounds) => bounds.every((b) => !Number.isNaN(b) && Number.isFinite(b)));
 		return [
 			Math.min(...allBounds.map((b) => b[0])),
 			Math.max(...allBounds.map((b) => b[1])),
@@ -665,8 +688,9 @@ To complete this post:
 			const bounds = combinedBounds(lines);
 			const xSize = bounds[1] - bounds[0];
 			const ySize = bounds[3] - bounds[2];
-			const xDomain = [bounds[0] - (xSize * 0.05), bounds[1] + (xSize * 0.05)];
-			const yDomain = [bounds[2] - (ySize * 0.05), bounds[3] + (ySize * 0.05)];
+			// Don't allow the X/Y domain of the graph to become so large that exponential notation is used
+			const xDomain = [Math.max(bounds[0] - (xSize * 0.05), -1000000000000), Math.min(bounds[1] + (xSize * 0.05), 1000000000000)];
+			const yDomain = [Math.max(bounds[2] - (ySize * 0.05), -1000000000000), Math.min(bounds[3] + (ySize * 0.05), 1000000000000)];
 
 			const xScale = d3.scaleLinear().domain(xDomain).range([25, 190]);
 			const yScale = d3.scaleLinear().domain(yDomain).range([185, 15]);
@@ -716,6 +740,10 @@ To complete this post:
 		adjustView(xDomain, yDomain, duration = 250) {
 			if (!this.drawn)
 				return;
+
+			// Don't allow scale to become so large that exponential notation is used for axis labels
+			xDomain = [Math.max(xDomain[0], -1000000000000), Math.min(xDomain[1], 1000000000000)];
+			yDomain = [Math.max(yDomain[0], -1000000000000), Math.min(yDomain[1], 1000000000000)];
 
 			const xScale = d3.scaleLinear().domain(xDomain).range([25, 190]);
 			const yScale = d3.scaleLinear().domain(yDomain).range([185, 15]);
