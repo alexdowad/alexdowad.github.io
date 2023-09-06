@@ -188,7 +188,7 @@ To complete this post:
 	}
 
 	// Parser for C/Java/JavaScript-like expression syntax
-	function jsTokenize(str) {
+	function tokenize(str) {
 		if (!str.length)
 			return [];
 		str = str.toLowerCase();
@@ -202,8 +202,8 @@ To complete this post:
 
 	const knownFunctions = new Set(['sqrt', 'sin', 'cos', 'tan', 'arcsin', 'arccos', 'arctan', 'ln', 'log', 'log10', 'log2', 'sgn', 'sign']);
 
-	function jsParse(tokens) {
-		const exp = jsParseExpression(tokens);
+	function parse(tokens) {
+		const exp = parseExpression(tokens);
 		if (tokens.length) {
 			// All tokens should have been consumed by the parser
 			throw new Error("Parse error"); // TODO: better error handling
@@ -211,11 +211,11 @@ To complete this post:
 		return exp;
 	}
 
-	function jsParseExpression(tokens) {
+	function parseExpression(tokens) {
 		if (!tokens.length)
 			throw new Error("Parse error"); // TODO: better error handling
 
-		let exp = jsParseNonBinaryExpression(tokens);
+		let exp = parseNonBinaryExpression(tokens);
 
 		if (!tokens.length)
 			return exp;
@@ -226,7 +226,7 @@ To complete this post:
 		while (tok === '+' || tok === '-' || tok === '*' || tok === '/' || tok === '**' || tok === '^') {
 			tokens.shift();
 			operators.push(tok);
-			operands.push(jsParseNonBinaryExpression(tokens));
+			operands.push(parseNonBinaryExpression(tokens));
 			tok = tokens[0];
 		}
 		if (operators.length) {
@@ -250,12 +250,12 @@ To complete this post:
 		return exp;
 	}
 
-	function jsParseNonBinaryExpression(tokens) {
+	function parseNonBinaryExpression(tokens) {
 		const tok = tokens.shift();
 		let subExp, nextTok;
 
 		if (tok === '(') {
-			subExp = jsParseExpression(tokens);
+			subExp = parseExpression(tokens);
 			nextTok = tokens.shift();
 			if (nextTok !== ')') {
 				throw new Error("Parse error"); // TODO: better error handling
@@ -270,7 +270,7 @@ To complete this post:
 			return tok;
 
 		if (tok === '-')
-			return ['-', jsParseNonBinaryExpression(tokens)];
+			return ['-', parseNonBinaryExpression(tokens)];
 
 		if (/[\w']+/.test(tok)) {
 			if (!knownFunctions.has(tok))
@@ -278,7 +278,7 @@ To complete this post:
 			nextTok = tokens.shift();
 			if (nextTok !== '(')
 				throw new Error("Parse error"); // TODO: better error handling
-			let param = jsParseExpression(tokens);
+			let param = parseExpression(tokens);
 			nextTok = tokens.shift();
 			if (nextTok !== ')')
 				throw new Error("Parse error"); // TODO: better error handling
@@ -1000,7 +1000,7 @@ To complete this post:
 		const endTime = Number($id('endtime').value);
 		const t0 = Number($id('t0').value);
 
-		const ast = jsParse(jsTokenize($id('exp1').value));
+		const ast = parse(tokenize($id('exp1').value));
 		const fn = compileFunction(ast);
 
 		const min_y0 = Number($id('starty1').value);
@@ -1039,7 +1039,7 @@ To complete this post:
 			const max_z0 = Number($id('startz2').value);
 			const n_z0 = Number($id('nstartz').value);
 			const z0_values = gradations(min_z0, max_z0, n_z0);
-			const ast2 = jsParse(jsTokenize($id('exp2').value));
+			const ast2 = parse(tokenize($id('exp2').value));
 			const fn2 = compileFunction(ast2);
 			solutions = eqs2_order1_solutions(y0_values, z0_values, t0, startTime, endTime, timeStep, fn, fn2);
 			satScale = d3.scaleLinear().domain([min_z0, max_z0]).range([0.34,0.84]);
