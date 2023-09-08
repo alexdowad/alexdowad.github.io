@@ -918,26 +918,29 @@ To complete this post:
 				// Pinch to zoom (on mobile)
 				event.preventDefault();
 
-				function boundingBox(points) {
-					const xs = points.map((p) => p[0]);
-					const ys = points.map((p) => p[1]);
-					return [Math.min(...xs), Math.max(...xs), Math.min(...ys), Math.max(...ys)];
+				function average(numbers) {
+					return numbers.reduce((a,b) => a + b, 0) / numbers.length;
+				}
+				function avgPoint(points) {
+					return [average(points.map((p) => p[0])), average(points.map((p) => p[1]))];
+				}
+				function distance(points) {
+					return Math.sqrt((points[0][0] - points[1][0]) ** 2 + (points[0][1] - points[1][1]) ** 2);
 				}
 
-				const startBox = boundingBox(Array.from(this.touchPos.values()));
-				const currentBox = boundingBox(Array.from(event.targetTouches).map((t) => this.mouseDomainPosition(t)));
-
-				// Pan and scale view so that 'startBox' is taken to 'currentBox'
-				const Δx = startBox[0] - currentBox[0];
-				const Δy = startBox[2] - currentBox[2];
-				const xStretch = (startBox[1] - startBox[0]) / (currentBox[1] - currentBox[0]);
-				const yStretch = (startBox[3] - startBox[2]) / (currentBox[3] - currentBox[2]);
+				const startPoints = Array.from(this.touchPos.values());
+				const currentPoints = Array.from(event.targetTouches).map((t) => this.mouseDomainPosition(t));
+				const startCenter = avgPoint(startPoints);
+				const currentCenter = avgPoint(currentPoints);
+				const Δx = startCenter[0] - currentCenter[0];
+				const Δy = startCenter[1] - currentCenter[1];
+				const stretch = distance(startPoints) / distance(currentPoints);
 
 				function scaleAround(v_0, v_1, factor) {
 					return v_0 + ((v_1 - v_0) * factor);
 				}
 
-				this.adjustView([scaleAround(startBox[0], this.xDomain[0] + Δx, xStretch), scaleAround(startBox[0], this.xDomain[1] + Δx, xStretch)], [scaleAround(startBox[2], this.yDomain[0] + Δy, yStretch), scaleAround(startBox[2], this.yDomain[1] + Δy, yStretch)], 0);
+				this.adjustView([scaleAround(startCenter[0], this.xDomain[0] + Δx, stretch), scaleAround(startCenter[0], this.xDomain[1] + Δx, stretch)], [scaleAround(startCenter[1], this.yDomain[0] + Δy, stretch), scaleAround(startCenter[1], this.yDomain[1] + Δy, stretch)], 0);
 			}
 		}
 
