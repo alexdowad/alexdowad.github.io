@@ -11,7 +11,7 @@ stylesheets:
 
 <p>This post presents a simple, interactive <a href='https://en.wikipedia.org/wiki/Differential_equation'>differential equation</a> solution graphing tool based on the classic <a href='https://en.wikipedia.org/wiki/Runge%E2%80%93Kutta_methods'>Runge-Kutta method</a> (which is really an algorithm).</p>
 
-<p>It graphs solutions to one 1<sup>st</sup>-order equation, one 2<sup>nd</sup>-order equation, or a system of two 1<sup>st</sup>-order equations. The right-hand side of the equation(s) must be entered using syntax similar to expressions in the C, Java, or JavaScript programming languages (<a>syntax help</a>). Since the solution of a differential equation depends on starting conditions, you can set the range of starting conditions which should be graphed and the “time” value at which the starting conditions apply. The tool will draw one line for each set of starting conditions.</p>
+<p>It graphs solutions to one 1<sup>st</sup>-order equation, one 2<sup>nd</sup>-order equation, or a system of two 1<sup>st</sup>-order equations. The right-hand side of the equation(s) must be entered using syntax similar to expressions in the C, Java, or JavaScript programming languages (<a href='#syntax'>syntax help</a>). Since the solution of a differential equation depends on starting conditions, you can set the range of starting conditions which should be graphed and the “time” value at which the starting conditions apply. The tool will draw one line for each set of starting conditions.</p>
 
 <p>Hover over a solution line to see what starting conditions it is based on. Roll your mouse wheel to zoom in and out; hold down the middle mouse button to pan. On mobile, use one finger to pan and pinch with two fingers to zoom.</p>
 
@@ -24,12 +24,6 @@ stylesheets:
 <!--
 
 To complete this post:
-
-- Pinch-zoom implementation is not 100% on mobile.... also, mobile browser gets stuck sometimes and pinch-zoom stops working
-
-- Then add a bit more explanatory text and a display of code with syntax highlighting
-
-- More samples
 
 - Get rid of "sticking out hairs" in derivative graphs
 
@@ -1319,3 +1313,90 @@ To complete this post:
 
 	redraw();
 </script>
+
+<hr>
+
+<p>Classic Runge-Kutta, also known as “RK4”, generates four different estimates of the rate of change of each variable at each time step, and takes a weighted sum of those four estimates as a final estimate which is (usually) more accurate than any of the four. Then, we use those estimated derivatives to adjust the values of each variable, bump “time” forward by one step, and repeat until we reach the ending time of the simulation. Here is a simple implementation of RK4 for a system with just one dependent variable:</p>
+
+{% highlight javascript %}
+// Trace out evolution of our system using classic Runge-Kutta (AKA "RK4")
+// Store results in a packed array of floats
+function rk4trace(y, t, Δt, fn, array, i, Δi, limit) {
+  while (i !== limit) {
+    const half_Δt = Δt / 2.0;
+    const next_t = t + Δt;
+    const half_t = t + half_Δt;
+
+    const k_1 = fn(t, y); // Slope at starting point
+    const k_2 = fn(half_t, y + (half_Δt * k_1)); // Estimated slope at mid-point
+    const k_3 = fn(half_t, y + (half_Δt * k_2)); // Another estimate of slope at mid-point
+    const k_4 = fn(next_t, y + (Δt * k_3)); // Estimated slope at endpoint
+
+    const slope = (k_1 + 2*k_2 + 2*k_3 + k_4) / 6.0; // Weighted average of those four slopes
+
+    y += Δt * slope;
+    array[i] = y;
+    t += Δt;
+    i += Δi;
+  }
+}
+
+// Apply RK4 to find phase lines for a system with one dependent variable
+function rk4solve(y_0, t_0, t_start, t_end, Δt, fn) {
+  const timeSteps = Math.floor(((t_end - t_start) / Δt) + 1);
+  // Packed array of variable values at each time step:
+  const array = new Float64Array(timeSteps);
+
+  let t = t_0, y = y_0, i = Math.floor((t_0 - t_start) / Δt);
+  array[i] = y_0;
+
+  // Trace out phase line from starting point
+  rk4trace(y_0, t_0, Δt, fn, array, i+1, 1, array.length);
+
+  // Trace out phase line in the opposite direction from the starting point
+  rk4trace(y_0, t_0, -Δt, fn, array, i-1, -1, -1);
+
+  return array;
+}
+{% endhighlight %}
+
+<p>The above implementation stores the values of the dependent variable in a <a href='https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Float64Array'><code>Float64Array</code></a> instead of a regular JavaScript Array; this is for speed and memory efficiency. It doesn't store the time value for each entry in the array, since that can be easily rederived from <code>t_start</code>, <code>t_end</code>, and <code>Δt</code>.</p>
+
+<hr>
+
+<h2 id='syntax'>Expression Syntax Help for this Tool</h2>
+
+<table>
+	<tr><td>Variables</td><td><code>t</code> <code>y</code><br><code>y'</code> <i>(for 2<sup>nd</sup>-order equations)</i><br><code>z</code> <i>(for systems of two 1<sup>st</sup>-order equations)</i><br><code>x</code> <i>(alternative name for <code>t</code>)</i></td></tr>
+	<tr>
+		<td>Numbers</td>
+		<td>
+			<code>1</code>, <code>2</code>, <code>-1</code>, etc<br>
+			<code>1.1234</code>...<br>
+			<code>e</code> <i>(Euler's number, 2.71828...)</i><br>
+			<code>pi</code> or <code>π</code> <i>(3.14159...)</i><br>
+			If you want any other mathematical constants, drop the author a line.
+		</td>
+	</tr>
+	<tr><td>Arithmetic</td><td><code><i>expression</i> + <i>expression</i></code><br>Other binary operators are <code>-</code>, <code>*</code>, <code>/</code>, and <code>^</code> or <code>**</code> for exponentiation<br><code>-<i>expression</i></code> for negation</td></tr>
+	<tr><td>Parentheses</td><td><code>(<i>expression</i>)</code><br>Use parentheses to ensure expressions are grouped in the way you want</td></tr>
+	<tr>
+		<td>Functions</td>
+		<td>
+			<code>sqrt(<i>expression</i>)</code><br>
+			<code>sin(<i>expression</i>)</code> <i>(for trig functions, the input parameter is in radians)</i><br>
+			<code>cos(<i>expression</i>)</code><br>
+			<code>tan(<i>expression</i>)</code><br>
+			<code>arcsin(<i>expression</i>)</code> <i>(inverse trig functions)</i><br>
+			<code>arccos(<i>expression</i>)</code><br>
+			<code>arctan(<i>expression</i>)</code><br>
+			<code>ln(<i>expression</i>)</code> or <code>log(<i>expression</i>)</code> <i>(natural logarithm)</i><br>
+			<code>log10(<i>expression</i>)</code><br>
+			<code>log2(<i>expression</i>)</code><br>
+			<code>sign(<i>expression</i>)</code> or <code>sgn(<i>expression</i>)</code> <i>(0 for zero, 1 for positive numbers, -1 for negative numbers)</i><br>
+			If you want any other mathematical functions, drop the author a line.
+		</td>
+	</tr>
+</table>
+
+<p><i><b>Special thanks</b> to Gilbert Strang for his text “Differential Equations and Linear Algebra”, which inspired me to make this tool.</i></p>
