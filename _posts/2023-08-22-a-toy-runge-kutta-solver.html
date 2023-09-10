@@ -25,8 +25,6 @@ stylesheets:
 
 To complete this post:
 
-- Get rid of "sticking out hairs" in derivative graphs
-
 - Once code is done, do cross-browser testing
 
 -->
@@ -410,25 +408,6 @@ To complete this post:
 		values(varIndex) {
 			return this.array.subarray(this.startIndex(varIndex), this.endIndex(varIndex));
 		}
-
-		estimatedDerivative(varIndex) {
-			if (this.nPoints === 0)
-				return [];
-			if (this.nPoints === 1)
-				return [0];
-			if (!this.diff) {
-				this.diff = new Float64Array(this.nVars * this.nPoints);
-				for (let v = 0; v < this.nVars; v++) {
-					let i = this.startIndex(v), limit = this.endIndex(v)-1;
-					this.diff[i] = (this.array[i+1] - this.array[i]) / this.Δt;
-					this.diff[limit] = (this.array[limit] - this.array[limit-1]) / this.Δt;
-					while (++i < limit) {
-						this.diff[i] = (this.array[i+1] - this.array[i-1]) / (2 * this.Δt);
-					}
-				}
-			}
-			return this.diff.subarray(this.startIndex(varIndex), this.endIndex(varIndex));
-		}
 	}
 
 	class PhaseLine {
@@ -472,10 +451,17 @@ To complete this post:
 
 	// Graph the value of a variable against its derivative
 	class DerivativeLine {
-		constructor(solution, varIndex = 0) {
+		constructor(solution, varIndex = 0, fn) {
 			this.solution = solution;
 			this.varIndex = varIndex;
 			this._bounds = undefined;
+
+			this.derivValues = new Float64Array(solution.endIndex(0));
+			let t = solution.t_start, values = solution.values(varIndex);
+			for (let i = 0; i < this.derivValues.length; i++) {
+				this.derivValues[i] = fn(t, values[i]);
+				t += solution.Δt;
+			}
 		}
 
 		title() {
@@ -483,11 +469,11 @@ To complete this post:
 		}
 
 		svgPath(xScale, yScale) {
-			const values = this.solution.values(this.varIndex), deriv_values = this.solution.estimatedDerivative(this.varIndex), limit = this.solution.endIndex(0);
+			const values = this.solution.values(this.varIndex), limit = this.solution.endIndex(0);
 			const minXDiff = Math.abs(xScale.invert(0.01) - xScale.invert(0)), minYDiff = Math.abs(yScale.invert(0.01) - yScale.invert(0));
 			let s = '', startingLine = true, prevX, prevY;
 			for (let i = 0; i < limit; i++) {
-				const x = values[i], y = deriv_values[i];
+				const x = values[i], y = this.derivValues[i];
 				if (Number.isNaN(x) || !Number.isFinite(x) || Number.isNaN(y) || !Number.isFinite(y) || Math.abs(x) > 1000000000000 || Math.abs(y) > 1000000000000) {
 					startingLine = true;
 				} else if (startingLine || Math.abs(x - prevX) >= minXDiff || Math.abs(y - prevY) >= minYDiff) {
@@ -504,8 +490,7 @@ To complete this post:
 			if (this._bounds)
 				return this._bounds;
 			const values = this.solution.values(this.varIndex);
-			const deriv_values = this.solution.estimatedDerivative(this.varIndex);
-			return this._bounds = minMax(values).concat(minMax(deriv_values));
+			return this._bounds = minMax(values).concat(minMax(this.derivValues));
 		}
 	}
 
@@ -1075,7 +1060,7 @@ To complete this post:
 		case 'order1':
 			solutions = order1_solutions(y0_values, t0, startTime, endTime, timeStep, fn);
 			colors = solutions.map((solution) => d3.hsl(hueScale(solution.startY), 0.75, 0.75).formatHex());
-			vp1.draw(solutions.map((s) => new DerivativeLine(s)), colors);
+			vp1.draw(solutions.map((s) => new DerivativeLine(s, 0, fn)), colors);
 			vp2.draw(solutions.map((s) => new TimeLine(s)), colors);
 			break;
 
@@ -1116,16 +1101,16 @@ To complete this post:
 			colors = solutions.map((solution) => d3.hsl(hueScale(solution.startY), satScale(solution.startZ), lightScale(solution.startZ)).formatHex());
 			switch($id('graph1').value) {
 				case 'z-y': vp1.draw(solutions.map((s) => new PhaseLine(s)), colors); break;
-				case 'dy-y': vp1.draw(solutions.map((s) => new DerivativeLine(s)), colors); break;
+				case 'dy-y': vp1.draw(solutions.map((s) => new DerivativeLine(s, 0, fn)), colors); break;
 				case 'y-t': vp1.draw(solutions.map((s) => new TimeLine(s)), colors); break;
-				case 'dz-z': vp1.draw(solutions.map((s) => new DerivativeLine(s, 1)), colors); break;
+				case 'dz-z': vp1.draw(solutions.map((s) => new DerivativeLine(s, 1, fn2)), colors); break;
 				case 'z-t': vp1.draw(solutions.map((s) => new TimeLine(s, 1)), colors); break;
 			}
 			switch($id('graph2').value) {
 				case 'z-y': vp2.draw(solutions.map((s) => new PhaseLine(s)), colors); break;
-				case 'dy-y': vp2.draw(solutions.map((s) => new DerivativeLine(s)), colors); break;
+				case 'dy-y': vp2.draw(solutions.map((s) => new DerivativeLine(s, 0, fn)), colors); break;
 				case 'y-t': vp2.draw(solutions.map((s) => new TimeLine(s)), colors); break;
-				case 'dz-z': vp2.draw(solutions.map((s) => new DerivativeLine(s, 1)), colors); break;
+				case 'dz-z': vp2.draw(solutions.map((s) => new DerivativeLine(s, 1, fn2)), colors); break;
 				case 'z-t': vp2.draw(solutions.map((s) => new TimeLine(s, 1)), colors); break;
 			}
 			break;

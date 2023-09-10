@@ -38,25 +38,6 @@ class Solution {
 	values(varIndex) {
 		return this.array.subarray(this.startIndex(varIndex), this.endIndex(varIndex));
 	}
-
-	estimatedDerivative(varIndex) {
-		if (this.nPoints === 0)
-			return [];
-		if (this.nPoints === 1)
-			return [0];
-		if (!this.diff) {
-			this.diff = new Float64Array(this.nVars * this.nPoints);
-			for (let v = 0; v < this.nVars; v++) {
-				let i = this.startIndex(v), limit = this.endIndex(v)-1;
-				this.diff[i] = (this.array[i+1] - this.array[i]) / this.Δt;
-				this.diff[limit] = (this.array[limit] - this.array[limit-1]) / this.Δt;
-				while (++i < limit) {
-					this.diff[i] = (this.array[i+1] - this.array[i-1]) / (2 * this.Δt);
-				}
-			}
-		}
-		return this.diff.subarray(this.startIndex(varIndex), this.endIndex(varIndex));
-	}
 }
 
 // Trace out evolution of our system using classic Runge-Kutta (AKA "RK4")
