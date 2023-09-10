@@ -1094,7 +1094,7 @@ To complete this post:
 				highlightParseError($id('exp2'), result);
 				return;
 			}
-			const fn2 = compileFunction(ast2);
+			const fn2 = compileFunction(result);
 			solutions = eqs2_order1_solutions(y0_values, z0_values, t0, startTime, endTime, timeStep, fn, fn2);
 			satScale = d3.scaleLinear().domain([min_z0, max_z0]).range([0.34,0.84]);
 			lightScale = d3.scaleLinear().domain([min_z0, max_z0]).range([0.78,0.48]);
