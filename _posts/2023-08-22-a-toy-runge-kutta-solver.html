@@ -15,7 +15,7 @@ stylesheets:
 
 <p>Hover over a solution line to see what starting conditions it is based on. Roll your mouse wheel to zoom in and out; hold down the middle mouse button to pan. On mobile, use one finger to pan and pinch with two fingers to zoom.</p>
 
-<p><b>Click these buttons to see a variety of samples:</b> <button id='sample_Y'>y' = y</button> <button id='sample_cosY'>y' = cos(y)</button> <button id='sample_cosT'>y'' = cos(t)</button> <button id='sample_cosY_2'>y'' = cos(y)</button> <button id='sample_predprey'>y' = y - (0.01yz), z' = -z + (0.02yz) <i>(a “predator-prey” system)</i></button> <button id='sample_mathieu'>y'' = y(a - 2q cos(t)) <i>(Mathieu's equation)</i></button> <button id='sample_riccati'>y' = -y²t² + (2y / t) <i>(a Riccati equation)</i></button> <button id='sample_cauchy'>y'' = -(a / t)y' - (b / t²)y <i>(a Cauchy-Euler equation)</i></button> <button id='sample_meissner'>y'' = -y(α² + ω² sign(cos(t))) <i>(Meissner equation)</i></button></p>
+<p><b>Click these buttons to see a variety of samples:</b> <button id='sample_Y'>y' = y</button> <button id='sample_cosY'>y' = cos(y)</button> <button id='sample_cosT'>y'' = cos(t)</button> <button id='sample_cosY_2'>y'' = cos(y)</button> <button id='sample_logistic'>y' = ay - by² <i>(the logistic equation)</i></button> <button id='sample_mathieu'>y'' = y(a - 2q cos(t)) <i>(Mathieu's equation)</i></button> <button id='sample_riccati'>y' = -y²t² + (2y / t) <i>(a Riccati equation)</i></button> <button id='sample_cauchy'>y'' = -(a / t)y' - (b / t²)y <i>(a Cauchy-Euler equation)</i></button> <button id='sample_meissner'>y'' = -y(α² + ω² sign(cos(t))) <i>(Meissner equation)</i></button> <button id='sample_predprey'>y' = y - (0.01yz), z' = -z + (0.02yz) <i>(a “predator-prey” system)</i></button></p>
 
 <p>Try playing with the parameters for some of the samples; you can get pretty wild pictures!</p>
 
@@ -1202,6 +1202,18 @@ To complete this post:
 		$id('starty1').value = '1.5';
 		$id('starty2').value = '3.5';
 		$id('nstarty').value = '8';
+		fireEvent($id('graphtype'), 'change');
+	});
+	$id('sample_logistic').listen('click', () => {
+		$id('graphtype').value = 'order1';
+		$id('exp1').value = '(10*y)-(y^2)';
+		$id('starttime').value = '-1';
+		$id('endtime').value = '1';
+		$id('timestep').value = '0.01';
+		$id('t0').value = '0';
+		$id('starty1').value = '1';
+		$id('starty2').value = '5';
+		$id('nstarty').value = '10';
 		fireEvent($id('graphtype'), 'change');
 	});
 	$id('sample_cosT').listen('click', () => {
