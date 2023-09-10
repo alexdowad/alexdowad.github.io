@@ -979,6 +979,8 @@ To complete this post:
 	vp1.linkedViews.push(vp2);
 	vp2.linkedViews.push(vp1);
 
+	const axisTitles = { 'z-y': ['y', 'z'], 'dy-y': ['y', "y'"], 'y-t': ['t', 'y'], 'dz-z': ['z', "z'"], 'z-t': ['t', 'z'] };
+
 	function validateField(ok, good, field, message) {
 		if (good) {
 			field.setAttribute('title', '');
@@ -1128,10 +1130,9 @@ To complete this post:
 
 	$id('graphtype').listen('change', (event) => {
 		if (event.target.value === 'eqs2_order1') {
-			const titles = { 'z-y': ['y', 'z'], 'dy-y': ['y', "y'"], 'y-t': ['t', 'y'], 'dz-z': ['z', "z'"], 'z-t': ['t', 'z'] };
 			for (const elem of $class('eqs2only')) elem.style.display = '';
-			vp1.setTitles(...titles[$id('graph1').value]);
-			vp2.setTitles(...titles[$id('graph2').value]);
+			vp1.setTitles(...axisTitles[$id('graph1').value]);
+			vp2.setTitles(...axisTitles[$id('graph2').value]);
 		} else {
 			for (const elem of $class('eqs2only')) elem.style.display = 'none';
 			vp1.setTitles('y', "y'");
@@ -1174,8 +1175,14 @@ To complete this post:
 	$id('startz2').listen('change', redraw);
 	$id('nstartz').listen('change', redraw);
 
-	$id('graph1').listen('change', redraw);
-	$id('graph2').listen('change', redraw);
+	$id('graph1').listen('change', (event) => {
+		vp1.setTitles(...axisTitles[event.target.value]);
+		redraw();
+	});
+	$id('graph2').listen('change', (event) => {
+		vp2.setTitles(...axisTitles[event.target.value]);
+		redraw();
+	});
 
 	$id('sample_Y').listen('click', () => {
 		$id('graphtype').value = 'order1';
