@@ -457,10 +457,19 @@ To complete this post:
 			this._bounds = undefined;
 
 			this.derivValues = new Float64Array(solution.endIndex(0));
-			let t = solution.t_start, values = solution.values(varIndex);
-			for (let i = 0; i < this.derivValues.length; i++) {
-				this.derivValues[i] = fn(t, values[i]);
-				t += solution.Δt;
+			let t = solution.t_start;
+			if (solution.nVars === 1) {
+				const values = solution.values(varIndex);
+				for (let i = 0; i < this.derivValues.length; i++) {
+					this.derivValues[i] = fn(t, values[i]);
+					t += solution.Δt;
+				}
+			} else if (solution.nVars === 2) {
+				const yValues = solution.values(0), zValues = solution.values(1);
+				for (let i = 0; i < this.derivValues.length; i++) {
+					this.derivValues[i] = fn(t, yValues[i], zValues[i]);
+					t += solution.Δt;
+				}
 			}
 		}
 
