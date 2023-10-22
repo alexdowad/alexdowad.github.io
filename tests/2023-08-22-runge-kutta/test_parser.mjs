@@ -164,6 +164,7 @@ suite.testVariables = function() {
 	tryParse('y', 'y');
 	tryParse('t', 't');
 	tryParse('z', 'z');
+	tryParse("y'", 'z');
 }
 
 suite.testUnary = function() {
@@ -198,6 +199,11 @@ suite.testParens = function() {
 suite.testBinaryPriority = function() {
 	tryParse("x+1*2", '(t) + ((1) * (2))');
 	tryParse('y^2+t^2', '((y) ** (2)) + ((t) ** (2))');
+}
+
+// I entered this DE when checking my solution for exercise 2.5.16 in Gil Strang's text "Differential Equations & Linear Algebra"
+suite.testDELAProblem2_5_16 = function() {
+	tryParse("1-(911*y')-(1000000*y)", '((1) - ((911) * (z))) - ((1000000) * (y))');
 }
 
 process.exit(unit.runSync(suite));
