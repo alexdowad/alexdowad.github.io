@@ -1,0 +1,51 @@
+/* 'Spoiler' text which has to be clicked to view */
+.reveal {
+  padding: 1em;
+  border-left: 0.5em solid #555;
+  background-color: #d8c399;
+}
+.reveal.hidden {
+  color: #d8c399;
+  cursor: pointer;
+  user-select: none;
+}
+
+.draggable {
+  cursor: move;
+}
+
+.graphlabel {
+  z-index: 100;
+  position: absolute;
+  bottom: .4em;
+  left: 50%;
+  transform: translateX(-50%);
+  color: white;
+  font-size: 1.2em;
+}
+
+.axislabel {
+  font-size: .25em;
+  user-select: none;
+}
+
+.inset {
+  background-color: #ddd;
+  margin: 1.5em;
+  padding: 1.8em;
+}
+.inset > :first-child {
+  margin-top: 0;
+}
+.inset > :last-child {
+  margin-bottom: 0;
+}
+
+.fuschia-btn {
+  background-color: #c154c1aa;
+  border: 1px solid #c154c1aa;
+}
+.fuschia-btn:hover {
+  background-color: #ca2c92aa;
+  border-color: #c4228a;
+}
