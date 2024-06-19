@@ -102,7 +102,7 @@
 		Longtime, advanced git user.
 	</p>
 	<p class="hidden-details" id="graphql">
-		On a previous project, I needed to implement a GraphQL server. None of the available open-source implementations seemed suitable, so I studied the specification and wrote my own server from scratch. (Interesting technical point: Many GraphQL server implementations use a technique called the “dataloader pattern” to avoid issuing vast numbers of database queries, but in my humble opinion, the “dataloader pattern” is a poor idea and best avoided. Instead, my implementation analyzed GraphQL queries and translated them into SQL queries in a way which guarantees just one SQL query will be issued for each node in the GraphQL query tree.)
+		On a previous project, I needed to implement a GraphQL server. None of the available open-source implementations seemed suitable, so I studied the specification and wrote my own server from scratch. (Interesting technical point: Many GraphQL server implementations use a technique called the “dataloader pattern” to avoid issuing vast numbers of database queries, but in my humble opinion, the “dataloader pattern” is a poor idea and best avoided. Instead, my implementation analyzes GraphQL queries and translates them into SQL queries in a way which guarantees just one SQL query will be issued for each node in the GraphQL query tree.)
 	</p>
 	<p class="hidden-details" id="jpeg">
 		See: <a href="https://github.com/alexdowad/jpeg.js">JPEG decoder</a> which I wrote as an exercise. <a href="https://alexdowad.github.io/visualizing-the-idct/">My article on the Discrete Cosine Transform</a>, which plays a central role in JPEG encoding/decoding.
@@ -123,13 +123,13 @@
 		While working on the PHP interpreter, I learned to devise algorithms for applying <a href="https://en.wikipedia.org/wiki/Single_instruction,_multiple_data">SIMD instructions</a> to speed up computation on large strings. I've only done this for x86-64 CPUs, though the skill should transfer to other CPU architectures. Examples: <a href="https://github.com/php/php-src/commit/3ae47793053f062f8d74c34258d8d98102df9f50">1</a> | <a href="https://github.com/php/php-src/commit/63c50cc87e4eb4a22de054f836934e8a005739f8">2</a> | <a href="https://github.com/php/php-src/commit/0b7986f976dbd737a2feac1f7fd4b5d0d457228c">3</a> | <a href="https://github.com/php/php-src/commit/b4cbaabd9b1bed40e8f5c29e43012da1fe6f221d">4</a> | <a href="https://github.com/php/php-src/commit/c8ec2ed730334c266ddf01a54d501f3777704219">5</a>
 	</p>
 	<p class="hidden-details" id="tex">
-		I use LaTeX for writing documents with embedded math notation, and KaTeX for including math notation in web pages. Once I wrote a Ruby-based clone of TeX to understand it better; unfortunately, my clone doesn't support the TeX commands for aligning table elements and probably never will.
+		I use LaTeX for writing documents with embedded math notation, and KaTeX for including math notation in web pages. Once I wrote a Ruby-based clone of TeX to understand it better; unfortunately, my clone doesn't support the TeX commands for aligning table cells and probably never will.
 	</p>
 	<p class="hidden-details" id="text_encoding">
-		I'm the maintainer of <a href="https://github.com/php/php-src/tree/master/ext/mbstring">mbstring</a>, a core PHP extension which allows PHP to handle all kinds of legacy text encodings. This has resulted in getting to know far more than I ever wanted to about ISO-2022 text, EUC, Shift-JIS, GB18030, BIG-5, UHC, HZ, etc.
+		I'm the maintainer of <a href="https://github.com/php/php-src/tree/master/ext/mbstring">mbstring</a>, a core PHP extension which allows PHP to handle all kinds of legacy text encodings. This has resulted in getting to know far more than I ever wanted about ISO-2022 text, EUC, Shift-JIS, GB18030, BIG-5, UHC, HZ, etc.
 	</p>
 	<p class="hidden-details" id="unicode">
-		I am the maintainer of <a href="https://github.com/php/php-src/tree/master/ext/mbstring">one of PHP's core libraries</a> for handling Unicode, and this has caused me to study the Unicode standard. I've contributed implementations of some important Unicode-processing algorithms like string canonicalization and grapheme segmentation to <a href="https://github.com/starwing/luautf8"><code>lua-utf8</code></a>.
+		I am the maintainer of <a href="https://github.com/php/php-src/tree/master/ext/mbstring">one of PHP's core libraries</a> for handling Unicode, and this has caused me to delve into the Unicode standard. I've contributed implementations of some important Unicode-processing algorithms like string canonicalization and grapheme segmentation to <a href="https://github.com/starwing/luautf8"><code>lua-utf8</code></a>.
 	</p>
 
 	<script>
