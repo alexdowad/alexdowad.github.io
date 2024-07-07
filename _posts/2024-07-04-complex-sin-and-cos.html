@@ -1360,7 +1360,7 @@ M1001 80h400000v40h-400000z"></path></svg></span></span></span><span class="vlis
     </button>
   </div>
 </div>
-<div style='margin-block-end: 1em; text-align: center; height: 1.5em' id='explain_deriv'></div>
+<div style='margin-block-end: 1em; text-align: center; min-height: 1.5em' id='explain_deriv'></div>
 
 <script type='module'>
   const svg1 = $id('real_func_graph');
@@ -1585,7 +1585,7 @@ M1001 80h400000v40h-400000z"></path></svg></span></span></span><span class="vlis
         cy: svgY(deriv, svgX)
       });
     }
-    $id('explain_deriv').innerHTML = 'When <span class="katex" style="font-size:1.1em"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height: 1.0019em; vertical-align: -0.25em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right: 0.1076em;">f</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height: 0.7519em;"><span class="" style="top: -3.063em; margin-right: 0.05em;"><span class="pstrut" style="height: 2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">′</span></span></span></span></span></span></span></span></span><span class="mopen">(</span><span class="mord mathnormal">x</span><span class="mclose">)</span></span></span></span></span> reaches its largest values, the slope of <span class="katex" style="font-size:1.1em"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height: 1em; vertical-align: -0.25em;"></span><span class="mord mathnormal" style="margin-right: 0.1076em;">f</span><span class="mopen">(</span><span class="mord mathnormal">x</span><span class="mclose">)</span></span></span></span> is steepest.';
+    $id('explain_deriv').innerHTML = 'At the maxima of <span class="katex" style="font-size:1.1em"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height: 1.0019em; vertical-align: -0.25em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right: 0.1076em;">f</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height: 0.7519em;"><span class="" style="top: -3.063em; margin-right: 0.05em;"><span class="pstrut" style="height: 2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">′</span></span></span></span></span></span></span></span></span><span class="mopen">(</span><span class="mord mathnormal">x</span><span class="mclose">)</span></span></span></span></span>, the slope of <span class="katex" style="font-size:1.1em"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height: 1em; vertical-align: -0.25em;"></span><span class="mord mathnormal" style="margin-right: 0.1076em;">f</span><span class="mopen">(</span><span class="mord mathnormal">x</span><span class="mclose">)</span></span></span></span> is steepest.';
   }
 
   $id('choose_func1').listen('click', () => {
