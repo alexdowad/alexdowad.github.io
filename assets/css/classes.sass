@@ -144,3 +144,9 @@
 .reveal.hidden a
   color: #d8c399
   pointer-events: none
+// In dark mode, text will be white, so make background darker for better contrast
+@media (prefers-color-scheme: dark)
+  .reveal
+    background-color: #c2a05e
+  .reveal.hidden
+    color: #c2a05e
