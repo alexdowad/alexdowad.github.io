@@ -1317,11 +1317,11 @@ for (var <span class="x">x</span> = 0; <span class="x">x</span> < 8; <span class
     ctx.lineWidth = 1;
     const xRange = xMax - xMin;
 
-    for (var i = 0; i < 40; i++) {
+    for (var i = 0; i < 32; i++) {
       ctx.strokeStyle = (i % 8 === 0) ? 'rgb(60,100,200)' : vertTickColor;
       ctx.beginPath();
-      ctx.moveTo(xMin + (xRange * (i + 0.5) / 40), yMin);
-      ctx.lineTo(xMin + (xRange * (i + 0.5) / 40), yMax);
+      ctx.moveTo(xMin + (xRange * (i + 0.5) / 32), yMin);
+      ctx.lineTo(xMin + (xRange * (i + 0.5) / 32), yMax);
       ctx.stroke();
     }
   }
@@ -1336,10 +1336,10 @@ for (var <span class="x">x</span> = 0; <span class="x">x</span> < 8; <span class
     const reversed = Array.from(values).reverse();
     values = values.concat(reversed).concat(values).concat(reversed).concat(values);
 
-    for (var i = 0; i < 40; i++) {
+    for (var i = 0; i < 32; i++) {
       ctx.fillStyle = (i >= 16 && i < 24) ? 'black' : '#888888';
       ctx.beginPath();
-      const x = xMin + (xRange * (i + 0.5) / 40);
+      const x = xMin + (xRange * (i + 0.5) / 32);
       const y = yMid - (values[i] * yRange / 2);
       ctx.arc(x, y, dotSize, 0, Math.PI * 2);
       ctx.fill();
@@ -1350,8 +1350,8 @@ for (var <span class="x">x</span> = 0; <span class="x">x</span> < 8; <span class
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     graphDrawManyVerticalTicks(canvas, ctx);
     graphDrawZeroLine(canvas, ctx);
-    graphCosines(canvas, ctx, [0, 2.5, 5, 7.5, 10, 12.5, 15, 17.5], coeffs, graphColors);
-    graphSumOfCosines(canvas, ctx, [0, 2.5, 5, 7.5, 10, 12.5, 15, 17.5], coeffs, graphColors);
+    graphCosines(canvas, ctx, [0, 2, 4, 6, 8, 10, 12, 14], coeffs, graphColors);
+    graphSumOfCosines(canvas, ctx, [0, 2, 4, 6, 8, 10, 12, 14], coeffs, graphColors);
     graphTargetDotsExtended(canvas, ctx, values);
   }
 
