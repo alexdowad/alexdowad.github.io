@@ -41,6 +41,11 @@
 .inset > :last-child {
   margin-bottom: 0;
 }
+@media (prefers-color-scheme: dark) {
+  .inset {
+    background-color: #888;
+  }
+}
 
 .fuschia-btn {
   background-color: #c154c1aa;
