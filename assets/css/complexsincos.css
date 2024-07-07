@@ -17,6 +17,19 @@
   user-select: none;
 }
 
+.rotation-slider {
+  width: 100%;
+}
+@media (min-width: 38rem) {
+  .rotation-slider {
+    appearance: slider-vertical;
+    width: 16px;
+    writing-mode: vertical-lr;
+    direction: rtl;
+    height: 35rem;
+  }
+}
+
 .inset {
   background-color: #ddd;
   margin: 1.5em;
