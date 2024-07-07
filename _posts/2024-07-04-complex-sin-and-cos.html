@@ -398,17 +398,20 @@ M1001 80h400000v40h-400000z"></path></svg></span></span></span><span class="vlis
 
 <p>For real numbers, the Pythagorean Identity <span class="katex" style="font-size:1.1em"><span class="base"><span class="strut" style="height: 1.1219em; vertical-align: -0.25em;"></span><span class="mop"><span class="mop">sin</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height: 0.8719em;"><span class="" style="top: -3.1208em; margin-right: 0.05em;"><span class="pstrut" style="height: 2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span></span></span></span></span><span class="mopen">(</span><span class="mord mathnormal">x</span><span class="mclose">)</span><span class="mspace" style="margin-right: 0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right: 0.2222em;"></span></span><span class="base"><span class="strut" style="height: 1.1141em; vertical-align: -0.25em;"></span><span class="mop"><span class="mop">cos</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height: 0.8641em;"><span class="" style="top: -3.113em; margin-right: 0.05em;"><span class="pstrut" style="height: 2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span></span></span></span></span><span class="mopen">(</span><span class="mord mathnormal">x</span><span class="mclose">)</span><span class="mspace" style="margin-right: 0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right: 0.2778em;"></span></span><span class="base"><span class="strut" style="height: 0.6444em;"></span><span class="mord">1</span></span></span> tells us that the sine and cosine of an angle can be thought of as the side lengths of a right triangle with unit hypotenuse. Like this:</p>
 
-<p>
-  <svg id='real_sin_cos_demo' style='width: 40em; height: 20em; user-select: none' viewbox='0 0 100 100'>
-    <defs>
-      <marker id='arrow1' viewbox='0 0 8 8' refX='6.5' refY='4' markerWidth='5' markerHeight='5' orient='0'>
-        <path d='M 0 0 L 8 4 L 0 8 z' />
-      </marker>
-    </defs>
-  </svg>
-  <br>
+<div style='margin-block-start: 1em; margin-block-end: 1em'>
+  <div>
+    <svg id='real_sin_cos_circle' style='width: 20em; height: 20em; user-select: none' viewbox='0 0 100 100'>
+      <defs>
+        <marker id='arrow1' viewbox='0 0 8 8' refX='6.5' refY='4' markerWidth='5' markerHeight='5' orient='0'>
+          <path d='M 0 0 L 8 4 L 0 8 z' />
+        </marker>
+      </defs>
+    </svg>
+    <svg id='real_sin_cos_wave' style='width: 20em; height: 20em; user-select: none' viewbox='0 0 100 100'>
+    </svg>
+  </div>
   <small><i>Drag the arrow around the circle. The length of the red line is the sine, the length of the blue line is the cosine. Note that together with the arrow, they form a right triangle.</i></small>
-</p>
+</div>
 
 <script>
   'use strict';
@@ -455,7 +458,7 @@ M1001 80h400000v40h-400000z"></path></svg></span></span></span><span class="vlis
     return Math.sqrt((pos1.svgX - pos2.svgX) ** 2 + (pos1.svgY - pos2.svgY) ** 2);
   }
 
-  const circleX = 0, circleY = 50, circleRadius = 45;
+  const circleX = 50, circleY = 50, circleRadius = 45;
 
   function svgArrowheadPos(arrow) {
     return {
@@ -522,29 +525,31 @@ M1001 80h400000v40h-400000z"></path></svg></span></span></span><span class="vlis
   }
 
   {
-    const svg = $id('real_sin_cos_demo');
-    const bigCircle = appendSvgNode(svg, 'circle', undefined, {
+    const svg1 = $id('real_sin_cos_circle');
+    const svg2 = $id('real_sin_cos_wave');
+
+    const bigCircle = appendSvgNode(svg1, 'circle', undefined, {
       r: circleRadius,
       stroke: '#333',
       fill: 'none',
       cx: circleX,
       cy: circleY
     });
-    const redLine = appendSvgNode(svg, 'line', undefined, {
+    const redLine = appendSvgNode(svg1, 'line', undefined, {
       x1: circleX + circleRadius,
       x2: circleX + circleRadius,
       y1: circleY,
       y2: circleY,
       stroke: '#c33'
     });
-    const blueLine = appendSvgNode(svg, 'line', undefined, {
+    const blueLine = appendSvgNode(svg1, 'line', undefined, {
       x1: circleX,
       x2: circleX + circleRadius,
       y1: circleY,
       y2: circleY,
       stroke: '#33c'
     });
-    const arrow = appendSvgNode(svg, 'line', undefined, {
+    const arrow = appendSvgNode(svg1, 'line', undefined, {
       x1: circleX,
       x2: circleX + circleRadius - lineOffset,
       y1: circleY,
@@ -555,22 +560,22 @@ M1001 80h400000v40h-400000z"></path></svg></span></span></span><span class="vlis
     });
     const marker = $id('arrow1');
 
-    const graphStart = 60, graphEnd = 145, graphHeight = circleRadius;
-    appendSvgNode(svg, 'line', undefined, {
+    const graphStart = 5, graphEnd = 95, graphHeight = circleRadius;
+    appendSvgNode(svg2, 'line', undefined, {
       x1: graphStart,
       x2: graphEnd,
       y1: '50',
       y2: '50',
       stroke: '#333'
     });
-    const redLine2 = appendSvgNode(svg, 'line', undefined, {
+    const redLine2 = appendSvgNode(svg2, 'line', undefined, {
       x1: graphStart,
       x2: graphStart,
       y1: '50',
       y2: '50',
       stroke: '#c33'
     });
-    const blueLine2 = appendSvgNode(svg, 'line', undefined, {
+    const blueLine2 = appendSvgNode(svg2, 'line', undefined, {
       x1: graphStart + ((graphEnd - graphStart) / 4),
       x2: graphStart + ((graphEnd - graphStart) / 4),
       y1: '50',
@@ -583,13 +588,13 @@ M1001 80h400000v40h-400000z"></path></svg></span></span></span><span class="vlis
       const x = Math.round((graphStart + ((graphEnd - graphStart) * (step / 100))) * 10) / 10;
       sinePath += ` L ${x} ${y}`;
     }
-    appendSvgNode(svg, 'path', undefined, {
+    appendSvgNode(svg2, 'path', undefined, {
       d: sinePath,
       stroke: '#333',
       fill: 'none'
     })
 
-    makeSvgArrowDraggable(svg, arrow, marker, (pos) => {
+    makeSvgArrowDraggable(svg1, arrow, marker, (pos) => {
       const arrowX = arrow.getAttribute('x2');
       const arrowY = arrow.getAttribute('y2');
       redLine.setAttribute('x1', arrowX);
