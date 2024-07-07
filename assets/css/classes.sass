@@ -131,3 +131,16 @@
 .btn:hover
   background-color: #5a6268
   border-color: #545b62
+
+// 'Spoiler' text which has to be clicked to view
+.reveal
+  padding: 1em
+  border-left: .5em solid #555
+  background-color: #d8c399
+.reveal.hidden
+  color: #d8c399
+  cursor: pointer
+  user-select: none
+.reveal.hidden a
+  color: #d8c399
+  pointer-events: none
