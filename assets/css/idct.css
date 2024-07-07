@@ -74,6 +74,11 @@
 .legend-entry .selection {
   filter: brightness(120%);
 }
+@media (prefers-color-scheme: dark) {
+  .legend-entry {
+    color: white;
+  }
+}
 
 /* Coefficient matrix for DCT/IDCT */
 .matrix-container {
