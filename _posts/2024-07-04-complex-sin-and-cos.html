@@ -156,7 +156,7 @@ stylesheets:
   const viewport1 = document.getElementById('sine_periodic_re');
   const viewport2 = document.getElementById('sine_periodic_im');
 
-  const resolution = 35;
+  const resolution = 30;
 
   const [vertices1, colors1] = meshVerticesForFunction(resolution, (z) => z.sin().re, viridis);
   const [vertices2, colors2] = meshVerticesForFunction(resolution, (z) => z.sin().im, magma);
@@ -320,7 +320,7 @@ M1001 80h400000v40h-400000z"></path></svg></span></span></span><span class="vlis
   import { OrbitControls } from '/assets/js/OrbitControls.js';
 
   const viewport = document.getElementById('sine_magnitude');
-  const resolution = 35;
+  const resolution = 28;
   const [vertices, colors] = meshVerticesForFunction(resolution, (z) => z.sin().abs(), cool, 0, Math.PI * 4);
   const indices = vertexIndicesForMesh(resolution);
 
@@ -887,8 +887,8 @@ M1001 80h400000v40h-400000z"></path></svg></span></span></span><span class="vlis
     const line = new LineGeometry;
     const linePositions = [];
     const point = new THREE.Vector3;
-    for (let i = 0; i <= 100; i++) {
-      curve.getPoint(i / 100, point);
+    for (let i = 0; i <= 70; i++) {
+      curve.getPoint(i / 70, point);
       linePositions.push(point.x / 2, 0, point.y);
     }
     line.setPositions(linePositions);
@@ -992,7 +992,7 @@ M1001 80h400000v40h-400000z"></path></svg></span></span></span><span class="vlis
 
   const viewport = document.getElementById('complex_sine_odd3');
 
-  const resolution = 35;
+  const resolution = 30;
   const [vertices, colors] = meshVerticesForFunction(resolution, (z) => z.sin().re, viridis);
   const indices = vertexIndicesForMesh(resolution);
 
@@ -1121,7 +1121,7 @@ M1001 80h400000v40h-400000z"></path></svg></span></span></span><span class="vlis
   import { OrbitControls } from '/assets/js/OrbitControls.js';
 
   const viewport = document.getElementById('sine_cos_magnitude_overlay');
-  const resolution = 35;
+  const resolution = 30;
   const [vertices1, colors1] = meshVerticesForFunction(resolution, (z) => z.sin().abs(), cool, 0, Math.PI * 1.2, Math.PI * 2.5, Math.PI * 0.8, 0, Math.PI * 0.4);
   const [vertices2, colors2] = meshVerticesForFunction(resolution, (z) => z.cos().abs(), cool, 0, Math.PI * 1.2, Math.PI * 2.5, Math.PI * 0.8, 0, Math.PI * 0.4);
   const indices = vertexIndicesForMesh(resolution);
@@ -1225,7 +1225,7 @@ M1001 80h400000v40h-400000z"></path></svg></span></span></span><span class="vlis
   import { OrbitControls } from '/assets/js/OrbitControls.js';
 
   const viewport = document.getElementById('sine_cos_angle_overlay');
-  const resolution = 35;
+  const resolution = 30;
   const [vertices1, colors1] = meshVerticesForFunction(resolution, (z) => z.sin().arg(), warm, -Math.PI, Math.PI, Math.PI, Math.PI);
   const [vertices2, colors2] = meshVerticesForFunction(resolution, (z) => z.cos().arg(), warm, -Math.PI, Math.PI, Math.PI, Math.PI);
   const indices = vertexIndicesForMesh(resolution);
@@ -1843,7 +1843,7 @@ M1001 80h400000v40h-400000z"></path></svg></span></span></span><span class="vlis
   const view3 = $id('deriv_cos_magnitude');
   const view4 = $id('deriv_cos_angle');
 
-  const resolution = 35;
+  const resolution = 30;
 
   const [vertices1, colors1] = meshVerticesForFunction(resolution, (z) => z.sin().abs(), viridis);
   const [vertices2, colors2] = meshVerticesForFunction(resolution, (z) => z.sin().arg(), magma);
