@@ -75,8 +75,8 @@
   filter: brightness(120%);
 }
 @media (prefers-color-scheme: dark) {
-  .legend-entry {
-    color: white;
+  .legend-entry text {
+    fill: white;
   }
 }
 
