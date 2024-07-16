@@ -417,9 +417,6 @@ M1001 80h400000v40h-400000z"></path></svg></span></span></span><span class="vlis
   'use strict';
 
   const $id = document.getElementById.bind(document);
-  Element.prototype.$class = Element.prototype.getElementsByClassName;
-  Element.prototype.$class1 = function(cssClass) { return this.$class(cssClass)?.[0]; }
-  Element.prototype.$tag = Element.prototype.getElementsByTagName;
   Element.prototype.listen = Element.prototype.addEventListener;
 
   function makeSvgNode(tag, cssClass, attributes = {}) {
