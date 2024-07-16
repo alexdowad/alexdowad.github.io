@@ -468,7 +468,7 @@ M1001 80h400000v40h-400000z"></path></svg></span></span></span><span class="vlis
   }
 
   function svgPosToAngle(pos) {
-    const offsetX = pos.svgX - circleX, offsetY = pos.svgY - circleY;
+    const offsetX = pos.svgX - circleX, offsetY = circleY - pos.svgY;
     return Math.atan2(offsetY, offsetX);
   }
 
@@ -477,8 +477,8 @@ M1001 80h400000v40h-400000z"></path></svg></span></span></span><span class="vlis
   function moveSvgArrow(arrow, marker, pos) {
     const angle = svgPosToAngle(pos);
     arrow.setAttribute('x2', Math.round((circleX + ((circleRadius - lineOffset) * Math.cos(angle))) * 10) / 10);
-    arrow.setAttribute('y2', Math.round((circleY + ((circleRadius - lineOffset) * Math.sin(angle))) * 10) / 10);
-    marker.setAttribute('orient', Math.round(angle / Math.PI * 180));
+    arrow.setAttribute('y2', Math.round((circleY + -((circleRadius - lineOffset) * Math.sin(angle))) * 10) / 10);
+    marker.setAttribute('orient', Math.round(-angle / Math.PI * 180));
   }
 
   function makeSvgArrowDraggable(svg, arrow, marker, callback) {
