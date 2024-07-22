@@ -1,6 +1,6 @@
 ---
 layout: post
-title:  "Stuff I have learned: Don't use a coverage-guided fuzzer on an uninstrumented binary"
+title:  "Stuff I Have Learned: Don't use a coverage-guided fuzzer on an uninstrumented binary"
 date:   2024-07-12
 categories:
   - fuzzing
