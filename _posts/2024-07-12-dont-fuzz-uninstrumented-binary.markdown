@@ -7,7 +7,7 @@ categories:
   - stuff i have learned
 ---
 
-(<i><b>Subtitle:</b> Unless You Really Have To</i>)
+<i>(<b>Subtitle:</b> Unless You Really Have To)</i>
 
 Coverage-guided fuzzing tools, such as [LLVM's libFuzzer](https://llvm.org/docs/LibFuzzer.html), run a target program on many random inputs, record the path of control flow each time the target program executes (for example, which branch of each `if` statement is taken), and mutate the input in an effort to find as many unique control-flow paths as possible. It turns out that this heuristic is incredibly effective at guiding the random search to find interesting test cases.
 
