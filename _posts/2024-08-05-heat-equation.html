@@ -60,11 +60,11 @@ stylesheets:
   </svg>
   <div>
     <span class="katex" style='min-width: 4.5em; display: inline-block'><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height: 0.6151em;"></span><span class="mord mathnormal">t</span><span class="mspace" style="margin-right: 0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right: 0.2778em;"></span></span><span class="base"><span class="strut" style="height: 0.6444em;"></span><span class="mord" id='sim_time'>0</span></span></span></span>
-    <button role='button' class='btn' id='step_sim'>Step forward</button>
-    <button role='button' class='btn' id='10step_sim'>10 steps</button>
-    <button role='button' class='btn' id='50step_sim'>50 steps</button>
-    <button role='button' class='btn' id='reset_sim'>Reset</button>
-    <button role='button' class='btn' id='rand_sim'>Randomize</button>
+    <button role='button' class='btn' style='margin-bottom: .3rem' id='step_sim'>Step forward</button>
+    <button role='button' class='btn' style='margin-bottom: .3rem' id='10step_sim'>10 steps</button>
+    <button role='button' class='btn' style='margin-bottom: .3rem' id='50step_sim'>50 steps</button>
+    <button role='button' class='btn' style='margin-bottom: .3rem' id='reset_sim'>Reset</button>
+    <button role='button' class='btn' style='margin-bottom: .3rem' id='rand_sim'>Randomize</button>
   </div>
 </div>
 
@@ -214,7 +214,7 @@ stylesheets:
 
 <h2>Analyzing the Model</h2>
 
-<p>After playing with the above simulation a bit, can you summarize which parts of the bar get hotter and which get colder at any particular moment? Well, obviously the parts which are hotter than average tend to get colder eventually, and the parts which are colder than average tend to get hotter. That describes the <i>long-term</i> change; but can you be a bit more precise about what happens <i>at any particular moment</i>?</p>
+<p>After playing with the above simulation a bit, can you summarize which parts of the bar get hotter and which get colder at any particular moment? Well, obviously the parts which are hotter than average tend to get colder eventually, and the parts which are colder than average tend to get hotter, eventually. That describes the <i>long-term</i> change; but can you be a bit more precise about what happens <i>at any particular moment</i>? (Click or tap below to reveal a possible answer.)</p>
 
 <div class="hidden reveal">
 <p>At any particular moment, slices which are colder than both their neighbours get hotter, and those which are hotter than both of their neighbours get colder. If one neighbour is hotter and one is colder, the direction of change depends on <i>how much hotter</i> and <i>how much colder</i> the neighbours are; it will follow whichever difference is greater.</p>
@@ -253,7 +253,7 @@ stylesheets:
     <span id='ylabel1' style='position: absolute; left: 50%; transform: translateX(-50%) translateY(-50%)'>
       <span class="katex" style='font-size: 1em'><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height: 1em; vertical-align: -0.25em;"></span><span class="mord mathnormal" style="margin-right: 0.1076em;">f</span><span class="mopen">(</span><span class="mord mathnormal">x</span><span class="mclose">)</span></span></span></span>
     </span>
-    <span id='ylabel2' style='position: absolute; left: .16em; transform: translateY(-50%); background-color: white'>
+    <span id='ylabel2' style='position: absolute; left: .16em; transform: translateY(-50%); background-color: white; background-color: light-dark(white, #1c1d22)'>
       <span class="katex" style='font-size: 1em'><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height: 1em; vertical-align: -0.25em;"></span><span class="mord mathnormal" style="margin-right: 0.1076em;">f</span><span class="mopen">(</span><span class="mord mathnormal">x</span><span class="mspace" style="margin-right: 0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right: 0.2222em;"></span></span><span class="base"><span class="strut" style="height: 1em; vertical-align: -0.25em;"></span><span class="mord">Δ</span><span class="mord"><span class="mord mathnormal">x</span></span><span class="mclose">)</span></span></span></span>
     </span>
   </div>
@@ -261,7 +261,7 @@ stylesheets:
     <span id='xlabel1' style='position: absolute; top: .2em; left: 50%; transform: translateX(-50%)'>
       <span class="katex" style='font-size: 1em'><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height: 0.4306em;"></span><span class="mord mathnormal">x</span></span></span></span>
     </span>
-    <span id='deltalabel1' style='position: absolute; top: .2em; left: 70%; transform: translateX(-50%); background-color: white'>
+    <span id='deltalabel1' style='position: absolute; top: .2em; left: 70%; transform: translateX(-50%); background-color: white; background-color: light-dark(white, #1c1d22)'>
       <span class="katex" style='font-size: 1em'><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height: 0.6667em; vertical-align: -0.0833em;"></span><span class="mord mathnormal">x</span><span class="mspace" style="margin-right: 0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right: 0.2222em;"></span></span><span class="base"><span class="strut" style="height: 0.6833em;"></span><span class="mord">Δ</span><span class="mord"><span class="mord mathnormal">x</span></span></span></span></span>
     </span>
   </div>
@@ -456,7 +456,7 @@ stylesheets:
     <span id='ylabel3' style='position: absolute; left: .16em; transform: translateY(-50%)'>
       <span class="katex" style='font-size: 1em'><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height: 1em; vertical-align: -0.25em;"></span><span class="mord mathnormal" style="margin-right: 0.1076em;">f</span><span class="mopen">(</span><span class="mord mathnormal">x</span><span class="mspace" style="margin-right: 0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right: 0.2222em;"></span></span><span class="base"><span class="strut" style="height: 1em; vertical-align: -0.25em;"></span><span class="mord">0.5Δ</span><span class="mord"><span class="mord mathnormal">x</span></span><span class="mclose">)</span></span></span></span>
     </span>
-    <span id='ylabel4' style='position: absolute; left: .16em; transform: translateY(-50%); background-color: white'>
+    <span id='ylabel4' style='position: absolute; left: .16em; transform: translateY(-50%); background-color: white; background-color: light-dark(white, #1c1d22)'>
       <span class="katex" style='font-size: 1em'><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height: 1em; vertical-align: -0.25em;"></span><span class="mord mathnormal" style="margin-right: 0.1076em;">f</span><span class="mopen">(</span><span class="mord mathnormal">x</span><span class="mspace" style="margin-right: 0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right: 0.2222em;"></span></span><span class="base"><span class="strut" style="height: 1em; vertical-align: -0.25em;"></span><span class="mord">0.5Δ</span><span class="mord"><span class="mord mathnormal">x</span></span><span class="mclose">)</span></span></span></span>
     </span>
   </div>
@@ -464,10 +464,10 @@ stylesheets:
     <span id='xlabel2' style='position: absolute; top: .2em; left: 50%; transform: translateX(-50%)'>
       <span class="katex" style='font-size: 1em'><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height: 0.4306em;"></span><span class="mord mathnormal">x</span></span></span></span>
     </span>
-    <span id='deltalabel2' style='position: absolute; top: .2em; left: 70%; transform: translateX(-50%); background-color: white'>
+    <span id='deltalabel2' style='position: absolute; top: .2em; left: 70%; transform: translateX(-50%); background-color: white; background-color: light-dark(white, #1c1d22)'>
       <span class="katex" style='font-size: 1em'><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height: 0.6667em; vertical-align: -0.0833em;"></span><span class="mord mathnormal">x</span><span class="mspace" style="margin-right: 0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right: 0.2222em;"></span></span><span class="base"><span class="strut" style="height: 0.6833em;"></span><span class="mord">0.5Δ</span><span class="mord"><span class="mord mathnormal">x</span></span></span></span></span>
     </span>
-    <span id='deltalabel3' style='position: absolute; top: .2em; left: 70%; transform: translateX(-50%); background-color: white'>
+    <span id='deltalabel3' style='position: absolute; top: .2em; left: 70%; transform: translateX(-50%); background-color: white; background-color: light-dark(white, #1c1d22)'>
       <span class="katex" style='font-size: 1em'><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height: 0.6667em; vertical-align: -0.0833em;"></span><span class="mord mathnormal">x</span><span class="mspace" style="margin-right: 0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right: 0.2222em;"></span></span><span class="base"><span class="strut" style="height: 0.6833em;"></span><span class="mord">0.5Δ</span><span class="mord"><span class="mord mathnormal">x</span></span></span></span></span>
     </span>
   </div>
