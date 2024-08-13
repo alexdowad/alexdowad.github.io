@@ -252,30 +252,33 @@ stylesheets:
       positionLabel(label, camera, viewWidth, viewHeight)
     }
 
-    const controls = new OrbitControls(camera, renderer.domElement);
-    controls.addEventListener('change', () => {
-      renderer.render(scene, camera);
-      for (const label of labels)
-        positionLabel(label, camera, viewWidth, viewHeight);
-    });
-
-    renderer.render(scene, camera);
-
     let redrawNeeded = false;
     function redrawIfNeeded() {
       if (redrawNeeded)
         renderer.render(scene, camera);
       redrawNeeded = false;
     }
+    function redraw() {
+      redrawNeeded = true;
+      setTimeout(redrawIfNeeded, 80);
+    }
+
+    redraw();
+
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.addEventListener('change', () => {
+      redraw();
+      for (const label of labels)
+        positionLabel(label, camera, viewWidth, viewHeight);
+    });
 
     new ResizeObserver(function() {
       viewWidth = viewport.clientWidth;
       viewHeight = viewport.clientHeight;
       renderer.setSize(viewWidth, viewHeight);
+      redraw();
       for (const label of labels)
         positionLabel(label, camera, viewWidth, viewHeight);
-      redrawNeeded = true;
-      setTimeout(redrawIfNeeded, 80);
     }).observe(viewport);
   }
 
