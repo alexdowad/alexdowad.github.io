@@ -51,8 +51,12 @@ stylesheets:
 
 <div style='margin-block-start: 1em; margin-block-end: 1em'>
   <div style='display: flex; flex-direction: row; flex-wrap: wrap; gap: .2em'>
-    <div id='sine_periodic_re' style='width: 25em; height: 25em; cursor: move; position: relative'></div>
-    <div id='sine_periodic_im' style='width: 25em; height: 25em; cursor: move; position: relative'></div>
+    <div id='sine_periodic_re' style='width: 25em; height: 25em; cursor: move; position: relative'>
+      <canvas style='width: 25em; height: 25em'></canvas>
+    </div>
+    <div id='sine_periodic_im' style='width: 25em; height: 25em; cursor: move; position: relative'>
+      <canvas style='width: 25em; height: 25em'></canvas>
+    </div>
   </div>
   <small>
     <i>Drag to rotate, roll mouse wheel (or pinch) to zoom, Ctrl+drag to pan.</i>
@@ -159,9 +163,30 @@ stylesheets:
   }
 </script>
 
+<div id='hiddencanvas' style='display:none'></div>
+
 <script type='module'>
   import * as THREE from 'three';
   import { OrbitControls } from '/assets/js/OrbitControls.js';
+
+  const renderer = new THREE.WebGLRenderer({ antialias: true });
+  renderer.setPixelRatio(window.devicePixelRatio);
+  $id('hiddencanvas').appendChild(renderer.domElement);
+  const size = new THREE.Vector2(0, 0);
+
+  window.useSharedRenderer = function(canvas, width, height, scene, camera) {
+    renderer.getSize(size);
+    if (width != size.width || height != size.height) {
+      renderer.setSize(width, height);
+    }
+    if (width != canvas.width || height != canvas.height) {
+      canvas.width = width;
+      canvas.height = height;
+    }
+    renderer.render(scene, camera);
+    const context = canvas.getContext('2d');
+    context.drawImage(renderer.domElement, 0, 0);
+  }
 
   const viewport1 = $id('sine_periodic_re');
   const viewport2 = $id('sine_periodic_im');
@@ -204,6 +229,7 @@ stylesheets:
 
   function showGraph(viewport, vertices, colors) {
     let viewWidth = viewport.clientWidth, viewHeight = viewport.clientHeight;
+    const canvas = viewport.$tag1('canvas');
 
     const scene = new THREE.Scene;
     scene.background = new THREE.Color('#121212');
@@ -238,11 +264,6 @@ stylesheets:
     scene.add(createLine(new THREE.Vector3(0, 12.5, 0), new THREE.Vector3(0, -12.5, 0)));
     scene.add(createLine(new THREE.Vector3(0, 0, 1.5*Math.PI), new THREE.Vector3(0, 0, -1.5*Math.PI)));
 
-    const renderer = new THREE.WebGLRenderer({ antialias: true });
-    renderer.setPixelRatio(window.devicePixelRatio);
-    renderer.setSize(viewWidth, viewHeight);
-    viewport.appendChild(renderer.domElement);
-
     const labels = [
       { text: '1', vector: new THREE.Vector3(1, 0, 0) },
       { text: '-1', vector: new THREE.Vector3(-1, 0, 0) },
@@ -257,38 +278,31 @@ stylesheets:
       { text: '3i', vector: new THREE.Vector3(0, 0, 3) },
       { text: '-3i', vector: new THREE.Vector3(0, 0, -3) },
     ];
-    for (const label of labels) {
+    for (const label of labels)
       initLabel(viewport, label);
-      positionLabel(label, camera, viewWidth, viewHeight)
-    }
 
     let redrawNeeded = false;
     function redrawIfNeeded() {
       if (redrawNeeded)
-        renderer.render(scene, camera);
+        useSharedRenderer(canvas, viewWidth, viewHeight, scene, camera);
       redrawNeeded = false;
     }
     function redraw() {
       redrawNeeded = true;
       setTimeout(redrawIfNeeded, 80);
+      for (const label of labels)
+        positionLabel(label, camera, viewWidth, viewHeight);
     }
 
     redraw();
 
-    const controls = new OrbitControls(camera, renderer.domElement);
-    controls.addEventListener('change', () => {
-      redraw();
-      for (const label of labels)
-        positionLabel(label, camera, viewWidth, viewHeight);
-    });
+    const controls = new OrbitControls(camera, viewport);
+    controls.addEventListener('change', redraw);
 
     new ResizeObserver(function() {
       viewWidth = viewport.clientWidth;
       viewHeight = viewport.clientHeight;
-      renderer.setSize(viewWidth, viewHeight);
       redraw();
-      for (const label of labels)
-        positionLabel(label, camera, viewWidth, viewHeight);
     }).observe(viewport);
   }
 
@@ -322,7 +336,9 @@ c-22,17.3,-33.3,26,-34,26s-26,-26,-26,-26s76,-59,76,-59s76,-60,76,-60z
 M1001 80h400000v40h-400000z"></path></svg></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height: 0.2561em;"></span></span></span></span></span></span>, also written as <span class="katex" style="font-size:1.1em"><span class="base"><span class="strut" style="height: 1em; vertical-align: -0.25em;"></span><span class="mord">∣</span><span class="mord mathnormal" style="margin-right: 0.044em;">z</span><span class="mord">∣</span></span></span>) of the complex sine at that point. I've drawn a (white-colored) horizontal plane slicing the graph at <span class="katex" style="font-size:1.1em"><span class="base"><span class="strut" style="height: 1em; vertical-align: -0.25em;"></span><span class="mord">∣</span><span class="mord mathnormal" style="margin-right: 0.044em;">z</span><span class="mord">∣</span><span class="mspace" style="margin-right: 0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right: 0.2778em;"></span></span><span class="base"><span class="strut" style="height: 0.6444em;"></span><span class="mord">1</span></span></span>.</p>
 
 <div style='display: flex; flex-direction: column; gap: .2em; margin-block-start: 1em; margin-block-end: 1em'>
-  <div id='sine_magnitude' style='width: 35em; height: 35em; cursor: move'></div>
+  <div id='sine_magnitude' style='width: 35em; height: 35em; cursor: move'>
+    <canvas></canvas>
+  </div>
   <small>
     <i>Again, drag to rotate, roll mouse wheel (or pinch) to zoom, Ctrl+drag to pan. Try peeking under the white plane at <span class="katex" style="font-size:1.1em"><span class="base"><span class="strut" style="height: 1em; vertical-align: -0.25em;"></span><span class="mord">∣</span><span class="mord mathnormal" style="margin-right: 0.044em;">z</span><span class="mord">∣</span><span class="mspace" style="margin-right: 0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right: 0.2778em;"></span></span><span class="base"><span class="strut" style="height: 0.6444em;"></span><span class="mord">1</span></span></span> to see the familiar shape of the real sine function.</i>
   </small>
@@ -339,6 +355,7 @@ M1001 80h400000v40h-400000z"></path></svg></span></span></span><span class="vlis
 
   function showGraph(viewport, vertices, colors) {
     let viewWidth = viewport.clientWidth, viewHeight = viewport.clientHeight;
+    const canvas = viewport.$tag1('canvas');
 
     const scene = new THREE.Scene;
     scene.background = new THREE.Color('#121212');
@@ -372,31 +389,28 @@ M1001 80h400000v40h-400000z"></path></svg></span></span></span><span class="vlis
     plane.translate(0, 0.5, 0);
     scene.add(new THREE.Mesh(plane, new THREE.MeshPhongMaterial({ color: 0xcccccc, side: THREE.DoubleSide })));
 
-    const renderer = new THREE.WebGLRenderer({ antialias: true });
-    renderer.setPixelRatio(window.devicePixelRatio);
-    renderer.setSize(viewWidth, viewHeight);
-    viewport.appendChild(renderer.domElement);
-
-    const controls = new OrbitControls(camera, renderer.domElement);
-    controls.target.set(3.3, 2.611, -2.581);
-    controls.update();
-    controls.addEventListener('change', () => { renderer.render(scene, camera) });
-
-    renderer.render(scene, camera);
-
     let redrawNeeded = false;
     function redrawIfNeeded() {
       if (redrawNeeded)
-        renderer.render(scene, camera);
+        useSharedRenderer(canvas, viewWidth, viewHeight, scene, camera);
       redrawNeeded = false;
     }
+    function redraw() {
+      redrawNeeded = true;
+      setTimeout(redrawIfNeeded, 80);
+    }
+
+    redraw();
+
+    const controls = new OrbitControls(camera, viewport);
+    controls.target.set(3.3, 2.611, -2.581);
+    controls.update();
+    controls.addEventListener('change', redraw);
 
     new ResizeObserver(function() {
       viewWidth = viewport.clientWidth;
       viewHeight = viewport.clientHeight;
-      renderer.setSize(viewWidth, viewHeight);
-      redrawNeeded = true;
-      setTimeout(redrawIfNeeded, 80);
+      redraw();
     }).observe(viewport);
   }
 
@@ -987,7 +1001,9 @@ M1001 80h400000v40h-400000z"></path></svg></span></span></span><span class="vlis
 <p>To check this property empirically, let's actually take some slices and see how they look! The 3D graph below plots the real part of the complex sine; move the slider to rotate the graph and take a slice at a different angle.</p>
 
 <div style='margin-block-start: 1em; margin-block-end: 1em'>
-  <div id='complex_sine_odd3' style='width: 100%; max-width: 35rem; aspect-ratio: 1; display: inline-block; margin-right: .5em; cursor: move'></div>
+  <div id='complex_sine_odd3' style='width: 100%; max-width: 35rem; max-height: 35rem; aspect-ratio: 1; display: inline-block; margin-right: .5em; cursor: move'>
+    <canvas style='width: 100%; height: 100%'></canvas>
+  </div>
   <input type='range' id='slicepos' min='0' max='100' value='50' class='rotation-slider' />
 </div>
 
@@ -1005,6 +1021,7 @@ M1001 80h400000v40h-400000z"></path></svg></span></span></span><span class="vlis
 
   function showGraph(viewport, vertices, colors, setRotation) {
     let viewWidth = viewport.clientWidth, viewHeight = viewport.clientHeight;
+    const canvas = viewport.$tag1('canvas');
 
     const scene = new THREE.Scene;
     scene.background = new THREE.Color('#121212');
@@ -1052,32 +1069,31 @@ M1001 80h400000v40h-400000z"></path></svg></span></span></span><span class="vlis
 
     setRotation([mesh], highlight, 50);
 
-    const renderer = new THREE.WebGLRenderer({ antialias: true });
-    renderer.setPixelRatio(window.devicePixelRatio);
-    renderer.setSize(viewWidth, viewHeight);
-    viewport.appendChild(renderer.domElement);
-    const controls = new OrbitControls(camera, renderer.domElement);
-    controls.addEventListener('change', () => renderer.render(scene, camera));
-    renderer.render(scene, camera);
-
     let redrawNeeded = false;
     function redrawIfNeeded() {
       if (redrawNeeded)
-        renderer.render(scene, camera);
+        useSharedRenderer(canvas, viewWidth, viewHeight, scene, camera);
       redrawNeeded = false;
     }
+    function redraw() {
+      redrawNeeded = true;
+      setTimeout(redrawIfNeeded, 80);
+    }
+
+    redraw();
+
+    const controls = new OrbitControls(camera, viewport);
+    controls.addEventListener('change', redraw);
 
     new ResizeObserver(function() {
       viewWidth = viewport.clientWidth;
       viewHeight = viewport.clientHeight;
-      renderer.setSize(viewWidth, viewHeight);
-      redrawNeeded = true;
-      setTimeout(redrawIfNeeded, 80);
+      redraw();
     }).observe(viewport);
 
     return function(t) {
       setRotation([mesh], highlight, t);
-      renderer.render(scene, camera);
+      redraw();
     }
   }
 
@@ -1111,7 +1127,8 @@ M1001 80h400000v40h-400000z"></path></svg></span></span></span><span class="vlis
 <p>Here is an overlay of the magnitudes of the complex sine and cosine; move the slider to shift the cosine along the real axis, and try to see at what shift (if any) the graphs coincide exactly. To make things easier to see, I'll only graph on one side of the real axis. Since the magnitudes of the two functions are symmetrical across the real axis, nothing is lost by only showing one side.</p>
 
 <div style='margin-block-start: 1em; margin-block-end: 1em'>
-  <div id='sine_cos_magnitude_overlay' style='width: 100%; max-width: 38em; height: 35em; display: inline-block; cursor: move'></div>
+  <canvas id='sine_cos_magnitude_overlay' style='width: 35em; height: 35em; display: inline-block; cursor: move'>
+  </canvas>
   <input type='range' id='shiftpos' min='0' max='1.57' value='0' step='0.314' list='shiftticks' style='width: 100%' />
   <datalist id='shiftticks' style='display: flex; justify-content: space-between; width: 100%'>
     <option value='0' label='0'></option>
@@ -1139,7 +1156,7 @@ M1001 80h400000v40h-400000z"></path></svg></span></span></span><span class="vlis
   scene.background = new THREE.Color('#121212');
 
   const camera = new THREE.PerspectiveCamera(45, viewWidth / viewHeight, 1, 1000);
-  camera.position.set(-5.15, 6.28, -6.24);
+  camera.position.set(-5.49, 6.56, -6.56);
   camera.rotation.set(-2.51, -0.48, -2.81);
 
   const ambientLight = new THREE.AmbientLight(0xcccccc, 1);
@@ -1177,45 +1194,43 @@ M1001 80h400000v40h-400000z"></path></svg></span></span></span><span class="vlis
   scene.add(createLine(new THREE.Vector3(0, 1.5*Math.PI, 0), new THREE.Vector3(0, 0, 0)));
   scene.add(createLine(new THREE.Vector3(0, 0, 1.5*Math.PI), new THREE.Vector3(0, 0, 0)));
 
-  const renderer = new THREE.WebGLRenderer({ antialias: true });
-  renderer.setPixelRatio(window.devicePixelRatio);
-  renderer.setSize(viewWidth, viewHeight);
-  viewport.appendChild(renderer.domElement);
+  let redrawNeeded = false;
+  function redrawIfNeeded() {
+    if (redrawNeeded)
+      useSharedRenderer(viewport, viewWidth, viewHeight, scene, camera);
+    redrawNeeded = false;
+  }
+  function redraw() {
+    redrawNeeded = true;
+    setTimeout(redrawIfNeeded, 80);
+  }
 
-  const controls = new OrbitControls(camera, renderer.domElement);
+  const controls = new OrbitControls(camera, viewport);
   controls.target.set(-0.42, 0.95, 1.08);
   controls.update();
-  controls.addEventListener('change', () => renderer.render(scene, camera));
+  controls.addEventListener('change', redraw);
 
   function setCosPos(t) {
     mesh2.position.set(t, 0, 0);
-    renderer.render(scene, camera);
+    redraw();
   }
 
   $id('shiftpos').listen('input', (e) => setCosPos(Number(e.target.value)));
 
   setCosPos(0);
 
-  let redrawNeeded = false;
-  function redrawIfNeeded() {
-    if (redrawNeeded)
-      renderer.render(scene, camera);
-    redrawNeeded = false;
-  }
-
   new ResizeObserver(function() {
     viewWidth = viewport.clientWidth;
     viewHeight = viewport.clientHeight;
-    renderer.setSize(viewWidth, viewHeight);
-    redrawNeeded = true;
-    setTimeout(redrawIfNeeded, 80);
+    redraw();
   }).observe(viewport);
 </script>
 
 <p>And the same for the angles of the complex sine and cosine:</p>
 
 <div style='margin-block-start: 1em; margin-block-end: 1em'>
-  <div id='sine_cos_angle_overlay' style='width: 100%; max-width: 38em; height: 35em; display: inline-block; cursor: move'></div>
+  <canvas id='sine_cos_angle_overlay' style='width: 35em; height: 35em; display: inline-block; cursor: move'>
+  </canvas>
   <input type='range' id='shiftpos2' min='0' max='1.57' value='0' step='0.314' list='shiftticks2' style='width: 100%' />
   <datalist id='shiftticks2' style='display: flex; justify-content: space-between; width: 100%'>
     <option value='0' label='0'></option>
@@ -1284,38 +1299,35 @@ M1001 80h400000v40h-400000z"></path></svg></span></span></span><span class="vlis
   scene.add(createLine(new THREE.Vector3(0, Math.PI*0.6, 0), new THREE.Vector3(0, -Math.PI*0.6, 0)));
   scene.add(createLine(new THREE.Vector3(0, 0, Math.PI*0.6), new THREE.Vector3(0, 0, -Math.PI*0.6)));
 
-  const renderer = new THREE.WebGLRenderer({ antialias: true });
-  renderer.setPixelRatio(window.devicePixelRatio);
-  renderer.setSize(viewWidth, viewHeight);
-  viewport.appendChild(renderer.domElement);
+  let redrawNeeded = false;
+  function redrawIfNeeded() {
+    if (redrawNeeded)
+      useSharedRenderer(viewport, viewWidth, viewHeight, scene, camera);
+    redrawNeeded = false;
+  }
+  function redraw() {
+    redrawNeeded = true;
+    setTimeout(redrawIfNeeded, 80);
+  }
 
-  const controls = new OrbitControls(camera, renderer.domElement);
+  const controls = new OrbitControls(camera, viewport);
   controls.target.set(0.31, 0, -0.21);
   controls.update();
-  controls.addEventListener('change', () => renderer.render(scene, camera));
+  controls.addEventListener('change', redraw);
 
   function setCosPos(t) {
     mesh2.position.set(t, 0, 0);
-    renderer.render(scene, camera);
+    redraw();
   }
 
   $id('shiftpos2').listen('input', (e) => setCosPos(Number(e.target.value)));
 
   setCosPos(0);
 
-  let redrawNeeded = false;
-  function redrawIfNeeded() {
-    if (redrawNeeded)
-      renderer.render(scene, camera);
-    redrawNeeded = false;
-  }
-
   new ResizeObserver(function() {
     viewWidth = viewport.clientWidth;
     viewHeight = viewport.clientHeight;
-    renderer.setSize(viewWidth, viewHeight);
-    redrawNeeded = true;
-    setTimeout(redrawIfNeeded, 80);
+    redraw();
   }).observe(viewport);
 </script>
 
