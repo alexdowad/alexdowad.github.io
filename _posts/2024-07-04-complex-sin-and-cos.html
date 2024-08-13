@@ -139,6 +139,16 @@ stylesheets:
 
     return indices;
   }
+
+  window.$id = document.getElementById.bind(document);
+  Element.prototype.listen = Element.prototype.addEventListener;
+  Element.prototype.$class = Element.prototype.getElementsByClassName;
+  Element.prototype.$class1 = function(cls) {
+    return this.getElementsByClassName(cls)[0];
+  }
+  Element.prototype.$tag1 = function(name) {
+    return this.getElementsByTagName(name)[0];
+  }
 </script>
 
 <script type='importmap'>
@@ -153,8 +163,8 @@ stylesheets:
   import * as THREE from 'three';
   import { OrbitControls } from '/assets/js/OrbitControls.js';
 
-  const viewport1 = document.getElementById('sine_periodic_re');
-  const viewport2 = document.getElementById('sine_periodic_im');
+  const viewport1 = $id('sine_periodic_re');
+  const viewport2 = $id('sine_periodic_im');
 
   const resolution = 30;
 
@@ -322,7 +332,7 @@ M1001 80h400000v40h-400000z"></path></svg></span></span></span><span class="vlis
   import * as THREE from 'three';
   import { OrbitControls } from '/assets/js/OrbitControls.js';
 
-  const viewport = document.getElementById('sine_magnitude');
+  const viewport = $id('sine_magnitude');
   const resolution = 28;
   const [vertices, colors] = meshVerticesForFunction(resolution, (z) => z.sin().abs(), cool, 0, Math.PI * 4);
   const indices = vertexIndicesForMesh(resolution);
@@ -418,9 +428,6 @@ M1001 80h400000v40h-400000z"></path></svg></span></span></span><span class="vlis
 
 <script>
   'use strict';
-
-  const $id = document.getElementById.bind(document);
-  Element.prototype.listen = Element.prototype.addEventListener;
 
   function makeSvgNode(tag, cssClass, attributes = {}) {
     const node = document.createElementNS("http://www.w3.org/2000/svg", tag);
@@ -808,7 +815,7 @@ M1001 80h400000v40h-400000z"></path></svg></span></span></span><span class="vlis
 
     function moveCircle(circle, z) {
       moveSvgCircle(circle, complexToSvgPos(z));
-      let title = circle.getElementsByTagName('title')[0];
+      let title = circle.$tag1('title');
       if (!title)
         title = appendSvgNode(circle, 'title');
       z = new Complex(Math.round(z.re * 100) / 100, Math.round(z.im * 100) / 100); // Round to 2 places
@@ -864,8 +871,8 @@ M1001 80h400000v40h-400000z"></path></svg></span></span></span><span class="vlis
   import { LineMaterial } from '/assets/js/LineMaterial.js';
   import { LineGeometry } from '/assets/js/LineGeometry.js';
 
-  const viewport1 = document.getElementById('real_sine_odd');
-  const viewport2 = document.getElementById('real_cosine_even');
+  const viewport1 = $id('real_sine_odd');
+  const viewport2 = $id('real_cosine_even');
 
   function showGraph(viewport, fn) {
     const range = Math.PI * 6;
@@ -990,7 +997,7 @@ M1001 80h400000v40h-400000z"></path></svg></span></span></span><span class="vlis
   import { LineMaterial } from '/assets/js/LineMaterial.js';
   import { LineGeometry } from '/assets/js/LineGeometry.js';
 
-  const viewport = document.getElementById('complex_sine_odd3');
+  const viewport = $id('complex_sine_odd3');
 
   const resolution = 30;
   const [vertices, colors] = meshVerticesForFunction(resolution, (z) => z.sin().re, viridis);
@@ -1089,7 +1096,7 @@ M1001 80h400000v40h-400000z"></path></svg></span></span></span><span class="vlis
     highlight.setPositions(highlighted);
   });
 
-  document.getElementById('slicepos').listen('input', (e) => update(Number(e.target.value)));
+  $id('slicepos').listen('input', (e) => update(Number(e.target.value)));
 </script>
 
 <p>What do you conclude?</p>
@@ -1120,7 +1127,7 @@ M1001 80h400000v40h-400000z"></path></svg></span></span></span><span class="vlis
   import * as THREE from 'three';
   import { OrbitControls } from '/assets/js/OrbitControls.js';
 
-  const viewport = document.getElementById('sine_cos_magnitude_overlay');
+  const viewport = $id('sine_cos_magnitude_overlay');
   const resolution = 30;
   const [vertices1, colors1] = meshVerticesForFunction(resolution, (z) => z.sin().abs(), cool, 0, Math.PI * 1.2, Math.PI * 2.5, Math.PI * 0.8, 0, Math.PI * 0.4);
   const [vertices2, colors2] = meshVerticesForFunction(resolution, (z) => z.cos().abs(), cool, 0, Math.PI * 1.2, Math.PI * 2.5, Math.PI * 0.8, 0, Math.PI * 0.4);
@@ -1185,7 +1192,7 @@ M1001 80h400000v40h-400000z"></path></svg></span></span></span><span class="vlis
     renderer.render(scene, camera);
   }
 
-  document.getElementById('shiftpos').listen('input', (e) => setCosPos(Number(e.target.value)));
+  $id('shiftpos').listen('input', (e) => setCosPos(Number(e.target.value)));
 
   setCosPos(0);
 
@@ -1224,7 +1231,7 @@ M1001 80h400000v40h-400000z"></path></svg></span></span></span><span class="vlis
   import * as THREE from 'three';
   import { OrbitControls } from '/assets/js/OrbitControls.js';
 
-  const viewport = document.getElementById('sine_cos_angle_overlay');
+  const viewport = $id('sine_cos_angle_overlay');
   const resolution = 30;
   const [vertices1, colors1] = meshVerticesForFunction(resolution, (z) => z.sin().arg(), warm, -Math.PI, Math.PI, Math.PI, Math.PI);
   const [vertices2, colors2] = meshVerticesForFunction(resolution, (z) => z.cos().arg(), warm, -Math.PI, Math.PI, Math.PI, Math.PI);
@@ -1292,7 +1299,7 @@ M1001 80h400000v40h-400000z"></path></svg></span></span></span><span class="vlis
     renderer.render(scene, camera);
   }
 
-  document.getElementById('shiftpos2').listen('input', (e) => setCosPos(Number(e.target.value)));
+  $id('shiftpos2').listen('input', (e) => setCosPos(Number(e.target.value)));
 
   setCosPos(0);
 
@@ -1448,9 +1455,9 @@ M1001 80h400000v40h-400000z"></path></svg></span></span></span><span class="vlis
   let neg    = deriv1_neg;
 
   function clearHighlights() {
-    for (const elem of Array.from(svg2.getElementsByClassName('highlight')))
+    for (const elem of Array.from(svg2.$class('highlight')))
       elem.remove();
-    for (const elem of Array.from(svg1.getElementsByClassName('highlight')))
+    for (const elem of Array.from(svg1.$class('highlight')))
       elem.remove();
     $id('explain_deriv').innerText = '';
   }
