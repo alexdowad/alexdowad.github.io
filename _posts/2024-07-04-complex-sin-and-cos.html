@@ -187,13 +187,17 @@ stylesheets:
   const size = new THREE.Vector2(0, 0);
 
   window.useSharedRenderer = function(canvas, width, height, scene, camera) {
+    // `width` and `height` are CSS 'pixels', not physical display pixels
+    // (`window.devicePixelRatio` gives the conversion factor)
     renderer.getSize(size);
     if (width != size.width || height != size.height) {
       renderer.setSize(width, height);
     }
-    if (width != canvas.width || height != canvas.height) {
-      canvas.width = width;
-      canvas.height = height;
+    const ratio = window.devicePixelRatio;
+    if (width*ratio != canvas.width || height*ratio != canvas.height) {
+      // `canvas.width` and `canvas.height` are in physical pixels
+      canvas.width = width*ratio;
+      canvas.height = height*ratio;
     }
     renderer.render(scene, camera);
     const context = canvas.getContext('2d');
@@ -351,7 +355,7 @@ M1001 80h400000v40h-400000z"></path></svg></span></span></span><span class="vlis
 
 <div style='display: flex; flex-direction: column; gap: .2em; margin-block-start: 1em; margin-block-end: 1em'>
   <div id='sine_magnitude' style='width: 35em; height: 35em; cursor: move'>
-    <canvas></canvas>
+    <canvas style='width: 35em; height: 35em'></canvas>
   </div>
   <small>
     <i>Again, drag to rotate, roll mouse wheel (or pinch) to zoom, Ctrl+drag to pan. Try peeking under the white plane at <span class="katex" style="font-size:1.1em"><span class="base"><span class="strut" style="height: 1em; vertical-align: -0.25em;"></span><span class="mord">∣</span><span class="mord mathnormal" style="margin-right: 0.044em;">z</span><span class="mord">∣</span><span class="mspace" style="margin-right: 0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right: 0.2778em;"></span></span><span class="base"><span class="strut" style="height: 0.6444em;"></span><span class="mord">1</span></span></span> to see the familiar shape of the real sine function.</i>
