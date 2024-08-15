@@ -153,6 +153,16 @@ stylesheets:
   Element.prototype.$tag1 = function(name) {
     return this.getElementsByTagName(name)[0];
   }
+  document.$tag1 = function(name) {
+    return this.getElementsByTagName(name)[0];
+  }
+
+  if (!window.WebGLRenderingContext) {
+    window.hasWebGL = false;
+  } else {
+    const canvas = document.createElement('canvas');
+    window.hasWebGL = canvas.getContext('webgl') ? true : false;
+  }
 </script>
 
 <script type='importmap'>
@@ -168,6 +178,8 @@ stylesheets:
 <script type='module'>
   import * as THREE from 'three';
   import { OrbitControls } from '/assets/js/OrbitControls.js';
+
+  if (window.hasWebGL) {
 
   const renderer = new THREE.WebGLRenderer({ antialias: true });
   renderer.setPixelRatio(window.devicePixelRatio);
@@ -308,6 +320,8 @@ stylesheets:
 
   showGraph(viewport1, vertices1, colors1);
   showGraph(viewport2, vertices2, colors2);
+
+  }
 </script>
 
 <p>What do you conclude? Does it look periodic to you? (Click or tap to reveal the answer.)</p>
@@ -347,6 +361,8 @@ M1001 80h400000v40h-400000z"></path></svg></span></span></span><span class="vlis
 <script type='module'>
   import * as THREE from 'three';
   import { OrbitControls } from '/assets/js/OrbitControls.js';
+
+  if (window.hasWebGL) {
 
   const viewport = $id('sine_magnitude');
   const resolution = 28;
@@ -415,6 +431,8 @@ M1001 80h400000v40h-400000z"></path></svg></span></span></span><span class="vlis
   }
 
   showGraph(viewport, vertices, colors);
+
+  }
 </script>
 
 <p>What do you conclude?</p>
@@ -885,6 +903,8 @@ M1001 80h400000v40h-400000z"></path></svg></span></span></span><span class="vlis
   import { LineMaterial } from '/assets/js/LineMaterial.js';
   import { LineGeometry } from '/assets/js/LineGeometry.js';
 
+  if (window.hasWebGL) {
+
   const viewport1 = $id('real_sine_odd');
   const viewport2 = $id('real_cosine_even');
 
@@ -991,6 +1011,8 @@ M1001 80h400000v40h-400000z"></path></svg></span></span></span><span class="vlis
       targetRotation += Math.PI;
     });
   }
+
+  }
 </script>
 
 <p>For a complex function, the analogous operation is to reflect each point in the input space across the origin; instead of <span class="katex" style="font-size:1.1em"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height: 1em; vertical-align: -0.25em;"></span><span class="mord mathnormal" style="margin-right: 0.1076em;">f</span><span class="mopen">(</span><span class="mord mathnormal" style="margin-right: 0.044em;">z</span><span class="mclose">)</span></span></span></span>, we take <span class="katex" style="font-size:1.1em"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height: 1em; vertical-align: -0.25em;"></span><span class="mord mathnormal" style="margin-right: 0.1076em;">f</span><span class="mopen">(</span><span class="mord">−</span><span class="mord mathnormal" style="margin-right: 0.044em;">z</span><span class="mclose">)</span></span></span></span>.
@@ -1001,7 +1023,7 @@ M1001 80h400000v40h-400000z"></path></svg></span></span></span><span class="vlis
 <p>To check this property empirically, let's actually take some slices and see how they look! The 3D graph below plots the real part of the complex sine; move the slider to rotate the graph and take a slice at a different angle.</p>
 
 <div style='margin-block-start: 1em; margin-block-end: 1em'>
-  <div id='complex_sine_odd3' style='width: 100%; max-width: 35rem; max-height: 35rem; aspect-ratio: 1; display: inline-block; margin-right: .5em; cursor: move'>
+  <div id='complex_sine_odd' style='width: 100%; max-width: 35rem; max-height: 35rem; aspect-ratio: 1; display: inline-block; margin-right: .5em; cursor: move'>
     <canvas style='width: 100%; height: 100%'></canvas>
   </div>
   <input type='range' id='slicepos' min='0' max='100' value='50' class='rotation-slider' />
@@ -1013,7 +1035,9 @@ M1001 80h400000v40h-400000z"></path></svg></span></span></span><span class="vlis
   import { LineMaterial } from '/assets/js/LineMaterial.js';
   import { LineGeometry } from '/assets/js/LineGeometry.js';
 
-  const viewport = $id('complex_sine_odd3');
+  if (window.hasWebGL) {
+
+  const viewport = $id('complex_sine_odd');
 
   const resolution = 30;
   const [vertices, colors] = meshVerticesForFunction(resolution, (z) => z.sin().re, viridis);
@@ -1113,6 +1137,8 @@ M1001 80h400000v40h-400000z"></path></svg></span></span></span><span class="vlis
   });
 
   $id('slicepos').listen('input', (e) => update(Number(e.target.value)));
+
+  }
 </script>
 
 <p>What do you conclude?</p>
@@ -1143,6 +1169,8 @@ M1001 80h400000v40h-400000z"></path></svg></span></span></span><span class="vlis
 <script type='module'>
   import * as THREE from 'three';
   import { OrbitControls } from '/assets/js/OrbitControls.js';
+
+  if (window.hasWebGL) {
 
   const viewport = $id('sine_cos_magnitude_overlay');
   const resolution = 30;
@@ -1224,6 +1252,8 @@ M1001 80h400000v40h-400000z"></path></svg></span></span></span><span class="vlis
     viewHeight = viewport.clientHeight;
     redraw();
   }).observe(viewport);
+
+  }
 </script>
 
 <p>And the same for the angles of the complex sine and cosine:</p>
@@ -1245,6 +1275,8 @@ M1001 80h400000v40h-400000z"></path></svg></span></span></span><span class="vlis
 <script type='module'>
   import * as THREE from 'three';
   import { OrbitControls } from '/assets/js/OrbitControls.js';
+
+  if (window.hasWebGL) {
 
   const viewport = $id('sine_cos_angle_overlay');
   const resolution = 30;
@@ -1329,6 +1361,8 @@ M1001 80h400000v40h-400000z"></path></svg></span></span></span><span class="vlis
     viewHeight = viewport.clientHeight;
     redraw();
   }).observe(viewport);
+
+  }
 </script>
 
 <p>What do you conclude?</p>
@@ -1857,20 +1891,8 @@ M1001 80h400000v40h-400000z"></path></svg></span></span></span><span class="vlis
   import { OrbitControls } from '/assets/js/OrbitControls.js';
 
   const svg = $id('deriv_demo_input');
-  const view1 = $id('deriv_sine_magnitude');
-  const view2 = $id('deriv_sine_angle');
-  const view3 = $id('deriv_cos_magnitude');
-  const view4 = $id('deriv_cos_angle');
-
-  const resolution = 30;
-
-  const [vertices1, colors1] = meshVerticesForFunction(resolution, (z) => z.sin().abs(), viridis);
-  const [vertices2, colors2] = meshVerticesForFunction(resolution, (z) => z.sin().arg(), magma);
-  const [vertices3, colors3] = meshVerticesForFunction(resolution, (z) => z.cos().abs(), cool);
-  const [vertices4, colors4] = meshVerticesForFunction(resolution, (z) => z.cos().arg(), warm);
-  const indices = vertexIndicesForMesh(resolution);
-
   const scale = 6; // Total width/height of SVG in function domain units
+
   const blackDot = appendSvgNode(svg, 'circle', undefined, {
     r: '3',
     fill: '#333'
@@ -1932,6 +1954,24 @@ M1001 80h400000v40h-400000z"></path></svg></span></span></span><span class="vlis
     };
   }
 
+  moveSvgCircle(blackDot, {svgX: 50, svgY: 50});
+  handIcon.setAttribute('transform', `translate(50, 50)`);
+
+  if (window.hasWebGL) {
+
+  const view1 = $id('deriv_sine_magnitude');
+  const view2 = $id('deriv_sine_angle');
+  const view3 = $id('deriv_cos_magnitude');
+  const view4 = $id('deriv_cos_angle');
+
+  const resolution = 30;
+
+  const [vertices1, colors1] = meshVerticesForFunction(resolution, (z) => z.sin().abs(), viridis);
+  const [vertices2, colors2] = meshVerticesForFunction(resolution, (z) => z.sin().arg(), magma);
+  const [vertices3, colors3] = meshVerticesForFunction(resolution, (z) => z.cos().abs(), cool);
+  const [vertices4, colors4] = meshVerticesForFunction(resolution, (z) => z.cos().arg(), warm);
+  const indices = vertexIndicesForMesh(resolution);
+
   function createLine(from, to) {
     const material = new THREE.LineBasicMaterial({ color: 0xffffff });
     const geometry = new THREE.BufferGeometry().setFromPoints([from, to]);
@@ -1980,30 +2020,32 @@ M1001 80h400000v40h-400000z"></path></svg></span></span></span><span class="vlis
     renderer.setSize(viewWidth, viewHeight);
     viewport.appendChild(renderer.domElement);
 
-    const controls = new OrbitControls(camera, renderer.domElement);
-    controls.target.set(target[0], target[1], target[2]);
-    controls.update();
-    controls.addEventListener('change', () => renderer.render(scene, camera));
-
     let redrawNeeded = false;
     function redrawIfNeeded() {
       if (redrawNeeded)
         renderer.render(scene, camera);
       redrawNeeded = false;
     }
+    function redraw() {
+      redrawNeeded = true;
+      setTimeout(redrawIfNeeded, 80);
+    }
+
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.target.set(target[0], target[1], target[2]);
+    controls.update();
+    controls.addEventListener('change', redraw);
 
     new ResizeObserver(function() {
       viewWidth = viewport.clientWidth;
       viewHeight = viewport.clientHeight;
       renderer.setSize(viewWidth, viewHeight);
-      redrawNeeded = true;
-      setTimeout(redrawIfNeeded, 80);
+      redraw();
     }).observe(viewport);
 
     return function(x, y, z) {
       highlight.position.set(x, y, z);
-      redrawNeeded = true;
-      setTimeout(redrawIfNeeded, 80);
+      redraw();
     }
   }
 
@@ -2024,6 +2066,8 @@ M1001 80h400000v40h-400000z"></path></svg></span></span></span><span class="vlis
 
   updateDerivDemo({svgX: 50, svgY: 50});
   makeSvgCircleDraggable(svg, [blackDot, handIcon], updateDerivDemo);
+
+  }
 </script>
 
 <p>Can you see that <i>both</i> the magnitude and angle of the sine change fastest around points where the magnitude of the cosine is large? And likewise, the magnitude and angle of the cosine change fastest around points where the magnitude of the sine is large?</p>
@@ -2175,6 +2219,8 @@ M1001 80h400000v40h-400000z"></path></svg></span></span></span><span class="vlis
 <p>In any case, many trig identities follow directly from the <a href="https://en.wikipedia.org/wiki/Euler%27s_formula#Relationship_to_trigonometry">exponential definitions</a> of sine and cosine. Since exponentials have the same basic properties regardless of whether the parameter is real or complex, such trig identities naturally work either way.</p>
 <p><span style='font-variant: small-caps'><b>One last little fact:</b></span> If you slice the graph of <span class="katex" style="font-size:1.1em"><span class="base"><span class="strut" style="height: 1em; vertical-align: -0.25em;"></span><span class="mop">sin</span><span class="mopen">(</span><span class="mord mathnormal" style="margin-right: 0.044em;">z</span><span class="mclose">)</span></span></span> straight along the imaginary axis (going through the origin), you get the graph of <span class="katex" style="font-size:1.1em"><span class="base"><span class="strut" style="height: 1em; vertical-align: -0.25em;"></span><span class="mop">sinh</span><span class="mopen">(</span><span class="mord mathnormal" style="margin-right: 0.044em;">x</span><span class="mclose">)</span></span></span>, the <a href="https://en.wikipedia.org/wiki/Hyperbolic_functions"><i>hyperbolic</i> sine</a>. It's the same for <span class="katex" style="font-size:1.1em"><span class="base"><span class="strut" style="height: 1em; vertical-align: -0.25em;"></span><span class="mop">cos</span><span class="mopen">(</span><span class="mord mathnormal" style="margin-right: 0.044em;">z</span><span class="mclose">)</span></span></span>; along the imaginary axis, it gives the graph of the <a href="https://en.wikipedia.org/wiki/Hyperbolic_functions">hyperbolic cosine</a>. If this intrigues you, have another look at the 3D graphs above and see if you can pick out the contours of the hyperbolic trig functions.</p>
 
+<p id='footnote1' style='font-size: 0.8em; margin-top: 2.5em'>[1] Answers: “A lot”, “Yes”, “For the most part”, “Not really”, and “You can be the judge of that”. <a href='#fnref1'>⏎</a></p>
+
 <script>
   'use strict';
 
@@ -2184,6 +2230,45 @@ M1001 80h400000v40h-400000z"></path></svg></span></span></span><span class="vlis
     this.removeEventListener('click', revealText);
   }
   document.querySelectorAll('.reveal').forEach((el) => el.addEventListener('click', revealText));
-</script>
 
-<p id='footnote1' style='font-size: 0.8em; margin-top: 2.5em'>[1] Answers: “A lot”, “Yes”, “For the most part”, “Not really”, and “You can be the judge of that”. <a href='#fnref1'>⏎</a></p>
+  if (!window.hasWebGL) {
+    // Show warning banner
+    const banner = document.createElement('div');
+    banner.classList.add('webglwarning');
+    banner.innerHTML = '<small><b>NOTE:</b></small> This article contains interactive 3D function graphs, which can be rotated and zoomed. However, your web browser does not provide the needed features for them to work. Hence, the 3D function graphs will be shown as static images only. You may wish to view this article on a different device or using a newer web browser.';
+    document.$tag1('article').$tag1('header').after(banner);
+
+    function makeImg(src, width, height) {
+      let img = document.createElement('img');
+      img.src = src;
+      img.width = width;
+      img.height = height;
+      img.style.margin = '0';
+      return img;
+    }
+
+    $id('sine_periodic_re').replaceChildren(makeImg('/assets/images/sine_periodic_re.jpg', 440, 445));
+    $id('sine_periodic_re').style.cursor = '';
+
+    $id('sine_periodic_im').replaceChildren(makeImg('/assets/images/sine_periodic_im.jpg', 439, 445));
+    $id('sine_periodic_im').style.cursor = '';
+
+    $id('sine_magnitude').replaceChildren(makeImg('/assets/images/sine_magnitude.jpg', 543, 543));
+    $id('sine_magnitude').style.cursor = '';
+
+    $id('sine_cos_magnitude_overlay').replaceWith(makeImg('/assets/images/sine_cos_magnitude_overlay.jpg', 537, 543));
+
+    $id('sine_cos_angle_overlay').replaceWith(makeImg('/assets/images/sine_cos_angle_overlay.jpg', 538, 543));
+
+    $id('real_sine_odd').prepend(makeImg('/assets/images/real_sine_odd.jpg', 368, 310));
+    $id('real_cosine_even').prepend(makeImg('/assets/images/real_cos_even.jpg', 372, 310));
+
+    $id('complex_sine_odd').replaceChildren(makeImg('/assets/images/complex_sine_odd.jpg', 539, 543));
+    $id('complex_sine_odd').style.cursor = '';
+
+    $id('deriv_sine_magnitude').replaceChildren(makeImg('/assets/images/deriv_sine_magnitude.jpg', 240, 244));
+    $id('deriv_sine_angle').replaceChildren(makeImg('/assets/images/deriv_sine_angle.jpg', 240, 244));
+    $id('deriv_cos_magnitude').replaceChildren(makeImg('/assets/images/deriv_cos_magnitude.jpg', 240, 244));
+    $id('deriv_cos_angle').replaceChildren(makeImg('/assets/images/deriv_cos_angle.jpg', 240, 244));
+  }
+</script>

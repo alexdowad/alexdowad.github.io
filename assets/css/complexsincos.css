@@ -55,3 +55,9 @@
   background-color: #ca2c92aa;
   border-color: #c4228a;
 }
+
+.webglwarning {
+  background-color: #edd3d1;
+  margin: 1.5em;
+  padding: 1.8em;
+}
