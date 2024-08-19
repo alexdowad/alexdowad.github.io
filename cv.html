@@ -39,11 +39,11 @@
 <article>
 
 <div style="display: flex; align-items: flex-start; gap: 1rem">
-	<p>Hello! I'm an inveterate tech-head who does freelance software development, performance engineering, and systems analysis. 30 years of wrangling with computer code has given me both breadth <i>and</i> depth in the field; some of my main areas of expertise are listed below. I can help you design software, build software, analyze difficult bugs, make slow software fast, or train your development team. General consulting and advisory jobs are also welcome. If you need a technical power hitter on your project, drop me a mail and let's talk.</p>
+	<p>Hello! I’m an inveterate tech-head who does freelance software development, performance engineering, and systems analysis. 30 years of wrangling with computer code has given me both breadth <i>and</i> depth in the field; some of my main areas of expertise are listed below. I can help you design software, build software, analyze difficult bugs, make slow software fast, or train your development team. General consulting and advisory jobs are also welcome. If you need a technical power hitter on your project, drop me a mail and let’s talk.</p>
 	<img src="/assets/images/MyHead-lores.jpg" style="width: 10rem; height: auto; margin-top: 1em">
 </div>
 
-<h2>I'm good with...</h2>
+<h2>I’m good with...</h2>
 
 <div class="indent">
 	<h3 style="margin-bottom: 0">Languages</h3>
@@ -51,14 +51,14 @@
 	(Have also written production code in: AWK, C#, C++, CoffeeScript, Groovy, Perl, PHP, Python)
 
 	<h3 style="margin-bottom: 0">Low-level/“System” Programming</h3>
-	I've done extensive research into CPU architectures, firmware standards like UEFI, operating system internals (especially the workings of the Linux kernel), filesystems, compiler/linker design, virtual machine/dynamic runtime design, binary formats, network protocols...
+	I’ve done extensive research into CPU architectures, firmware standards like UEFI, operating system internals (especially the workings of the Linux kernel), filesystems, compiler/linker design, virtual machine/dynamic runtime design, binary formats, network protocols...
 
 	<p>
 		Understanding the lower parts of the computing stack often helps me diagnose and fix obscure bugs which would otherwise be inscrutable. Examples:
 	</p>
 	<ul>
-		<li><b>Fixing a bug in Ruby's garbage collector.</b> (<a href="https://bugs.ruby-lang.org/issues/7135">Ruby Bug #7135</a>) After tracing a crashing Ruby program in the GDB debugger and examining its memory, I realized this was a use-after-free bug. Further investigation showed that the only reference to a string was being kept in a CPU register, when Ruby's garbage collector relies on scanning the program stack for pointers.</li>
-		<li><b>Fixing a bug in PHP's JIT compiler.</b> (<a href="https://github.com/php/php-src/pull/6392">PHP PR #6392</a>) I traced a crashing PHP program in GDB and by reading the disassembly of JIT-generated code, found that it was clearly wrong. The next step was digging through the source code for the JIT compiler to find which part was generating the incorrect machine code.</li>
+		<li><b>Fixing a bug in Ruby’s garbage collector.</b> (<a href="https://bugs.ruby-lang.org/issues/7135">Ruby Bug #7135</a>) After tracing a crashing Ruby program in the GDB debugger and examining its memory, I realized this was a use-after-free bug. Further investigation showed that the only reference to a string was being kept in a CPU register, when Ruby’s garbage collector relies on scanning the program stack for pointers.</li>
+		<li><b>Fixing a bug in PHP’s JIT compiler.</b> (<a href="https://github.com/php/php-src/pull/6392">PHP PR #6392</a>) I traced a crashing PHP program in GDB and by reading the disassembly of JIT-generated code, found that it was clearly wrong. The next step was digging through the source code for the JIT compiler to find which part was generating the incorrect machine code.</li>
 	</ul>
 	<p>This in-depth understanding also helps me design fast systems, or analyze why a system is slow.</p>
 
@@ -75,13 +75,13 @@
 	My experience is most extensive with PostgreSQL, but have also coded SQL for MS SQL Server, MySQL, and SQLite. Have often been able to make SQL queries faster (even hundreds of times faster) by analyzing the query plan and adjusting the query or adding appropriate indexes.
 
 	<h3 style="margin-bottom: 0">Math</h3>
-	I'm a math buff and have a good grasp of many undergraduate-level math topics: calculus, linear algebra, differential equations, probability, statistics, group theory, complex analysis. (<a href="https://math.stackexchange.com/users/182510/alex-d?tab=questions&sort=newest">Math questions I've asked publicly</a>)
+	I’m a math buff and have a good grasp of many undergraduate-level math topics: calculus, linear algebra, differential equations, probability, statistics, group theory, complex analysis. (<a href="https://math.stackexchange.com/users/182510/alex-d?tab=questions&sort=newest">Math questions I’ve asked publicly</a>)
 
 	<h4 style="margin-bottom: 0">Other technical strengths (click for details):</h4>
 	<a class="detail-link">Alpine Linux</a> | <a class="detail-link">Ansible</a> | <a class="detail-link">Concurrency</a> | <a class="detail-link">Data Visualization</a> | <a class="detail-link">Debuggers</a> | <a class="detail-link">Fuzzing</a> | <a class="detail-link">Git</a> | <a class="detail-link">GraphQL</a> | <a class="detail-link">JPEG</a> | <a class="detail-link">Linux Containers</a> | <a class="detail-link">Networking</a> | <a class="detail-link">Parsing</a> | <a class="detail-link">Regular Expressions</a> | <a class="detail-link">Security</a> | <a class="detail-link">SIMD</a> | <a class="detail-link">TeX</a> | <a class="detail-link">Text Encoding</a> | <a class="detail-link">Unicode</a>
 
 	<p class="hidden-details" id="alpine_linux">
-		I'm the maintainer of several Alpine Linux packages. I have contributed code to musl libc before, and have read some of the source code for OpenRC. (Both of these are key components of Alpine Linux.)
+		I’m the maintainer of several Alpine Linux packages. I have contributed code to musl libc before, and have read some of the source code for OpenRC. (Both of these are key components of Alpine Linux.)
 	</p>
 	<p class="hidden-details" id="ansible">
 		I use Ansible to automate server setup and other sysadmin tasks.
@@ -90,13 +90,13 @@
 		I once became very interested in concurrent/parallel programming and did a lot of research. One of the fruits was the <a href="https://github.com/ruby-concurrency/concurrent-ruby/pull/259"><code>ReadWriteLock</code> implementation</a> which is still included in the popular <code>concurrent-ruby</code> library.
 	</p>
 	<p class="hidden-details" id="data_visualization">
-		Most of what I know about data visualization in the abstract was learned by reading Tamara Munzner's <i>Visualization Analysis and Design</i>. I sometimes use D3.js to create interactive displays of information; you can see a few examples on <a href="https://alexdowad.github.io">my blog</a>.
+		Most of what I know about data visualization in the abstract was learned by reading Tamara Munzner’s <i>Visualization Analysis and Design</i>. I sometimes use D3.js to create interactive displays of information; you can see a few examples on <a href="https://alexdowad.github.io">my blog</a>.
 	</p>
 	<p class="hidden-details" id="debuggers">
-		I frequently use GDB to analyze the behavior of programs. Have some limited experience in scripting GDB using Python.<br><br>(War story: This once helped me diagnose and fix an intermittent bug which we couldn't reliably reproduce; I ran the buggy program in a loop, under GDB, with a script which would make GDB stop the program at key points, dump the registers and stack to a log, then continue execution. After waiting for the bug to reoccur, I was able to find the log entries for the “bad” run and discover what was actually happening.)
+		I frequently use GDB to analyze the behavior of programs. Have some limited experience in scripting GDB using Python.<br><br>(War story: This once helped me diagnose and fix an intermittent bug which we couldn’t reliably reproduce; I ran the buggy program in a loop, under GDB, with a script which would make GDB stop the program at key points, dump the registers and stack to a log, then continue execution. After waiting for the bug to reoccur, I was able to find the log entries for the “bad” run and discover what was actually happening.)
 	</p>
 	<p class="hidden-details" id="fuzzing">
-		Around 2015, I started using homebrew “fuzzers” to test my code on huge numbers of random test cases. These fuzzers were not coverage-guided, but would just blindly generate random inputs. Still, they were effective enough at finding bugs to make the practice worthwhile. When I started working on PHP core, <a href="https://www.npopov.com/aboutMe.html">Nikita</a> encouraged me to try using clang's libFuzzer (a coverage-guided fuzzer). It was astonishly good at finding bugs, even wildly obscure bugs; my previous hand-rolled fuzzers were left in the dust. Ever since then, libFuzzer has been a key tool in my toolkit. (<a href="https://github.com/php/php-src/pull/10828#issuecomment-1484762798">Description of how I normally use libFuzzer</a>)
+		Around 2015, I started using homebrew “fuzzers” to test my code on huge numbers of random test cases. These fuzzers were not coverage-guided, but would just blindly generate random inputs. Still, they were effective enough at finding bugs to make the practice worthwhile. When I started working on PHP core, <a href="https://www.npopov.com/aboutMe.html">Nikita</a> encouraged me to try using clang’s libFuzzer (a coverage-guided fuzzer). It was astonishly good at finding bugs, even wildly obscure bugs; my previous hand-rolled fuzzers were left in the dust. Ever since then, libFuzzer has been a key tool in my toolkit. (<a href="https://github.com/php/php-src/pull/10828#issuecomment-1484762798">Description of how I normally use libFuzzer</a>)
 	</p>
 	<p class="hidden-details" id="git">
 		Longtime, advanced git user.
@@ -114,25 +114,25 @@
 		At one previous job, I was in charge of network installations and support for a facility with several hundred workers. This meant learning to configure network switches, routers, Wi-Fi access points, and so on. I also studied many network protocols in detail and learned to use WireShark to analyze packet dumps.
 	</p>
 	<p class="hidden-details" id="parsing">
-		I've researched a lot of parsing algorithms and am experienced in using both traditional LALR(1) parser generators and the newer PEG parser generators.
+		I’ve researched a lot of parsing algorithms and am experienced in using both traditional LALR(1) parser generators and the newer PEG parser generators.
 	</p>
 	<p class="hidden-details" id="regular_expressions">
 		Good understanding of how regular expression engines are implemented. Have implemented some of the key algorithms before, such as NFA-to-DFA conversion and DFA minimization. Understand how to use advanced features supported by some regex engines, such as lookahead and lookbehind.
 	</p>
 	<p class="hidden-details" id="security">
-		I'm not a security researcher, but once I worked through almost all the <a href="https://overthewire.org/wargames/">OverTheWire hacking “wargames”</a>, just to understand more about how security exploits work. In the process, I learned how to write shellcode and develop buffer overflow exploits, printf format string exploits, time-of-check-to-time-of-use exploits, and so on.<br><br>Fun story: While going through some of the harder “wargames”, I found it was very helpful to use <a href="https://en.wikipedia.org/wiki/Return-oriented_programming">return-oriented programming</a> in my exploits... but it is such a pain to read through an entire disassembled binary to find snippets of assembly code for a ROP exploit! To save myself this pain, I developed a tool in Ruby which analyzes an ELF binary and automatically generates a list of addresses for a ROP exploit against that binary. (You tell the tool what CPU registers and fixed memory addresses you want the exploit to write specified values into. It only works for the x86 architecture, and only for the basic scalar registers, not for bigger registers used for SIMD. I have not made this tool publicly available.)
+		I’m not a security researcher, but once I worked through almost all the <a href="https://overthewire.org/wargames/">OverTheWire hacking “wargames”</a>, just to understand more about how security exploits work. In the process, I learned how to write shellcode and develop buffer overflow exploits, printf format string exploits, time-of-check-to-time-of-use exploits, and so on.<br><br>Fun story: While going through some of the harder “wargames”, I found it was very helpful to use <a href="https://en.wikipedia.org/wiki/Return-oriented_programming">return-oriented programming</a> in my exploits... but it is such a pain to read through an entire disassembled binary to find snippets of assembly code for a ROP exploit! To save myself this pain, I developed a tool in Ruby which analyzes an ELF binary and automatically generates a list of addresses for a ROP exploit against that binary. (You tell the tool what CPU registers and fixed memory addresses you want the exploit to write specified values into. It only works for the x86 architecture, and only for the basic scalar registers, not for bigger registers used for SIMD. I have not made this tool publicly available.)
 	</p>
 	<p class="hidden-details" id="simd">
-		While working on the PHP interpreter, I learned to devise algorithms for applying <a href="https://en.wikipedia.org/wiki/Single_instruction,_multiple_data">SIMD instructions</a> to speed up computation on large strings. I've only done this for x86-64 CPUs, though the skill should transfer to other CPU architectures. Examples: <a href="https://github.com/php/php-src/commit/3ae47793053f062f8d74c34258d8d98102df9f50">1</a> | <a href="https://github.com/php/php-src/commit/63c50cc87e4eb4a22de054f836934e8a005739f8">2</a> | <a href="https://github.com/php/php-src/commit/0b7986f976dbd737a2feac1f7fd4b5d0d457228c">3</a> | <a href="https://github.com/php/php-src/commit/b4cbaabd9b1bed40e8f5c29e43012da1fe6f221d">4</a> | <a href="https://github.com/php/php-src/commit/c8ec2ed730334c266ddf01a54d501f3777704219">5</a>
+		While working on the PHP interpreter, I learned to devise algorithms for applying <a href="https://en.wikipedia.org/wiki/Single_instruction,_multiple_data">SIMD instructions</a> to speed up computation on large strings. I’ve only done this for x86-64 CPUs, though the skill should transfer to other CPU architectures. Examples: <a href="https://github.com/php/php-src/commit/3ae47793053f062f8d74c34258d8d98102df9f50">1</a> | <a href="https://github.com/php/php-src/commit/63c50cc87e4eb4a22de054f836934e8a005739f8">2</a> | <a href="https://github.com/php/php-src/commit/0b7986f976dbd737a2feac1f7fd4b5d0d457228c">3</a> | <a href="https://github.com/php/php-src/commit/b4cbaabd9b1bed40e8f5c29e43012da1fe6f221d">4</a> | <a href="https://github.com/php/php-src/commit/c8ec2ed730334c266ddf01a54d501f3777704219">5</a>
 	</p>
 	<p class="hidden-details" id="tex">
-		I use LaTeX for writing documents with embedded math notation, and KaTeX for including math notation in web pages. Once I wrote a Ruby-based clone of TeX to understand it better; unfortunately, my clone doesn't support the TeX commands for aligning table cells and probably never will.
+		I use LaTeX for writing documents with embedded math notation, and KaTeX for including math notation in web pages. Once I wrote a Ruby-based clone of TeX to understand it better; unfortunately, my clone doesn’t support the TeX commands for aligning table cells and probably never will.
 	</p>
 	<p class="hidden-details" id="text_encoding">
-		I'm the maintainer of <a href="https://github.com/php/php-src/tree/master/ext/mbstring">mbstring</a>, a core PHP extension which allows PHP to handle all kinds of legacy text encodings. This has resulted in getting to know far more than I ever wanted about ISO-2022 text, EUC, Shift-JIS, GB18030, BIG-5, UHC, HZ, etc.
+		I’m the maintainer of <a href="https://github.com/php/php-src/tree/master/ext/mbstring">mbstring</a>, a core PHP extension which allows PHP to handle all kinds of legacy text encodings. This has resulted in getting to know far more than I ever wanted about ISO-2022 text, EUC, Shift-JIS, GB18030, BIG-5, UHC, HZ, etc.
 	</p>
 	<p class="hidden-details" id="unicode">
-		I am the maintainer of <a href="https://github.com/php/php-src/tree/master/ext/mbstring">one of PHP's core libraries</a> for handling Unicode, and this has caused me to delve into the Unicode standard. I've contributed implementations of some important Unicode-processing algorithms like string canonicalization and grapheme segmentation to <a href="https://github.com/starwing/luautf8"><code>lua-utf8</code></a>.
+		I am the maintainer of <a href="https://github.com/php/php-src/tree/master/ext/mbstring">one of PHP’s core libraries</a> for handling Unicode, and this has caused me to delve into the Unicode standard. I’ve contributed implementations of some important Unicode-processing algorithms like string canonicalization and grapheme segmentation to <a href="https://github.com/starwing/luautf8"><code>lua-utf8</code></a>.
 	</p>
 
 	<script>
@@ -156,11 +156,11 @@
 	</script>
 </div>
 
-<h2>I don't know much about (but would love to learn)...</h2>
+<h2>I don’t know much about (but would love to learn)...</h2>
 
 <div class="indent">
 	<h3 style="margin-bottom: 0">High-scale Distributed System Design</h3>
-	Sounds fascinating, but I've never done it before. I could still help to fix bugs or optimize for speed on individual nodes in your distributed system.
+	Sounds fascinating, but I’ve never done it before. I could still help to fix bugs or optimize for speed on individual nodes in your distributed system.
 
 	<h3 style="margin-bottom: 0">NoSQL Databases</h3>
 	Have only done a small amount of work with MongoDB on one project.
@@ -169,7 +169,7 @@
 	I have built SPA web applications using my own hand-rolled JavaScript before, but have never used any of the big frameworks.
 
 	<h3 style="margin-bottom: 0">Mobile (iOS/Android) Client Development</h3>
-	Would love to learn, but haven't had the opportunity yet.
+	Would love to learn, but haven’t had the opportunity yet.
 
 	<h3 style="margin-bottom: 0">Machine Learning</h3>
 	Would love to learn one of these days. Hopefully, when that day comes, my background in linear algebra and statistics may help.
@@ -178,12 +178,12 @@
 <h2>Samples of Paid Work</h2>
 
 <div class="indent">
-	Much of my paid work has been done on internal applications and systems, which I can't show publicly; but here are a couple examples of work which I can show:
+	Much of my paid work has been done on internal applications and systems, which I can’t show publicly; but here are a couple examples of work which I can show:
 
 	<div style="display: flex; align-items: flex-start; gap: 1rem">
 		<div>
 			<h3 style="margin-bottom: 0">GUI for updating data tables on microcontroller</h3>
-			Written mostly in Clojure, AOT-compiled to Java bytecode and packaged up to run on a single double-click. So the client wouldn't have to keep calling me back, most of what is seen in the GUI can be changed by editing plain-text configuration files. I couldn't find a good open-source library for rendering 3D graphs with license terms which were acceptable, so I rolled my own simple CPU-based renderer which does Z-sorting and Gouraud shading of polygons.
+			Written mostly in Clojure, AOT-compiled to Java bytecode and packaged up to run on a single double-click. So the client wouldn’t have to keep calling me back, most of what is seen in the GUI can be changed by editing plain-text configuration files. I couldn’t find a good open-source library for rendering 3D graphs with license terms which were acceptable, so I rolled my own simple CPU-based renderer which does Z-sorting and Gouraud shading of polygons.
 		</div>
 		<img src="/assets/images/gui-screenshot.jpg" style="width: 20rem; height: auto; margin-top: 1em">
 	</div>
@@ -201,7 +201,7 @@
 
 <div class="indent">
 	<h3 style="margin-bottom: 0">PHP</h3>
-	I've contributed <a href="https://github.com/php/php-src/commits?author=alexdowad">over 500 commits</a> to <code>php-src</code>. Much of this was on <code>mbstring</code> (a core PHP extension which is used to process text which is encoded in various ways), but it also includes other bug fixes and enhancements. <a href="https://github.com/php/php-src/commit/80598f12507c5cbde04163289e4d2575f05d2a0c">My first commit in PHP core</a> is interesting; it tweaked the PHP lexer so that PHP can print much better error messages for certain kinds of syntax errors.
+	I’ve contributed <a href="https://github.com/php/php-src/commits?author=alexdowad">over 500 commits</a> to <code>php-src</code>. Much of this was on <code>mbstring</code> (a core PHP extension which is used to process text which is encoded in various ways), but it also includes other bug fixes and enhancements. <a href="https://github.com/php/php-src/commit/80598f12507c5cbde04163289e4d2575f05d2a0c">My first commit in PHP core</a> is interesting; it tweaked the PHP lexer so that PHP can print much better error messages for certain kinds of syntax errors.
 
 	<h3 style="margin-bottom: 0">lua-utf8</h3>
 	<code>lua-utf8</code> is a Lua and LuaJIT extension for processing UTF-8 text. I have added <a href="https://github.com/starwing/luautf8/commits?author=alexdowad">several new features</a>: functions for Unicode normalization, grapheme segmentation, and for UTF-8 validity checking and scrubbing of invalid byte sequences.
@@ -216,10 +216,10 @@
 	Here are a few examples: <a href="https://bugs.ruby-lang.org/issues/11404">1</a> | <a href="https://bugs.ruby-lang.org/issues/11451">2</a> | <a href="https://bugs.ruby-lang.org/issues/12016">3</a>
 
 	<h3 style="margin-bottom: 0">Rubocop</h3>
-	Rubocop is a linter and formatter for Ruby code. I've contributed <a href="https://github.com/rubocop/rubocop/commits?author=alexdowad">more than 400 commits</a>, including lots of bug fixes as well as some big performance improvements.
+	Rubocop is a linter and formatter for Ruby code. I’ve contributed <a href="https://github.com/rubocop/rubocop/commits?author=alexdowad">more than 400 commits</a>, including lots of bug fixes as well as some big performance improvements.
 </div>
 
-<h2>Finally, if it's any help...</h2>
+<h2>Finally, if it’s any help...</h2>
 
 <div class="indent">
 	<ul>
