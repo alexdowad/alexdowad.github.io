@@ -1,6 +1,6 @@
 ---
 layout: post
-title:  "Stuff I Have Learned: Don't use a coverage-guided fuzzer on an uninstrumented binary"
+title:  "Stuff I Have Learned: Don’t use a coverage-guided fuzzer on an uninstrumented binary"
 date:   2024-07-12
 categories:
   - fuzzing
@@ -9,7 +9,7 @@ categories:
 
 <i>(<b>Subtitle:</b> Unless You Really Have To)</i>
 
-Coverage-guided fuzzing tools, such as [LLVM's libFuzzer](https://llvm.org/docs/LibFuzzer.html), run a target program on many random inputs, record the path of control flow each time the target program executes (for example, which branch of each `if` statement is taken), and mutate the input in an effort to find as many unique control-flow paths as possible. It turns out that this heuristic is incredibly effective at guiding the random search to find interesting test cases.
+Coverage-guided fuzzing tools, such as [LLVM’s libFuzzer](https://llvm.org/docs/LibFuzzer.html), run a target program on many random inputs, record the path of control flow each time the target program executes (for example, which branch of each `if` statement is taken), and mutate the input in an effort to find as many unique control-flow paths as possible. It turns out that this heuristic is incredibly effective at guiding the random search to find interesting test cases.
 
 But it only works if the fuzzer *can* actually trace the path of control flow through the target program! As I was so forcefully reminded today...
 
@@ -43,10 +43,10 @@ I sure hope I never pull one like that again!
 
 ***⸻But why did the fuzzer originally seem to work?***
 
-Coverage-guided fuzzers, such as those based on libFuzzer, will not crash or print a warning or anything like that if part of the binary code under test is not instrumented. They just won't be able to tell which way the path of execution is going in the uninstrumented part. Effectively, your “coverage-guided” fuzzer will degenerate into an unguided fuzzer which just throws random inputs at the code under test. This can make the fuzzer orders of magnitude less likely to find obscure bugs.
+Coverage-guided fuzzers, such as those based on libFuzzer, will not crash or print a warning or anything like that if part of the binary code under test is not instrumented. They just won’t be able to tell which way the path of execution is going in the uninstrumented part. Effectively, your “coverage-guided” fuzzer will degenerate into an unguided fuzzer which just throws random inputs at the code under test. This can make the fuzzer orders of magnitude less likely to find obscure bugs.
 
-That's why this article is subtitled <i>“Unless You Really Have To”</i>: if you have no way of instrumenting a binary (maybe because you don't have the source code), but need to fuzz it, there's nothing to say that you *can't* use a coverage-guided fuzzer on it; you will just lose the benefit of coverage guidance.
+That’s why this article is subtitled <i>“Unless You Really Have To”</i>: if you have no way of instrumenting a binary (maybe because you don’t have the source code), but need to fuzz it, there’s nothing to say that you *can’t* use a coverage-guided fuzzer on it; you will just lose the benefit of coverage guidance.
 
 ***⸻What kind of project has a test suite with 19,000 test cases??***
 
-Well, I was actually implementing standard algorithms for processing Unicode text. The Unicode Consortium publishes lists of test cases for unit testing such implementations. Have a look at [the data files published by the Unicode Consortium](https://www.unicode.org/Public/UNIDATA/) if you're curious.
+Well, I was actually implementing standard algorithms for processing Unicode text. The Unicode Consortium publishes lists of test cases for unit testing such implementations. Have a look at [the data files published by the Unicode Consortium](https://www.unicode.org/Public/UNIDATA/) if you’re curious.

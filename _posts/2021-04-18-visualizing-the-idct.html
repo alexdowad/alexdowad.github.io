@@ -12,11 +12,11 @@ stylesheets:
 
 <p>A key step in JPEG image compression is converting 8-by-8-pixel blocks of color values into the frequency domain, so instead of storing color values, we store amplitudes of sinusoidal waveforms. This is a fun little bit of applied math, and you might enjoy seeing how it works.<p>
 
-<p>It all really started in the early 1820's, when Joseph Fourier figured out that any periodic waveform can be broken down into a sum of sinusoids. Kalid Azad has <a href="https://betterexplained.com/articles/an-interactive-guide-to-the-fourier-transform/">explained this much better than I could over at BetterExplained</a>, and if you are not familiar with the Fourier transform, I recommend you go learn about it from Kalid first. I'll be waiting right here.</p>
+<p>It all really started in the early 1820’s, when Joseph Fourier figured out that any periodic waveform can be broken down into a sum of sinusoids. Kalid Azad has <a href="https://betterexplained.com/articles/an-interactive-guide-to-the-fourier-transform/">explained this much better than I could over at BetterExplained</a>, and if you are not familiar with the Fourier transform, I recommend you go learn about it from Kalid first. I’ll be waiting right here.</p>
 
 <hr>
 
-<p>Welcome back! Let's apply what you learned to a block of pixel values. How about this block of pixels right here?</p>
+<p>Welcome back! Let’s apply what you learned to a block of pixel values. How about this block of pixels right here?</p>
 
 <!-- If you want to reuse the program code in this page for any purpose, hit the author up.
      He is generally cool about stuff and will probably be willing to grant permission. -->
@@ -63,7 +63,7 @@ stylesheets:
 
 <p>Take a horizontal slice, 8 pixels wide, from that block. Take the position of each pixel as an <i>x</i> value and its brightness as a <i>y</i> value. Then the 8 pixels correspond to 8 <i>(x, y)</i> points on a plane, and we could find a combination of sinusoidal waves that would go through those 8 points.</p>
 
-<p>We could, and we will. Let's do it now. Click on any row of the pixel grid below:</p>
+<p>We could, and we will. Let’s do it now. Click on any row of the pixel grid below:</p>
 
 <div class="pic-container">
   <div class="pic-spacer"></div>
@@ -408,7 +408,7 @@ stylesheets:
       const yMin = 10, yMax = wave1.height - 10, yRange = yMax - yMin, yMid = yMin + (yRange / 2);
       /* The 1.666 multiplier is because the range from 0-255 luminance only covers about
        * 60% of the available vertical space in the graph (1 / 0.6 = 1.666...)
-       * (We don't use the entire space available, so that parts of the waveform which
+       * (We don’t use the entire space available, so that parts of the waveform which
        * go higher or lower can still be seen) */
       var luminance = Math.max(Math.min(255 * (0.5 + (1.666 * (yMid - endY) / yRange)), 255), 0);
 
@@ -417,8 +417,8 @@ stylesheets:
         samples[dot] = luminance;
         px2[index + dot].style.backgroundColor = `rgb(${luminance},${luminance},${luminance})`;
         /* The other events which can trigger a repaint of the graph, such as clicking on a
-         * row of pixels or a legend entry, don't generally happen more than once per screen
-         * refresh. Drag events, though, can happen much faster than that, so let's make sure
+         * row of pixels or a legend entry, don’t generally happen more than once per screen
+         * refresh. Drag events, though, can happen much faster than that, so let’s make sure
          * we only redraw the graph once per screen refresh (and avoid pegging the CPU). */
         if (!repaintScheduled) {
           repaintScheduled = true;
@@ -436,7 +436,7 @@ stylesheets:
 
 <p>You might notice that for darker pixel values, the dots appear below the 'zero line', while for brighter pixels, they appear above it. This is because we subtracted 128 from each brightness value before converting to a waveform, so the range of possible values (0-255) would be centered on the zero line. This is also done when an image is stored in JPEG format.</p>
 
-<p>You might have also noticed that one of the component waves doesn't look like a sinusoid; it's the red one. It is just a flat line. That is the <b>zero frequency</b> component; it represents the <b>average</b> of the 8 values. It shifts the black waveform up or down to just the right height for it to hit all 8 target points.</p>
+<p>You might have also noticed that one of the component waves doesn’t look like a sinusoid; it’s the red one. It is just a flat line. That is the <b>zero frequency</b> component; it represents the <b>average</b> of the 8 values. It shifts the black waveform up or down to just the right height for it to hit all 8 target points.</p>
 
 <p>The legend displays the frequency and amplitude (on a scale of zero to one) of each component wave. Try clicking on the color swatches in the legend to see the component waves more clearly.</p>
 
@@ -552,7 +552,7 @@ stylesheets:
 
 <p>If the answer is obvious, just humour me here. Go back and try dragging any of the black points up or down. The pixel colors and waveform will update as you drag.</p>
 
-<p>Looks cool, doesn't it?</p>
+<p>Looks cool, doesn’t it?</p>
 
 <hr>
 
@@ -560,34 +560,34 @@ stylesheets:
 
 <p>I have misled you here. The <a href="https://betterexplained.com/articles/an-interactive-guide-to-the-fourier-transform/">link to BetterExplained</a> above probably tricked you into thinking that these waveforms were derived using a Fourier transform. Not so. This page is about the <b>Discrete Cosine Transform</b>, not the Fourier transform. But it was good for you to understand the idea of the Fourier transform before learning about the DCT.</p>
 
-<p>If you take some time to play with both the <a href="https://betterexplained.com/examples/fourier/">Fourier transform demonstration on BetterExplained</a> and the DCT demonstration here, you might recognize some differences between these transforms. Even when given the same input, they produce a different series of component waves. (That's an interesting point; the <i>same</i> sequence of discrete time samples can be broken down into sinusoids in more than one way.)</p>
+<p>If you take some time to play with both the <a href="https://betterexplained.com/examples/fourier/">Fourier transform demonstration on BetterExplained</a> and the DCT demonstration here, you might recognize some differences between these transforms. Even when given the same input, they produce a different series of component waves. (That’s an interesting point; the <i>same</i> sequence of discrete time samples can be broken down into sinusoids in more than one way.)</p>
 
 <p>Do you want to go back and give it a try? Either way, whenever you are ready, click to reveal two major differences:</p>
 
 <p class="reveal hidden">The frequencies of the component waves found by the Fourier transform are <i>integral multiples</i> of the overall period of repetition; i.e. 0, 1F, 2F, 3F, and so on. Those found by the DCT are multiples of <i>half</i> the period of repetition: 0, 0.5F, 1F, 1.5F, 2F, 2.5F, etc.</p>
 
-<p class="reveal hidden">The component waves found by the Fourier transform often have varying phase shifts (they have to, otherwise it wouldn't be possible to match the input values). Those found by the DCT all have the same phase. Look at the graphs above and you will see this clearly.</p>
+<p class="reveal hidden">The component waves found by the Fourier transform often have varying phase shifts (they have to, otherwise it wouldn’t be possible to match the input values). Those found by the DCT all have the same phase. Look at the graphs above and you will see this clearly.</p>
 
-<p>Other differences which you can't see from the demonstrations are:</p>
+<p>Other differences which you can’t see from the demonstrations are:</p>
 
 <ul>
 <li>While the computation of the Fourier transform uses complex numbers, the DCT only involves real numbers.</li>
-<li>The DCT is easier to compute. It's just a simple nested loop which evaluates a cosine function and a couple of adds and multiplies for each input sample.</li>
+<li>The DCT is easier to compute. It’s just a simple nested loop which evaluates a cosine function and a couple of adds and multiplies for each input sample.</li>
 </ul>
 
 <p>Now, another important point. Look back at the interactive DCT. As you drag the target points up and down, what is the maximum number of component waves which are required to match the 8 target points?</p>
 
 <p class="reveal hidden">8.</p>
 
-<p>Right. That is a key point for JPEG image compression. Remember, in a JPEG image, blocks of 8 pixels by 8 pixels are represented as a combination of component waves. The amplitude of each component is called a DCT <b>coefficient</b>. Since each block of input pixels converts to a fixed number of component waves, we just need to store a fixed number of coefficients for each such block. We don't need to store their frequencies, since those are known and are always the same. Nor do we need to store phase shifts, because all are at a constant phase.</p>
+<p>Right. That is a key point for JPEG image compression. Remember, in a JPEG image, blocks of 8 pixels by 8 pixels are represented as a combination of component waves. The amplitude of each component is called a DCT <b>coefficient</b>. Since each block of input pixels converts to a fixed number of component waves, we just need to store a fixed number of coefficients for each such block. We don’t need to store their frequencies, since those are known and are always the same. Nor do we need to store phase shifts, because all are at a constant phase.</p>
 
-<p>Let's move into two dimensions now. We have demonstrated that if we just needed to represent 8 color values in a row, 8 coefficients would be enough. But how many coefficients do we need to represent 8-by-8, or 64, color values? Guess before clicking:</p>
+<p>Let’s move into two dimensions now. We have demonstrated that if we just needed to represent 8 color values in a row, 8 coefficients would be enough. But how many coefficients do we need to represent 8-by-8, or 64, color values? Guess before clicking:</p>
 
 <p class="reveal hidden">64.</p>
 
-<p>You might ask: <i><b>Isn't JPEG a lossy format which compresses images into fewer bits? How can converting 64 numbers into 64 other numbers save storage space?</b></i></p>
+<p>You might ask: <i><b>Isn’t JPEG a lossy format which compresses images into fewer bits? How can converting 64 numbers into 64 other numbers save storage space?</b></i></p>
 
-<p>You are right; <i>by itself</i>, applying the DCT to a block of color samples doesn't result in any compression. It's like translating English text to French or Chinese; you are representing the same information in a different form. So it's not surprising that 64 color samples convert to 64 coefficients. However, the DCT is still a key step in achieving image compression. <a href="#why-useful">More on this later.</a></p>
+<p>You are right; <i>by itself</i>, applying the DCT to a block of color samples doesn’t result in any compression. It’s like translating English text to French or Chinese; you are representing the same information in a different form. So it’s not surprising that 64 color samples convert to 64 coefficients. However, the DCT is still a key step in achieving image compression. <a href="#why-useful">More on this later.</a></p>
 
 <p>I want to show you examples of 8-by-8 images broken down into 64 two-dimensional waveforms. As in the one-dimensional case, the frequencies and phase of the 64 components will always be the same; only their amplitudes will vary. Before looking at any sample images, though, first let me show you the 64 components of the two-dimensional DCT at a fixed amplitude.</p>
 
@@ -1202,11 +1202,11 @@ stylesheets:
   drawPic();
 </script>
 
-<p>Here's a hint of one interesting thing to look for. If you try disabling various coefficients in the images, which coefficients generally seem to have a smaller effect on the picture? (Those at the top of the matrix, the left, right, bottom, or towards a certain corner?) This has much to do with JPEG compression. More on that towards the end of the post...</p>
+<p>Here’s a hint of one interesting thing to look for. If you try disabling various coefficients in the images, which coefficients generally seem to have a smaller effect on the picture? (Those at the top of the matrix, the left, right, bottom, or towards a certain corner?) This has much to do with JPEG compression. More on that towards the end of the post...</p>
 
 <hr>
 
-<p>If you've made it this far, you might want to know how the DCT and IDCT are calculated. (<a href="#why-useful">Don't care about the math? Feel free to skip it.</a>) For simplicity, we'll stick to eight pixel values in one dimension (a row or column). The two-dimensional transforms are very similar.</p>
+<p>If you’ve made it this far, you might want to know how the DCT and IDCT are calculated. (<a href="#why-useful">Don’t care about the math? Feel free to skip it.</a>) For simplicity, we’ll stick to eight pixel values in one dimension (a row or column). The two-dimensional transforms are very similar.</p>
 
 <p>First, the DCT, which converts pixel values to coefficients:</p>
 
@@ -1246,7 +1246,7 @@ s-225.272,467,-225.272,467s-235,486,-235,486c-2.7,4.7,-9,7,-19,7
 c-6,0,-10,-1,-12,-3s-194,-422,-194,-422s-65,47,-65,47z
 M834 80h400000v40h-400000z"></path></svg></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height: 0.13278em;"></span></span></span></span></span></span><span style="top: -3.23em;"><span class="pstrut" style="height: 3em;"></span><span class="frac-line" style="border-bottom-width: 0.04em;"></span></span><span style="top: -3.677em;"><span class="pstrut" style="height: 3em;"></span><span class="mord"><span class="mord">1</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height: 0.93em;"></span></span></span></span><span class="mclose nulldelimiter"></span></span></span><span class="mpunct">,</span><span class="mspace" style="margin-right: 0.166667em;"></span><span class="mord Cu"><span class="mord mathnormal" style="margin-right: 0.07153em;">C</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height: 0.301108em;"><span style="top: -2.55em; margin-left: -0.07153em; margin-right: 0.05em;"><span class="pstrut" style="height: 2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">1</span><span class="mbin mtight">−</span><span class="mord mtight">7</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height: 0.208331em;"></span></span></span></span></span><span class="mspace" style="margin-right: 0.277778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right: 0.277778em;"></span></span><span class="base"><span class="strut" style="height: 0.64444em; vertical-align: 0em;"></span><span class="mord">1</span></span></span></span></span>
 
-<p>That's quite a mouthful in English: to calculate <span class="Su">the DCT coefficient <i>u</i></span>, <span class="sum">loop over</span> all eight pixels and <span class="sum">sum up</span>: the <span class="pxval">pixel value</span> times the cosine of: <span class="freq">twice</span> <span class="x">the pixel's <i>x</i> coordinate</span> plus <span class="freq">one</span>, times <span class="freq">π</span>, times <span class="u"><i>u</i></span>, divided by <span class="freq">16</span>. <span class="half">Halve the total.</span> Further, <span class="Cu">if <i>u</i> is zero, divide the total again by root 2</span>.</p>
+<p>That’s quite a mouthful in English: to calculate <span class="Su">the DCT coefficient <i>u</i></span>, <span class="sum">loop over</span> all eight pixels and <span class="sum">sum up</span>: the <span class="pxval">pixel value</span> times the cosine of: <span class="freq">twice</span> <span class="x">the pixel’s <i>x</i> coordinate</span> plus <span class="freq">one</span>, times <span class="freq">π</span>, times <span class="u"><i>u</i></span>, divided by <span class="freq">16</span>. <span class="half">Halve the total.</span> Further, <span class="Cu">if <i>u</i> is zero, divide the total again by root 2</span>.</p>
 
 <p>Or if you speak JavaScript:</p>
 
@@ -1290,7 +1290,7 @@ for (var <span class="x">x</span> = 0; <span class="x">x</span> < 8; <span class
 
 <p>Let me share another thing which I find fascinating about the DCT. Actually, no; let me show you and see if you can recognize it yourself.</p>
 
-<p>Earlier I showed you waveform graphs demonstrating how the DCT converts a sequence of discrete color samples to a sum of sinusoid waves. The graphs were bounded tightly around the eight samples on the X-axis. This time let's stretch out the X-axis and let the waves carry on to the left and right. I will draw grey dots at evenly spaced intervals, so you can see if the same pattern repeats itself every eight time units or not.</p>
+<p>Earlier I showed you waveform graphs demonstrating how the DCT converts a sequence of discrete color samples to a sum of sinusoid waves. The graphs were bounded tightly around the eight samples on the X-axis. This time let’s stretch out the X-axis and let the waves carry on to the left and right. I will draw grey dots at evenly spaced intervals, so you can see if the same pattern repeats itself every eight time units or not.</p>
 
 <div class="pic-container">
   <div class="pic-spacer"></div>
@@ -1395,11 +1395,11 @@ for (var <span class="x">x</span> = 0; <span class="x">x</span> < 8; <span class
 <p>Of course, the DCT is much faster to compute than a DFT on twice as many samples.</p>
 </div>
 
-<p>This is part of why the DCT is useful for image compression. When an image is broken down into blocks of pixels, the color of the left edge of a block will often be different from the right edge, and likewise for the top and bottom edges. If we used a discrete Fourier transform on those color samples, the discontinuity between the colors of opposing edges would tend to produce strong high-frequency component waves. (When breaking a waveform down into sinusoids, any sharp "jumps" result in strong high-frequency components.) But since the DCT, in effect, buts the block up with a mirror image of itself on each side, that discontinuity doesn't exist, and the high-frequency components will usually be much weaker.</p>
+<p>This is part of why the DCT is useful for image compression. When an image is broken down into blocks of pixels, the color of the left edge of a block will often be different from the right edge, and likewise for the top and bottom edges. If we used a discrete Fourier transform on those color samples, the discontinuity between the colors of opposing edges would tend to produce strong high-frequency component waves. (When breaking a waveform down into sinusoids, any sharp "jumps" result in strong high-frequency components.) But since the DCT, in effect, buts the block up with a mirror image of itself on each side, that discontinuity doesn’t exist, and the high-frequency components will usually be much weaker.</p>
 
 <hr id="why-useful">
 
-<p>I still haven't told you why the DCT is useful for image compression. First, understand that not all the information contained in an image is equally important or noticeable to a human viewer. It happens that converting color samples to the frequency domain concentrates the information which is most detectable by our visual system in the coefficients at the <i>top-left</i> of the DCT matrix. Conversely, the information which is least perceptible to our visual system is concentrated in the coefficients at the bottom-right.</p>
+<p>I still haven’t told you why the DCT is useful for image compression. First, understand that not all the information contained in an image is equally important or noticeable to a human viewer. It happens that converting color samples to the frequency domain concentrates the information which is most detectable by our visual system in the coefficients at the <i>top-left</i> of the DCT matrix. Conversely, the information which is least perceptible to our visual system is concentrated in the coefficients at the bottom-right.</p>
 
 <p>In this way, the DCT sets things up for subsequent stages of compression to work their fullest effect. First, <b>quantization</b>. This stage throws away part of the data in the less-significant bits of the DCT coefficients. Since we know that the values of the coefficients towards the bottom-right have less of an effect on what we see, those can be heavily quantized, while retaining more bits of the coefficients toward the top-left. That means we can discard a significant amount of data with little effect on visual quality.</p>
 

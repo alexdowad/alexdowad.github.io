@@ -15,7 +15,7 @@ stylesheets:
 
 <p>Hover over a solution line to see what starting conditions it is based on. Roll your mouse wheel to zoom in and out; hold down the middle mouse button to pan. On mobile, use one finger to pan and pinch with two fingers to zoom.</p>
 
-<p><b>Click these buttons to see a variety of samples:</b> <button id='sample_Y'>y' = y</button> <button id='sample_cosY'>y' = cos(y)</button> <button id='sample_cosT'>y'' = cos(t)</button> <button id='sample_cosY_2'>y'' = cos(y)</button> <button id='sample_logistic'>y' = ay - by² <i>(the logistic equation)</i></button> <button id='sample_mathieu'>y'' = y(a - 2q cos(t)) <i>(Mathieu's equation)</i></button> <button id='sample_riccati'>y' = -y²t² + (2y / t) <i>(a Riccati equation)</i></button> <button id='sample_cauchy'>y'' = -(a / t)y' - (b / t²)y <i>(a Cauchy-Euler equation)</i></button> <button id='sample_meissner'>y'' = -y(α² + ω² sign(cos(t))) <i>(Meissner equation)</i></button> <button id='sample_predprey'>y' = y - (0.01yz), z' = -z + (0.02yz) <i>(a “predator-prey” system)</i></button></p>
+<p><b>Click these buttons to see a variety of samples:</b> <button id='sample_Y'>y' = y</button> <button id='sample_cosY'>y' = cos(y)</button> <button id='sample_cosT'>y'' = cos(t)</button> <button id='sample_cosY_2'>y'' = cos(y)</button> <button id='sample_logistic'>y' = ay - by² <i>(the logistic equation)</i></button> <button id='sample_mathieu'>y'' = y(a - 2q cos(t)) <i>(Mathieu’s equation)</i></button> <button id='sample_riccati'>y' = -y²t² + (2y / t) <i>(a Riccati equation)</i></button> <button id='sample_cauchy'>y'' = -(a / t)y' - (b / t²)y <i>(a Cauchy-Euler equation)</i></button> <button id='sample_meissner'>y'' = -y(α² + ω² sign(cos(t))) <i>(Meissner equation)</i></button> <button id='sample_predprey'>y' = y - (0.01yz), z' = -z + (0.02yz) <i>(a “predator-prey” system)</i></button></p>
 
 <p>Try playing with the parameters for some of the samples; you can get pretty wild pictures!</p>
 
@@ -176,15 +176,15 @@ stylesheets:
 		if (!str.length)
 			return [];
 		str = str.toLowerCase();
-		// Use 'sticky' regex so that matches must be contiguous; we don't just want to pick
+		// Use 'sticky' regex so that matches must be contiguous; we don’t just want to pick
 		// matches out of the string, but want to split the entire string into matches
 		const matches = Array.from(str.matchAll(/\d+(\.\d+)?|[()^/+-]|\*\*?|[\w'π]+/gy));
 		const lastMatch = matches.at(-1);
 		const matchedUpTo = lastMatch.index + lastMatch[0].length;
 		if (matchedUpTo !== str.length) {
 			// The last match did not appear at the end of the string, meaning there was
-			// some text which we couldn't tokenize
-			return [false, { offset: matchedUpTo, length: 1, message: "I don't know what to do with the highlighted character." }];
+			// some text which we couldn’t tokenize
+			return [false, { offset: matchedUpTo, length: 1, message: "I don’t know what to do with the highlighted character." }];
 		}
 		return [true, Array.from(matches).map((m) => m[0])]
 	}
@@ -209,7 +209,7 @@ stylesheets:
 			// All tokens should have been consumed by the parser
 			const entireLength = origTokens.reduce((sum, s) => sum + s.length, 0);
 			const remainingLength = tokens.reduce((sum, s) => sum + s.length, 0);
-			return [false, { offset: entireLength - remainingLength, length: remainingLength, message: "The last part of this expression is extraneous; it doesn't seem like it should be there" }];
+			return [false, { offset: entireLength - remainingLength, length: remainingLength, message: "The last part of this expression is extraneous; it doesn’t seem like it should be there" }];
 		}
 		return [true, exp];
 	}
@@ -269,7 +269,7 @@ stylesheets:
 		}
 
 		if (tok === ')' || tok === '+' || tok === '*' || tok === '/' || tok === '**' || tok === '^')
-			throw new Error("Parse error: I don't know what to do with the highlighted symbol in this position");
+			throw new Error("Parse error: I don’t know what to do with the highlighted symbol in this position");
 
 		if (/^\-?\d+(\.\d+)?$/.test(tok) || tok === 't' || tok === 'x' || tok === 'y' || tok === 'z' || tok === "y'" || tok == 'e' || tok === 'π' || tok === 'pi')
 			return tok;
@@ -279,7 +279,7 @@ stylesheets:
 
 		if (/[\w']+/.test(tok)) {
 			if (!knownFunctions.has(tok))
-				throw new Error(`Parse error: I don't know what '${tok}' means`);
+				throw new Error(`Parse error: I don’t know what '${tok}' means`);
 			nextTok = tokens.shift();
 			if (nextTok !== '(')
 				throw new Error(`Parse error: After the function '${tok}', there should be an opening parenthesis before the parameter`);
@@ -722,7 +722,7 @@ stylesheets:
 			const bounds = combinedBounds(lines);
 			const xSize = bounds[1] - bounds[0];
 			const ySize = bounds[3] - bounds[2];
-			// Don't allow the X/Y domain of the graph to become so large that exponential notation is used
+			// Don’t allow the X/Y domain of the graph to become so large that exponential notation is used
 			const xDomain = [Math.max(bounds[0] - (xSize * 0.05), -1000000000000), Math.min(bounds[1] + (xSize * 0.05), 1000000000000)];
 			const yDomain = [Math.max(bounds[2] - (ySize * 0.05), -1000000000000), Math.min(bounds[3] + (ySize * 0.05), 1000000000000)];
 
@@ -775,7 +775,7 @@ stylesheets:
 			if (!this.drawn)
 				return;
 
-			// Don't allow scale to become so large that exponential notation is used for axis labels
+			// Don’t allow scale to become so large that exponential notation is used for axis labels
 			xDomain = [Math.max(xDomain[0], -1000000000000), Math.min(xDomain[1], 1000000000000)];
 			yDomain = [Math.max(yDomain[0], -1000000000000), Math.min(yDomain[1], 1000000000000)];
 
@@ -1365,7 +1365,7 @@ function rk4solve(y_0, t_0, t_start, t_end, Δt, fn) {
 }
 {% endhighlight %}
 
-<p>The above implementation stores the values of the dependent variable in a <a href='https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Float64Array'><code>Float64Array</code></a> instead of a regular JavaScript Array; this is for speed and memory efficiency. It doesn't store the time value for each entry in the array, since that can be easily rederived from <code>t_start</code>, <code>t_end</code>, and <code>Δt</code>.</p>
+<p>The above implementation stores the values of the dependent variable in a <a href='https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Float64Array'><code>Float64Array</code></a> instead of a regular JavaScript Array; this is for speed and memory efficiency. It doesn’t store the time value for each entry in the array, since that can be easily rederived from <code>t_start</code>, <code>t_end</code>, and <code>Δt</code>.</p>
 
 <hr>
 
@@ -1378,7 +1378,7 @@ function rk4solve(y_0, t_0, t_start, t_end, Δt, fn) {
 		<td>
 			<code>1</code>, <code>2</code>, <code>-1</code>, etc<br>
 			<code>1.1234</code>...<br>
-			<code>e</code> <i>(Euler's number, 2.71828...)</i><br>
+			<code>e</code> <i>(Euler’s number, 2.71828...)</i><br>
 			<code>pi</code> or <code>π</code> <i>(3.14159...)</i><br>
 			If you want any other mathematical constants, drop the author a line.
 		</td>
