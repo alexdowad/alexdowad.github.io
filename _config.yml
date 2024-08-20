@@ -40,6 +40,7 @@ external_for_cv:
   - {title: Mail, icon: envelope, url: "mailto:alexinbeijing@gmail.com"}
   - {title: Github, icon: github, url: "https://github.com/alexdowad"}
   - {title: StackOverflow, icon: "stack-overflow", url: "https://stackoverflow.com/users/960828/alex-d"}
+  - {title: Blog, icon: blog, url: "/"}
 
 plugins:
  - jekyll-feed
