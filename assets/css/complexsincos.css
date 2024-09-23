@@ -47,6 +47,26 @@
   }
 }
 
+#realderiv {
+  display: grid;
+  grid-template-columns: 80% 20%;
+  grid-template-rows: 50% 50%;
+  grid-template-areas: "graph1 btnbar" "graph2 btnbar";
+  aspect-ratio: 1.25;
+  margin-block-start: 1em;
+  max-width: 45em;
+  margin-left: auto;
+  margin-right: auto
+}
+@media (max-width: 30rem) {
+  #realderiv {
+    grid-template-columns: 100%;
+    grid-template-rows: 1fr 1fr 1fr;
+    grid-template-areas: "graph1" "graph2" "btnbar";
+    aspect-ratio: unset;
+  }
+}
+
 .fuschia-btn {
   background-color: #c154c1aa;
   border: 1px solid #c154c1aa;
