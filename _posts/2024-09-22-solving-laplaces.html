@@ -130,9 +130,9 @@ M347 1759 V0 H263 V1759 v0 v1759 h84z"></path></svg></span></span></span><span c
 <p>Now here is the fun part. I’ll draw a grid below, which represents a plate of heat-conducting material. You can choose the grid size, i.e. how fine or coarse the discretization should be. Then click on any nodes that you like in the grid and enter their fixed temperatures. I will convert that to a matrix equation and solve for the equilibrium temperatures which all other nodes will reach through heat conduction.</p>
 
 <p>
-  <div style='display: flex; justify-content: center; gap: .3em'>
-    <span>Grid Size:</span> <input value='5' id='gridsize1' />
-    <span style='visibility: hidden' id='templabel1'>Fixed Temperature:</span> <input style='visibility: hidden;' value='' id='tempinput1' />
+  <div style='display: flex; justify-content: center; gap: .3em; flex-wrap: wrap'>
+    <span>Grid Size: <input value='5' id='gridsize1' /></span>
+    <span style='visibility: hidden' id='templabel1'>Fixed Temperature: <input value='' id='tempinput1' /></span>
   </div>
   <div style='position: relative; display: flex; justify-content: center'>
     <svg viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg' style='height: 28em; width: 28em; user-select: none' id='svg1'>
@@ -402,7 +402,6 @@ M347 1759 V0 H263 V1759 v0 v1759 h84z"></path></svg></span></span></span><span c
   function editFixedTemp(index, circle, ui, state) {
     state.editingIndex = index;
     ui.tempInput.value = state.fixedTemps.has(index) ? state.fixedTemps.get(index) : '';
-    ui.tempInput.style.visibility = '';
     ui.tempLabel.style.visibility = '';
     ui.tempInput.focus();
 
@@ -421,8 +420,13 @@ M347 1759 V0 H263 V1759 v0 v1759 h84z"></path></svg></span></span></span><span c
       fieldPos[1] - canvasPos[1]);
   }
 
+  function cancelEditingTemp(ui, state) {
+    ui.tempLabel.style.visibility = 'hidden';
+    clearCanvas(ui.ctx, ui.canvas);
+    state.editingIndex = undefined;
+  }
+
   function editedFixedTemp(ui, state) {
-    ui.tempInput.style.visibility = 'hidden';
     ui.tempLabel.style.visibility = 'hidden';
     clearCanvas(ui.ctx, ui.canvas);
     if (ui.tempInput.value != '')
@@ -604,15 +608,19 @@ M347 1759 V0 H263 V1759 v0 v1759 h84z"></path></svg></span></span></span><span c
     editedFixedTemp(ui, state);
     fixedTempChanged();
   });
+  ui.tempInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape')
+      cancelEditingTemp(ui, state);
+  });
 </script>
 
 <p>What if the plate has a hole in the middle?</p>
 
 <p>
-  <div style='display: flex; justify-content: center; gap: .3em'>
-    <span>Grid Size:</span> <input value='5' id='gridsize2' />
-    <span>Hole Size:</span> <input value='30' id='holesize2' />
-    <span style='visibility: hidden' id='templabel2'>Fixed Temperature:</span> <input style='visibility: hidden;' value='' id='tempinput2' />
+  <div style='display: flex; justify-content: center; gap: .3em; flex-wrap: wrap'>
+    <span>Grid Size: <input value='5' id='gridsize2' /></span>
+    <span>Hole Size: <input value='30' id='holesize2' /></span>
+    <span style='visibility: hidden' id='templabel2'>Fixed Temperature: <input value='' id='tempinput2' /></span>
   </div>
   <div style='position: relative; display: flex; justify-content: center;'>
     <svg viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg' style='height: 28em; width: 28em; user-select: none' id='svg2'>
@@ -737,6 +745,10 @@ M347 1759 V0 H263 V1759 v0 v1759 h84z"></path></svg></span></span></span><span c
   ui2.tempInput.addEventListener('change', () => {
     editedFixedTemp(ui2, state2);
     fixedTempChanged2();
+  });
+  ui2.tempInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape')
+      cancelEditingTemp(ui2, state2);
   });
 </script>
 
