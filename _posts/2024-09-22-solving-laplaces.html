@@ -413,11 +413,12 @@ M347 1759 V0 H263 V1759 v0 v1759 h84z"></path></svg></span></span></span><span c
     const fieldPos = [fieldBox.x + (fieldBox.width / 3), fieldBox.bottom]
     clearCanvas(ui.ctx, ui.canvas);
     updateCanvasWidth(ui.canvas);
+    const ratio = window.devicePixelRatio;
     drawStraightArrow(ui.ctx,
-      circlePos[0] - canvasPos[0],
-      circlePos[1] - canvasPos[1],
-      fieldPos[0] - canvasPos[0],
-      fieldPos[1] - canvasPos[1]);
+      (circlePos[0] - canvasPos[0]) * ratio,
+      (circlePos[1] - canvasPos[1]) * ratio,
+      (fieldPos[0] - canvasPos[0]) * ratio,
+      (fieldPos[1] - canvasPos[1]) * ratio);
   }
 
   function cancelEditingTemp(ui, state) {
@@ -554,9 +555,10 @@ M347 1759 V0 H263 V1759 v0 v1759 h84z"></path></svg></span></span></span><span c
   }
 
   function drawStraightArrow(ctx, x0, y0, x1, y1, offset=0) {
-    const lineWidth = 5;
-    const arrowheadWidth = 15;
-    const arrowheadLength = 15;
+    const ratio = window.devicePixelRatio;
+    const lineWidth = 5 * ratio;
+    const arrowheadWidth = 15 * ratio;
+    const arrowheadLength = 15 * ratio;
 
     const start = new Vec2(x0, y0);
     const vec = new Vec2(x1 - x0, y1 - y0);
