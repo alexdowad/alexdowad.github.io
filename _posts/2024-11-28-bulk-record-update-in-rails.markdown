@@ -1,6 +1,6 @@
 ---
 layout: post
-title:  "Fast bulk record updates in Rails"
+title:  "Fast Bulk Record Updates in Rails"
 date:   2024-11-28
 categories:
   - stuff i have learned
