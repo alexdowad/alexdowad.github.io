@@ -38,7 +38,7 @@ class ApplicationModel
     update_manager.table(table)
     update_manager.set(changes.map { |name, (_, val)| [table[name], val] })
     update_manager.where(table[:id].eq(self.id))
-    update_manager.to_sql
+    update_manager.to_sql + ";\n"
   end
 
   # Build SQL to create this record
@@ -48,11 +48,13 @@ class ApplicationModel
     insert_manager = Arel::InsertManager.new
     insert_manager.into(table)
     insert_manager.insert(attributes.reject { |name, val| name == 'id' }.map { |name, val| [table[name], val] })
-    insert_manager.to_sql
+    insert_manager.to_sql + ";\n"
   end
 
   def save_sql
-    if persisted?
+    if !changed?
+      ''
+    elsif persisted?
       update_sql
     else
       create_sql
@@ -70,7 +72,7 @@ class MyController < ApplicationController
       other.property1 = some_computation
       other.property2 = another_computation
       if other.valid?
-        sql << other.save_sql << ";\n"
+        sql << other.save_sql
       else
         # Handle error
       end
