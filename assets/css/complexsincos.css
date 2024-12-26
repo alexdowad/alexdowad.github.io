@@ -17,6 +17,12 @@
   user-select: none;
 }
 
+line.axis { stroke: #111 }
+@media (prefers-color-scheme: dark) {
+  text { fill: white }
+  line.axis { stroke: white }
+}
+
 .rotation-slider {
   width: 100%;
 }

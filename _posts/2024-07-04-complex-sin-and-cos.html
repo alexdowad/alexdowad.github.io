@@ -773,64 +773,64 @@ M1001 80h400000v40h-400000z"></path></svg></span></span></span><span class="vlis
       d: 'M -1 0.65 v -2.41 c 0.01 -0.19 0.14 -0.29 0.29 -0.29 c 0.15 0 0.34 0.2 0.34 0.34 v 1.41 v -1.89 c -0 -0.15 0.14 -0.27 0.27 -0.27 c 0.14 0 0.31 0.15 0.31 0.31 v 1.85 v -1.58 c -0 -0.11 0.22 -0.23 0.36 -0.21 c 0.14 0.02 0.26 0.14 0.26 0.31 v 1.59 v -1.09 c -0 -0.13 0.2 -0.21 0.34 -0.19 c 0.14 0.02 0.23 0.15 0.23 0.31 v 2.33 c 0 0.13 -0 0.34 -0.04 0.52 c -0.04 0.18 -0.12 0.26 -0.25 0.38 c -0.13 0.11 -0.33 0.22 -0.48 0.28 c -0.15 0.06 -0.23 0.08 -0.41 0.09 c -0.18 0 -0.45 -0.03 -0.64 -0.12 c -0.19 -0.09 -0.43 -0.33 -0.48 -0.39 c -0.08 -0.1 -1.19 -1.69 -1.19 -1.69 c -0.06 -0.1 -0.01 -0.37 0.13 -0.45 c 0.13 -0.07 0.36 0.01 0.44 0.13 z'
     });
 
-    prependSvgNode(svg, 'line', undefined, {
-      x1: '50', x2: '50', y1: '0', y2: '100', stroke: '#111', "stroke-width": '0.3'
+    prependSvgNode(svg, 'line', 'axis', {
+      x1: '50', x2: '50', y1: '0', y2: '100', "stroke-width": '0.3'
     });
-    prependSvgNode(svg, 'line', undefined, {
-      y1: '50', y2: '50', x1: '0', x2: '100', stroke: '#111', "stroke-width": '0.3'
+    prependSvgNode(svg, 'line', 'axis', {
+      y1: '50', y2: '50', x1: '0', x2: '100', "stroke-width": '0.3'
     });
-    prependSvgNode(svg, 'line', undefined, {
-      x1: '25', x2: '25', y1: '45', y2: '55', stroke: '#111', "stroke-width": '0.3'
+    prependSvgNode(svg, 'line', 'axis', {
+      x1: '25', x2: '25', y1: '45', y2: '55', "stroke-width": '0.3'
     });
     prependSvgNode(svg, 'line', undefined, {
       x1: '25', x2: '25', y1: '0', y2: '100', stroke: '#888', "stroke-width": '0.2'
     });
     prependSvgNode(svg, 'text', 'axislabel', { x: '25.3', y: '49.5' }).textContent = '-1';
-    prependSvgNode(svg, 'line', undefined, {
-      x1: '75', x2: '75', y1: '45', y2: '55', stroke: '#111', "stroke-width": '0.3'
+    prependSvgNode(svg, 'line', 'axis', {
+      x1: '75', x2: '75', y1: '45', y2: '55', "stroke-width": '0.3'
     });
     prependSvgNode(svg, 'line', undefined, {
       x1: '75', x2: '75', y1: '0', y2: '100', stroke: '#888', "stroke-width": '0.2'
     });
     prependSvgNode(svg, 'text', 'axislabel', { x: '75.3', y: '49.5' }).textContent = '1';
-    prependSvgNode(svg, 'line', undefined, {
-      y1: '25', y2: '25', x1: '45', x2: '55', stroke: '#111', "stroke-width": '0.3'
+    prependSvgNode(svg, 'line', 'axis', {
+      y1: '25', y2: '25', x1: '45', x2: '55', "stroke-width": '0.3'
     });
     prependSvgNode(svg, 'line', undefined, {
       y1: '25', y2: '25', x1: '0', x2: '100', stroke: '#888', "stroke-width": '0.2'
     });
     prependSvgNode(svg, 'text', 'axislabel', { x: '50.5', y: '24.3' }).textContent = 'i';
-    prependSvgNode(svg, 'line', undefined, {
-      y1: '75', y2: '75', x1: '45', x2: '55', stroke: '#111', "stroke-width": '0.3'
+    prependSvgNode(svg, 'line', 'axis', {
+      y1: '75', y2: '75', x1: '45', x2: '55', "stroke-width": '0.3'
     });
     prependSvgNode(svg, 'line', undefined, {
       y1: '75', y2: '75', x1: '0', x2: '100', stroke: '#888', "stroke-width": '0.2'
     });
     prependSvgNode(svg, 'text', 'axislabel', { x: '50.5', y: '74.3' }).textContent = '-i';
     const halfPiDist = Math.PI/scale*50;
-    prependSvgNode(svg, 'line', undefined, {
-      x1: String(50 - halfPiDist), x2: String(50 - halfPiDist), y1: '45', y2: '55', stroke: '#111', "stroke-width": '0.3'
+    prependSvgNode(svg, 'line', 'axis', {
+      x1: String(50 - halfPiDist), x2: String(50 - halfPiDist), y1: '45', y2: '55', "stroke-width": '0.3'
     });
     prependSvgNode(svg, 'line', undefined, {
       x1: String(50 - halfPiDist), x2: String(50 - halfPiDist), y1: '0', y2: '100', stroke: '#888', "stroke-width": '0.2'
     });
     prependSvgNode(svg, 'text', 'axislabel', { x: String(50 - halfPiDist + 0.3), y: '49.5' }).textContent = '-π/2';
-    prependSvgNode(svg, 'line', undefined, {
-      x1: String(50 + halfPiDist), x2: String(50 + halfPiDist), y1: '45', y2: '55', stroke: '#111', "stroke-width": '0.3'
+    prependSvgNode(svg, 'line', 'axis', {
+      x1: String(50 + halfPiDist), x2: String(50 + halfPiDist), y1: '45', y2: '55', "stroke-width": '0.3'
     });
     prependSvgNode(svg, 'line', undefined, {
       x1: String(50 + halfPiDist), x2: String(50 + halfPiDist), y1: '0', y2: '100', stroke: '#888', "stroke-width": '0.2'
     });
     prependSvgNode(svg, 'text', 'axislabel', { x: String(50 + halfPiDist + 0.3), y: '49.5' }).textContent = 'π/2';
-    prependSvgNode(svg, 'line', undefined, {
-      y1: String(50 - halfPiDist), y2: String(50 - halfPiDist), x1: '45', x2: '55', stroke: '#111', "stroke-width": '0.3'
+    prependSvgNode(svg, 'line', 'axis', {
+      y1: String(50 - halfPiDist), y2: String(50 - halfPiDist), x1: '45', x2: '55', "stroke-width": '0.3'
     });
     prependSvgNode(svg, 'line', undefined, {
       y1: String(50 - halfPiDist), y2: String(50 - halfPiDist), x1: '0', x2: '100', stroke: '#888', "stroke-width": '0.2'
     });
     prependSvgNode(svg, 'text', 'axislabel', { x: '50.5', y: String(50 - halfPiDist - 0.7) }).textContent = 'iπ/2';
-    prependSvgNode(svg, 'line', undefined, {
-      y1: String(50 + halfPiDist), y2: String(50 + halfPiDist), x1: '45', x2: '55', stroke: '#111', "stroke-width": '0.3'
+    prependSvgNode(svg, 'line', 'axis', {
+      y1: String(50 + halfPiDist), y2: String(50 + halfPiDist), x1: '45', x2: '55', "stroke-width": '0.3'
     });
     prependSvgNode(svg, 'line', undefined, {
       y1: String(50 + halfPiDist), y2: String(50 + halfPiDist), x1: '0', x2: '100', stroke: '#888', "stroke-width": '0.2'
@@ -1907,11 +1907,11 @@ M1001 80h400000v40h-400000z"></path></svg></span></span></span><span class="vlis
   });
 
   const unitDist = (1/scale)*100;
-  prependSvgNode(svg, 'line', undefined, {
-    x1: '50', x2: '50', y1: '0', y2: '100', stroke: '#111', "stroke-width": '0.3'
+  prependSvgNode(svg, 'line', 'axis', {
+    x1: '50', x2: '50', y1: '0', y2: '100', "stroke-width": '0.3'
   });
-  prependSvgNode(svg, 'line', undefined, {
-    y1: '50', y2: '50', x1: '0', x2: '100', stroke: '#111', "stroke-width": '0.3'
+  prependSvgNode(svg, 'line', 'axis', {
+    y1: '50', y2: '50', x1: '0', x2: '100', "stroke-width": '0.3'
   });
   prependSvgNode(svg, 'line', undefined, {
     x1: String(50 - unitDist), x2: String(50 - unitDist), y1: '0', y2: '100', stroke: '#444', "stroke-width": '0.3'
@@ -2128,64 +2128,64 @@ M1001 80h400000v40h-400000z"></path></svg></span></span></span><span class="vlis
       d: 'M -1 0.65 v -2.41 c 0.01 -0.19 0.14 -0.29 0.29 -0.29 c 0.15 0 0.34 0.2 0.34 0.34 v 1.41 v -1.89 c -0 -0.15 0.14 -0.27 0.27 -0.27 c 0.14 0 0.31 0.15 0.31 0.31 v 1.85 v -1.58 c -0 -0.11 0.22 -0.23 0.36 -0.21 c 0.14 0.02 0.26 0.14 0.26 0.31 v 1.59 v -1.09 c -0 -0.13 0.2 -0.21 0.34 -0.19 c 0.14 0.02 0.23 0.15 0.23 0.31 v 2.33 c 0 0.13 -0 0.34 -0.04 0.52 c -0.04 0.18 -0.12 0.26 -0.25 0.38 c -0.13 0.11 -0.33 0.22 -0.48 0.28 c -0.15 0.06 -0.23 0.08 -0.41 0.09 c -0.18 0 -0.45 -0.03 -0.64 -0.12 c -0.19 -0.09 -0.43 -0.33 -0.48 -0.39 c -0.08 -0.1 -1.19 -1.69 -1.19 -1.69 c -0.06 -0.1 -0.01 -0.37 0.13 -0.45 c 0.13 -0.07 0.36 0.01 0.44 0.13 z'
     });
 
-    prependSvgNode(svg, 'line', undefined, {
-      x1: '50', x2: '50', y1: '0', y2: '100', stroke: '#111', "stroke-width": '0.3'
+    prependSvgNode(svg, 'line', 'axis', {
+      x1: '50', x2: '50', y1: '0', y2: '100', "stroke-width": '0.3'
     });
-    prependSvgNode(svg, 'line', undefined, {
-      y1: '50', y2: '50', x1: '0', x2: '100', stroke: '#111', "stroke-width": '0.3'
+    prependSvgNode(svg, 'line', 'axis', {
+      y1: '50', y2: '50', x1: '0', x2: '100', "stroke-width": '0.3'
     });
-    prependSvgNode(svg, 'line', undefined, {
-      x1: '25', x2: '25', y1: '45', y2: '55', stroke: '#111', "stroke-width": '0.3'
+    prependSvgNode(svg, 'line', 'axis', {
+      x1: '25', x2: '25', y1: '45', y2: '55', "stroke-width": '0.3'
     });
     prependSvgNode(svg, 'line', undefined, {
       x1: '25', x2: '25', y1: '0', y2: '100', stroke: '#666', "stroke-width": '0.2'
     });
     prependSvgNode(svg, 'text', 'axislabel', { x: '25.3', y: '49.5' }).textContent = '-1';
-    prependSvgNode(svg, 'line', undefined, {
-      x1: '75', x2: '75', y1: '45', y2: '55', stroke: '#111', "stroke-width": '0.3'
+    prependSvgNode(svg, 'line', 'axis', {
+      x1: '75', x2: '75', y1: '45', y2: '55', "stroke-width": '0.3'
     });
     prependSvgNode(svg, 'line', undefined, {
       x1: '75', x2: '75', y1: '0', y2: '100', stroke: '#666', "stroke-width": '0.2'
     });
     prependSvgNode(svg, 'text', 'axislabel', { x: '75.3', y: '49.5' }).textContent = '1';
-    prependSvgNode(svg, 'line', undefined, {
-      y1: '25', y2: '25', x1: '45', x2: '55', stroke: '#111', "stroke-width": '0.3'
+    prependSvgNode(svg, 'line', 'axis', {
+      y1: '25', y2: '25', x1: '45', x2: '55', "stroke-width": '0.3'
     });
     prependSvgNode(svg, 'line', undefined, {
       y1: '25', y2: '25', x1: '0', x2: '100', stroke: '#666', "stroke-width": '0.2'
     });
     prependSvgNode(svg, 'text', 'axislabel', { x: '50.5', y: '24.3' }).textContent = 'i';
-    prependSvgNode(svg, 'line', undefined, {
-      y1: '75', y2: '75', x1: '45', x2: '55', stroke: '#111', "stroke-width": '0.3'
+    prependSvgNode(svg, 'line', 'axis', {
+      y1: '75', y2: '75', x1: '45', x2: '55', "stroke-width": '0.3'
     });
     prependSvgNode(svg, 'line', undefined, {
       y1: '75', y2: '75', x1: '0', x2: '100', stroke: '#666', "stroke-width": '0.2'
     });
     prependSvgNode(svg, 'text', 'axislabel', { x: '50.5', y: '74.3' }).textContent = '-i';
     const halfPiDist = Math.PI/scale*50;
-    prependSvgNode(svg, 'line', undefined, {
-      x1: String(50 - halfPiDist), x2: String(50 - halfPiDist), y1: '45', y2: '55', stroke: '#111', "stroke-width": '0.3'
+    prependSvgNode(svg, 'line', 'axis', {
+      x1: String(50 - halfPiDist), x2: String(50 - halfPiDist), y1: '45', y2: '55', "stroke-width": '0.3'
     });
     prependSvgNode(svg, 'line', undefined, {
       x1: String(50 - halfPiDist), x2: String(50 - halfPiDist), y1: '0', y2: '100', stroke: '#666', "stroke-width": '0.2'
     });
     prependSvgNode(svg, 'text', 'axislabel', { x: String(50 - halfPiDist + 0.3), y: '49.5' }).textContent = '-π/2';
-    prependSvgNode(svg, 'line', undefined, {
-      x1: String(50 + halfPiDist), x2: String(50 + halfPiDist), y1: '45', y2: '55', stroke: '#111', "stroke-width": '0.3'
+    prependSvgNode(svg, 'line', 'axis', {
+      x1: String(50 + halfPiDist), x2: String(50 + halfPiDist), y1: '45', y2: '55', "stroke-width": '0.3'
     });
     prependSvgNode(svg, 'line', undefined, {
       x1: String(50 + halfPiDist), x2: String(50 + halfPiDist), y1: '0', y2: '100', stroke: '#666', "stroke-width": '0.2'
     });
     prependSvgNode(svg, 'text', 'axislabel', { x: String(50 + halfPiDist + 0.3), y: '49.5' }).textContent = 'π/2';
-    prependSvgNode(svg, 'line', undefined, {
-      y1: String(50 - halfPiDist), y2: String(50 - halfPiDist), x1: '45', x2: '55', stroke: '#111', "stroke-width": '0.3'
+    prependSvgNode(svg, 'line', 'axis', {
+      y1: String(50 - halfPiDist), y2: String(50 - halfPiDist), x1: '45', x2: '55', "stroke-width": '0.3'
     });
     prependSvgNode(svg, 'line', undefined, {
       y1: String(50 - halfPiDist), y2: String(50 - halfPiDist), x1: '0', x2: '100', stroke: '#666', "stroke-width": '0.2'
     });
     prependSvgNode(svg, 'text', 'axislabel', { x: '50.5', y: String(50 - halfPiDist - 0.7) }).textContent = 'iπ/2';
-    prependSvgNode(svg, 'line', undefined, {
-      y1: String(50 + halfPiDist), y2: String(50 + halfPiDist), x1: '45', x2: '55', stroke: '#111', "stroke-width": '0.3'
+    prependSvgNode(svg, 'line', 'axis', {
+      y1: String(50 + halfPiDist), y2: String(50 + halfPiDist), x1: '45', x2: '55', "stroke-width": '0.3'
     });
     prependSvgNode(svg, 'line', undefined, {
       y1: String(50 + halfPiDist), y2: String(50 + halfPiDist), x1: '0', x2: '100', stroke: '#666', "stroke-width": '0.2'
