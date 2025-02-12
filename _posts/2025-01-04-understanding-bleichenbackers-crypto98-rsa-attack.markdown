@@ -1,7 +1,7 @@
 ---
 layout: post
 title: "Understanding Bleichenbacher's CRYPTO'98 Attack on RSA Encryption"
-date:  2025-01-04
+date:  2025-02-12
 categories:
   - security
 stylesheets:
