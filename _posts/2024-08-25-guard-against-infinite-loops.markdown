@@ -17,7 +17,7 @@ Well, converting an unintentional infinite loop into an assertion failure certai
 
 ## What is a “non-trivial loop”?
 
-In this article, a “non-trivial loop” is any loop which forces the author to stop and think in order to convince themselves that it will eventually terminate. A loop which uses an index variable to count up to a constant value is definitely trivial:
+In this article, a “non-trivial loop” means any loop which forces the author to stop and think in order to convince themselves that it will eventually terminate. A loop which uses an index variable to count up to a constant value is definitely trivial:
 
 ```c
 for (int i = 0; i < 10; i++) {
