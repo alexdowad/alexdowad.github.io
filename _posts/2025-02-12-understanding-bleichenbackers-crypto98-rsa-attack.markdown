@@ -27,6 +27,8 @@ It specifies the following format for a plaintext data block:<sup><a href='#foot
 			<stop offset="80%" stop-color="#bff0f0" />
 			<stop offset="100%" stop-color="#efffff" />
 		</linearGradient>
+		<!-- White background is for users whose browser is in dark mode: -->
+		<rect x="5" y="5" width="185" height="20" stroke="none" fill="#fff" />
 		<rect x="55" y="5" width="110" height="20" stroke="none" fill="#ffdfbf" />
 		<rect x="190" y="5" width="55" height="20" stroke="none" fill="url(#grad1)" />
 		<path d="M 245 5 L 5 5 L 5 25 L 245 25" stroke="black" fill="none" />
