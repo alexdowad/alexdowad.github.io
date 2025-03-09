@@ -173,6 +173,7 @@ function renderSubtree(tree, svg, xPos, yPos, width, height, nodeRadius, nodeSpa
         const midpoint = [parentX + (vector[0] / 2), parentY + (vector[1] / 2)];
         const label = addSvgElement(svg, 'text', 'x', midpoint[0] + dx, 'y', midpoint[1] + dy, 'text-anchor', 'middle', 'dominant-baseline', 'central', 'font-size', nodeRadius * 1.1);
         label.textContent = (childX == xPos) ? '0' : '1';
+        label.classList.add('linelabel');
       }
 
       /* Render subtree */
