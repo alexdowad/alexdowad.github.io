@@ -10,7 +10,7 @@ stylesheets:
 
 In 1998, Daniel Bleichenbacher published [a method for cracking RSA encryption with PKCS#1v15 padding](/assets/files/bleichenbacher98.pdf), given access to a “padding oracle”. I learned of this attack via the [cryptopals challenges](https://cryptopals.com), where it is featured in [challenge #47](https://cryptopals.com/sets/6/challenges/47) and [#48](https://cryptopals.com/sets/6/challenges/48).
 
-The instructions for the challenge state: “We recommend you just use the raw math from the paper and not spend too much time trying to grok how the math works.” However, I was not able to solve the challenge without understanding the math involved. For other software practitioners who want to implement, or at least understand, Bleichenbacher's chosen-ciphertext RSA attack, this article may serve as a more gentle introduction than jumping directly into the research paper.
+The instructions for the challenge state: “We recommend you just use the raw math from the paper and not spend too much time trying to grok how the math works.” However, I was not able to solve the challenge without understanding “how the math works.” For other software practitioners who want to implement, or at least understand, Bleichenbacher's chosen-ciphertext RSA attack, this article may serve as a more gentle introduction than jumping directly into the research paper.
 
 Prerequisites first, then the details of the attack will follow:
 
