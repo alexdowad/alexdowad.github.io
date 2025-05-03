@@ -246,6 +246,7 @@ Reason carefully on those inequalities to avoid this.
 - Don't use PKCS#1v15 padding.
 - More generally, don't use outdated cryptosystems which are known to be crackable.
 - Avoid using RSA encryption.<sup><a href='#footnote5' id='fnref5'>[5]</a></sup>
+- If you do use RSA encryption, don't use the same private key for both encryption and signing.
 
 <hr>
 
