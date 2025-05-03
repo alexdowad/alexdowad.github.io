@@ -1,9 +1,10 @@
 ---
 layout: post
-title: "Understanding Bleichenbacher's CRYPTO'98 Attack on RSA Encryption"
+title: "Understanding Bleichenbacher's CRYPTO'98 Padding Oracle Attack on RSA Encryption"
 date:  2025-02-12
 categories:
   - security
+  - cryptanalysis
 stylesheets:
   - katex_smaller.css
 ---
