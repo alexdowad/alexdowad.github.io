@@ -1,0 +1,11 @@
+.highlight-block {
+	padding: .1em .5em;
+	background: rgba(234, 179, 8, .14);
+	border-radius: .6em;
+}
+
+#step1 img, #step2 img, #step3 img {
+	font-weight: bold; /* if image doesn't show, make alt text appear bold */
+	vertical-align: top;
+	margin: 0;
+}
