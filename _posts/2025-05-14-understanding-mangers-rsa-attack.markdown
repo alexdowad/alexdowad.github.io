@@ -1,7 +1,7 @@
 ---
 layout: post
 title: "Understanding Manger’s Padding Oracle Attack on RSA Encryption"
-date:  2025-05-01
+date:  2025-05-14
 categories:
   - security
   - cryptanalysis
