@@ -21,6 +21,16 @@
 			background-color: #d8c399;
 			display: none;
 		}
+		div.hidden-details {
+			margin-block-start: 1em;
+			margin-block-end: 1em
+		}
+		div.hidden-details > p:first-child {
+			margin-block-start: 0;
+		}
+		div.hidden-details > p:last-child {
+			margin-block-end: 0;
+		}
 		.detail-link {
 			cursor: pointer;
 		}
@@ -122,9 +132,17 @@
 	<p class="hidden-details" id="regular_expressions">
 		Good understanding of how regular expression engines are implemented. Have implemented some of the key algorithms before, such as NFA-to-DFA conversion and DFA minimization. Understand how to use advanced features supported by some regex engines, such as lookahead and lookbehind.
 	</p>
-	<p class="hidden-details" id="security">
-		I’m not a security researcher, but once I worked through almost all the <a href="https://overthewire.org/wargames/">OverTheWire hacking “wargames”</a>, just to understand more about how security exploits work. In the process, I learned how to write shellcode and develop buffer overflow exploits, printf format string exploits, time-of-check-to-time-of-use exploits, and so on.<br><br>Fun story: While going through some of the harder “wargames”, I found it was very helpful to use <a href="https://en.wikipedia.org/wiki/Return-oriented_programming">return-oriented programming</a> in my exploits... but it is such a pain to read through an entire disassembled binary to find snippets of assembly code for a ROP exploit! To save myself this pain, I developed a tool in Ruby which analyzes an ELF binary and automatically generates a list of addresses for a ROP exploit against that binary. (You tell the tool what CPU registers and fixed memory addresses you want the exploit to write specified values into. It only works for the x86 architecture, and only for the basic scalar registers, not for bigger registers used for SIMD. I have not made this tool publicly available.)
-	</p>
+	<div class="hidden-details" id="security">
+		<p>
+			Years ago, I worked through the <a href="https://overthewire.org/wargames/">OverTheWire hacking “wargames”</a> to understand more about how security exploits work. Learned how to write shellcode and develop buffer overflow exploits, printf format string exploits, time-of-check-to-time-of-use exploits, and so on.
+		</p>
+		<p>
+			<b>Fun story:</b> While going through some of the harder “wargames”, I found it was very helpful to use <a href="https://en.wikipedia.org/wiki/Return-oriented_programming">return-oriented programming</a> in my exploits... but it is such a pain to read through an entire disassembled binary to find snippets of assembly code for a ROP exploit! To save myself this pain, I developed a tool in Ruby which analyzes an ELF binary and automatically generates a list of addresses for a ROP exploit against that binary. (You tell the tool what CPU registers and fixed memory addresses you want the exploit to write specified values into. It only works for the x86 architecture, and only for the basic scalar registers, not for SIMD registers. I have not made this tool publicly available.)
+		</p>
+		<p>
+			More recently, accepted a job with an IT security firm and started doing security-related work full time. See the <a href="#recent_work_experience">recent work experience</a> listed below.
+		</p>
+	</div>
 	<p class="hidden-details" id="simd">
 		While working on the PHP interpreter, I learned to devise algorithms for applying <a href="https://en.wikipedia.org/wiki/Single_instruction,_multiple_data">SIMD instructions</a> to speed up computation on large strings. I’ve only done this for x86-64 CPUs, though the skill should transfer to other CPU architectures. Examples: <a href="https://github.com/php/php-src/commit/3ae47793053f062f8d74c34258d8d98102df9f50">1</a> | <a href="https://github.com/php/php-src/commit/63c50cc87e4eb4a22de054f836934e8a005739f8">2</a> | <a href="https://github.com/php/php-src/commit/0b7986f976dbd737a2feac1f7fd4b5d0d457228c">3</a> | <a href="https://github.com/php/php-src/commit/b4cbaabd9b1bed40e8f5c29e43012da1fe6f221d">4</a> | <a href="https://github.com/php/php-src/commit/c8ec2ed730334c266ddf01a54d501f3777704219">5</a>
 	</p>
@@ -176,6 +194,21 @@
 
 	<h3 style="margin-bottom: 0">Machine Learning</h3>
 	Am currently studying the book <a href="https://d2l.ai/">Dive into Deep Learning</a>; hope to have more to say soon.
+</div>
+
+<h2 id="recent_work_experience">Security Engineering/Penetration Testing Work</h2>
+
+<div class="indent">
+	<h3 style="margin-bottom: 0">
+		<span style="margin-right: 3em">Nov 2024—Present</span>
+		<span>Blackwing Intelligence</span>
+	</h3>
+	<p style="margin-block-start: 0">
+		Audited various corporate codebases for security vulnerabilities. The codebases used diverse programming languages, frameworks, databases, and programming styles. Issues and vulnerabilities found ranged from banal (“corporate web application does not check whether the user is logged in before performing privileged operations”) to deep conceptual flaws with an entire system design.
+	</p>
+	<p>
+		Blackwing’s company culture meshed well with my own mindset; substance over form, clear communication over jargon, genuine value over posturing, meaningful compliance over box-ticking. When providing security audit reports to a client, they do not exaggerate the severity of issues to inflate the apparent value of their work, and do not list many theoretical “vulnerabilities” with no actual impact. Every issue reported to a client must be a real problem and must be something which the client can do something about.
+	</p>
 </div>
 
 <h2>Samples of Paid Work</h2>
