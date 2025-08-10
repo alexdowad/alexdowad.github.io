@@ -65,7 +65,7 @@ This immediately suggests: can we solve a linear system mod 6 by finding its sol
 
 Answer: Yes! That works perfectly.
 
-The important thing to note is that the matrix must be non-singular (i.e. there must be a unique solution to the matrix equation) *both* when reduced mod 3 and when reduced mod 2. This is not automatic; even if the original matrix of mod-12 integers is non-singular, it can become singular when you convert it to a matrix of mod-3 or mod-2 integers.
+The important thing to note is that the matrix must be non-singular (i.e. there must be a unique solution to the matrix equation) *both* when reduced mod 3 and when reduced mod 2. This is not automatic; even if the original matrix of mod-6 integers is non-singular, it can become singular when you convert it to a matrix of mod-3 or mod-2 integers.
 
 ## The still harder case: when <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height: 0.6833em;"></span><span class="mord mathnormal" style="margin-right: 0.109em;">N</span></span></span></span> is a squared prime <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height: 1.0085em; vertical-align: -0.1944em;"></span><span class="mord"><span class="mord mathnormal">p</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height: 0.8141em;"><span style="top: -3.063em; margin-right: 0.05em;"><span class="pstrut" style="height: 2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span></span></span></span></span></span></span></span>
 
