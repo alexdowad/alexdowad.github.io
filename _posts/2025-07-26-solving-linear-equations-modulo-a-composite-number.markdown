@@ -217,7 +217,6 @@ function linearSolveModComposite(A, b, N) {
   for (const [p, k] of factorizeInteger(N)) {
     partialSolution = solveLinearSystemModPrimePower(A, b, p, k);
     // Use CRT to combine solutions
-    // Earlier in this article, the CRT formula for two moduli was shown; this is the version for any number
     let Mi = N / (p ** k);
     let [xi, yi] = extendedGCD(Mi, p ** k); // invert p**k mod Mi using extended GCD algorithm
     x = x.add(partialSolution.scalarMul(Mi * yi));
