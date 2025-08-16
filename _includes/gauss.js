@@ -56,7 +56,7 @@ function createVector(size, data=undefined) {
 }
 
 
-function randomNonSingularMatrix(n, minVal=-5, maxVal=5) {
+function randomNonSingularMatrix(n, minVal=-9, maxVal=9) {
 	// Start with identity matrix to guarantee non-singularity
 	const matrix = createMatrix(n, n);
 	for (let i = 0; i < n; i++) {
@@ -83,8 +83,19 @@ function randomNonSingularMatrix(n, minVal=-5, maxVal=5) {
 
 			const factor = randomInt(minVal, maxVal);
 			if (factor !== 0) {
+				// Check if this will cause values in row to go outside [minVal, maxVal]
+				let ok = true;
 				for (let k = 0; k < n; k++) {
-					matrix.set(i, k, matrix.get(i, k) + factor * matrix.get(j, k));
+					let value = matrix.get(i, k) + factor * matrix.get(j, k);
+					if (value < minVal || value > maxVal) {
+						ok = false;
+						break;
+					}
+				}
+				if (ok) {
+					for (let k = 0; k < n; k++) {
+						matrix.set(i, k, matrix.get(i, k) + factor * matrix.get(j, k));
+					}
 				}
 			}
 		} else {
@@ -94,26 +105,19 @@ function randomNonSingularMatrix(n, minVal=-5, maxVal=5) {
 			while (factor === 0) {
 				factor = randomInt(minVal, maxVal);
 			}
-
+			// Check if this will cause values in row to go outside [minVal, maxVal]
+			let ok = true;
 			for (let k = 0; k < n; k++) {
-				matrix.set(i, k, matrix.get(i, k) * factor);
-			}
-		}
-	}
-
-	// Final pass to ensure all entries are reasonable integers
-	for (let i = 0; i < n; i++) {
-		for (let j = 0; j < n; j++) {
-			let val = matrix.get(i, j);
-			// Clamp extreme values
-			if (val > maxVal*3 || val < minVal*3) {
-				let multiplier = maxVal / val;
-				for (let k = 0; k < n; k++) {
-					matrix.set(i, k, Math.round(multiplier * matrix.get(i, k)))
+				let value = matrix.get(i, k) * factor;
+				if (value < minVal || value > maxVal) {
+					ok = false;
+					break;
 				}
-			} else if (val === 0) {
-				val = randomInt(1, 3); // Avoid zeros on diagonal vicinity
-				matrix.set(i, j, Math.round(val));
+			}
+			if (ok) {
+				for (let k = 0; k < n; k++) {
+					matrix.set(i, k, matrix.get(i, k) * factor);
+				}
 			}
 		}
 	}
@@ -121,12 +125,28 @@ function randomNonSingularMatrix(n, minVal=-5, maxVal=5) {
 	return matrix;
 }
 
-function randomVector(n, minVal = -10, maxVal = 10) {
+function randomNonSingularMatrixMod(n, modulus, minVal=-9, maxVal=9) {
+	if (maxVal >= modulus)
+		maxVal = modulus - 1;
+	if (minVal <= -modulus)
+		minVal = -modulus + 1;
+	return randomNonSingularMatrix(n, minVal, maxVal);
+}
+
+function randomVector(n, minVal = -12, maxVal = 12) {
 	const vector = createVector(n);
 	for (let i = 0; i < n; i++) {
 		vector.set(i, Math.floor(Math.random() * (maxVal - minVal + 1)) + minVal);
 	}
 	return vector;
+}
+
+function randomVectorMod(n, modulus, minVal = -12, maxVal = 12) {
+	if (maxVal >= modulus)
+		maxVal = modulus - 1;
+	if (minVal <= -modulus)
+		minVal = -modulus + 1;
+	return randomVector(n, minVal, maxVal);
 }
 
 function modInverse(a, m) {
@@ -590,22 +610,9 @@ function updateMatrixValues(div, matrix, precision=2) {
 // Functions for animating the process of Gaussian elimination
 
 function runAnimation(div, label) {
-	let A = randomNonSingularMatrix(3)
-	let b = randomVector(3)
-	let steps = [];
-	// Because we are using random matrices, it may happen that we get a singular one and Gaussian elimination fails
-	// Hence, retry a few times to get a matrix where elimination works
-	for (let tries = 3; tries >= 0; tries--) {
-		try {
-			steps = gaussianSteps(A, b);
-			break;
-		}	catch (e) {
-			console.log(e)
-		}
-	}
-	if (steps.length === 0) {
-		return;
-	}
+	let A = randomNonSingularMatrix(3);
+	let b = randomVector(3);
+	let steps = gaussianSteps(A, b);
 
 	function nextStep() {
 		let step = steps.shift();
@@ -621,21 +628,9 @@ function runAnimation(div, label) {
 }
 
 function runAnimationMod(div, label, modulus) {
-	let A = randomNonSingularMatrix(4)
-	let b = randomVector(4)
-	let steps = [];
-
-	for (let tries = 4; tries >= 0; tries--) {
-		try {
-			steps = gaussianStepsMod(A, b, modulus);
-			break;
-		}	catch (e) {
-			console.log(e)
-		}
-	}
-	if (steps.length === 0) {
-		return;
-	}
+	let A = randomNonSingularMatrixMod(4, modulus);
+	let b = randomVectorMod(4, modulus);
+	let steps = gaussianStepsMod(A, b, modulus);
 
 	function nextStep() {
 		let step = steps.shift();
