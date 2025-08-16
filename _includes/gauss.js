@@ -70,7 +70,7 @@ function randomNonSingularMatrix(n, minVal=-9, maxVal=9) {
 
 	// Apply random elementary row operations to make it look random
 	// while preserving non-singularity
-	for (let iter = 0; iter < n * 3; iter++) {
+	for (let iter = 0; iter < n * 6; iter++) {
 		const opType = Math.floor(Math.random() * 2); // 0 or 1
 
 		if (opType === 0) {
