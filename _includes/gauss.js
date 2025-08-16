@@ -198,6 +198,39 @@ function gaussianSteps(A, b) {
 				pivotRow = i;
 			}
 		}
+
+		// Check if the column is already empty aside from the pivot
+		let alreadyEmpty = true;
+		for (let i = k; i < n; i++) {
+			if (i !== pivotRow && Math.abs(augmented.get(i, k)) > 1e-10) {
+				alreadyEmpty = false;
+				break;
+			}
+		}
+		if (alreadyEmpty) {
+			if (pivotRow !== k) {
+				steps.push({
+					type: "choose_pivot",
+					description: `Choose ${augmented.get(pivotRow, k).toFixed(2)} as the pivot element`,
+					pivotRow: pivotRow,
+					pivotCol: k,
+					matrix: augmented.copy()
+				});
+				for (let j = 0; j < n + 1; j++) {
+					const temp = augmented.get(k, j);
+					augmented.set(k, j, augmented.get(pivotRow, j));
+					augmented.set(pivotRow, j, temp);
+				}
+				steps.push({
+					type: "row_swap",
+					description: `Swap row ${k+1} with row ${pivotRow+1}`,
+					swappedRows: [k, pivotRow],
+					matrix: augmented.copy()
+				});
+			}
+			continue; // Go to the next column
+		}
+
 		steps.push({
 			type: "choose_pivot",
 			description: `Choose ${augmented.get(pivotRow, k).toFixed(2)} as the pivot element to clear column ${k+1}`,
@@ -341,13 +374,34 @@ function gaussianStepsMod(A, b, mod) {
 			throw new Error("Matrix is singular in the finite field");
 		}
 
-		steps.push({
-			type: "choose_pivot",
-			description: `Choose ${augmented.get(pivotRow, k)} as the pivot element to clear column ${k+1}`,
-			pivotRow: pivotRow,
-			pivotCol: k,
-			matrix: augmented.copy()
-		});
+		// Check if the column is already empty aside from the pivot
+		let alreadyEmpty = true;
+		for (let i = k; i < n; i++) {
+			if (i !== pivotRow && augmented.get(i, k) !== 0) {
+				alreadyEmpty = false;
+				break;
+			}
+		}
+
+		if (alreadyEmpty) {
+			if (pivotRow !== k) {
+				steps.push({
+					type: "choose_pivot",
+					description: `Choose ${augmented.get(pivotRow, k)} as the pivot element`,
+					pivotRow: pivotRow,
+					pivotCol: k,
+					matrix: augmented.copy()
+				});
+			}
+		} else {
+			steps.push({
+				type: "choose_pivot",
+				description: `Choose ${augmented.get(pivotRow, k)} as the pivot element to clear column ${k+1}`,
+				pivotRow: pivotRow,
+				pivotCol: k,
+				matrix: augmented.copy()
+			});
+		}
 
 		// Swap rows if needed
 		if (pivotRow !== k) {
