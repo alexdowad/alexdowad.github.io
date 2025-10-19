@@ -235,7 +235,7 @@ The higher the chances are of such spurious false returns, the more <span class=
 
 ## One more tip
 
-If you are implementing Bleicherbacher’s attack, remember that the inequalities in the paper are expressed in terms of <b>real number</b> division, but your bignum library probably gives you truncating integer division. The difference can and will throw endpoints (especially upper endpoints) out by one and cause your attack code to fail.
+If you are implementing Bleichenbacher’s attack, remember that the inequalities in the paper are expressed in terms of <b>real number</b> division, but your bignum library probably gives you truncating integer division. The difference can and will throw endpoints (especially upper endpoints) out by one and cause your attack code to fail.
 
 Reason carefully on those inequalities to avoid this.
 
