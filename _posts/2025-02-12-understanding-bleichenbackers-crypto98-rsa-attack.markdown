@@ -39,7 +39,7 @@ It specifies the following format for a plaintext data block:<sup><a href='#foot
 		<line x1="190" x2="190" y1="5" y2="25" stroke="black" />
 		<text x="17.5" y="15" font-size=".5rem" text-anchor="middle" dominant-baseline="middle">0x00</text>
 		<text x="42.5" y="15" font-size=".5rem" text-anchor="middle" dominant-baseline="middle">0x02</text>
-		<text x="110" y="15" font-size=".33rem" text-anchor="middle" dominant-baseline="middle">8 OR MORE RANDOM, NON-ZERO BYTES</text>
+		<text x="110" y="15" font-size=".33rem" text-anchor="middle" dominant-baseline="middle" textLength="105" lengthAdjust="spacingAndGlyphs">8 OR MORE RANDOM, NON-ZERO BYTES</text>
 		<text x="177.5" y="15" font-size=".5rem" text-anchor="middle" dominant-baseline="middle">0x00</text>
 		<text x="200" y="15" font-size=".5rem" text-anchor="left" dominant-baseline="middle">DATA...</text>
 	</svg>
@@ -219,7 +219,7 @@ Bleichenbacher’s attack exploits the fact that PKCS#1v15-padded messages fall 
 		<line x1="190" x2="190" y1="5" y2="25" stroke="black" />
 		<text x="17.5" y="15" font-size=".5rem" text-anchor="middle" dominant-baseline="middle">0x00</text>
 		<text x="42.5" y="15" font-size=".5rem" text-anchor="middle" dominant-baseline="middle">0x02</text>
-		<text x="110" y="15" font-size=".33rem" text-anchor="middle" dominant-baseline="middle">8 OR MORE RANDOM, NON-ZERO BYTES</text>
+		<text x="110" y="15" font-size=".33rem" text-anchor="middle" dominant-baseline="middle" textLength="105" lengthAdjust="spacingAndGlyphs">8 OR MORE RANDOM, NON-ZERO BYTES</text>
 		<text x="177.5" y="15" font-size=".5rem" text-anchor="middle" dominant-baseline="middle">0x00</text>
 		<text x="200" y="15" font-size=".5rem" text-anchor="left" dominant-baseline="middle">DATA...</text>
 	</svg>
