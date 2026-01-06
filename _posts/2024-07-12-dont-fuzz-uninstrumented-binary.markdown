@@ -13,7 +13,7 @@ Coverage-guided fuzzing tools, such as [LLVM’s libFuzzer](https://llvm.org/doc
 
 But it only works if the fuzzer *can* actually trace the path of control flow through the target program! As I was so forcefully reminded today...
 
-Before I go further, let me explain how coverage-guided fuzzers are able to record the path of program execution. Generally, these tools require the target program to be compiled with special options, which tell the compiler to insert some instrumentation code before every instance of certain machine instructions. For example, instrumentation code might be added before every conditional branch instruction.
+Before I go further, let me explain how coverage-guided fuzzers are able to record the path of program execution. Generally, these tools require the target program to be compiled with special options, which tell the compiler to insert instrumentation code before every instance of certain machine instructions. For example, instrumentation code might be added before every conditional branch instruction.
 
 For [clang](https://clang.llvm.org/), the special option needed is `-fsanitize=fuzzer`. When you compile a C program with that option, the resulting binary will contain code like:
 
